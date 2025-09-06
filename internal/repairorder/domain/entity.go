@@ -1,14 +1,15 @@
 package domain
 
 import (
+	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type RepairOrderStatus string
-
 type (
+	RepairOrderStatus string
+
 	ItemType string
 
 	RepairOrder struct {
@@ -18,8 +19,7 @@ type (
 		Status     RepairOrderStatus
 		Services   map[uuid.UUID]int64
 		Products   map[uuid.UUID]int64
-		CreatedAt  time.Time
-		UpdatedAt  time.Time
+		entity.Timestamps
 	}
 )
 
@@ -41,13 +41,13 @@ func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 	}
 
 	now := time.Now()
+
 	return &RepairOrder{
 		ID:         uuid.New(),
 		CustomerID: customerID,
 		VehicleID:  vehicleID,
 		Status:     StatusReceived,
-		CreatedAt:  now,
-		UpdatedAt:  now,
+		Timestamps: entity.NewTimeStamps(now, now),
 	}, nil
 }
 
