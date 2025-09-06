@@ -1,2 +1,7 @@
+vendor
+
+# test files
+coverage.out
+
 # ide folders
 .idea
