@@ -1,0 +1,29 @@
+package domain
+
+import (
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNewRepairOrder(t *testing.T) {
+
+	t.Run("should initialize with correct values", func(t *testing.T) {
+		estimate, err := NewEstimate(uuid.New())
+		require.NoError(t, err)
+		require.NotNil(t, estimate)
+
+		assert.Equal(t, StatusDraft, estimate.Status)
+		assert.NotZero(t, estimate.CreatedAt)
+		assert.NotZero(t, estimate.UpdatedAt)
+		assert.Equal(t, estimate.CreatedAt, estimate.UpdatedAt)
+	})
+
+	t.Run("should initialize with invalid repair", func(t *testing.T) {
+		estimate, err := NewEstimate(uuid.Nil)
+		assert.Error(t, err)
+		assert.Nil(t, estimate)
+	})
+}
