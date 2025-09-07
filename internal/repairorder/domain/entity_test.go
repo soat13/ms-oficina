@@ -44,7 +44,7 @@ func TestRepairOrder_touch(t *testing.T) {
 	repairOrder := newRepairOrder()
 	originalUpdatedAt := repairOrder.UpdatedAt
 
-	repairOrder.touch()
+	repairOrder.Timestamps.Touch()
 
 	assert.True(t, repairOrder.UpdatedAt.After(originalUpdatedAt))
 }

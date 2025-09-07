@@ -1,10 +1,10 @@
 package domain
 
 import (
-	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/pkg/entity"
 )
 
 type (
@@ -37,7 +37,7 @@ const (
 
 func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 	if customerID == uuid.Nil || vehicleID == uuid.Nil {
-		return nil, ErrCustomerOrVehicleInvalid
+		return nil, ErrCustomerOrVehicleIDInvalid
 	}
 
 	now := time.Now()
@@ -47,11 +47,9 @@ func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 		CustomerID: customerID,
 		VehicleID:  vehicleID,
 		Status:     StatusReceived,
-		Timestamps: entity.NewTimeStamps(now, now),
+		Timestamps: entity.NewTimestamps(now, now),
 	}, nil
 }
-
-func (ro *RepairOrder) touch() { ro.UpdatedAt = time.Now() }
 
 func (ro *RepairOrder) set(itemType ItemType, id uuid.UUID, quantity int64) error {
 	if ro.Status != StatusInDiagnosis {
@@ -69,12 +67,12 @@ func (ro *RepairOrder) set(itemType ItemType, id uuid.UUID, quantity int64) erro
 
 	if quantity == 0 {
 		delete(bucket, id)
-		ro.touch()
+		ro.Timestamps.Touch()
 		return nil
 	}
 
 	bucket[id] = quantity
-	ro.touch()
+	ro.Timestamps.Touch()
 	return nil
 }
 

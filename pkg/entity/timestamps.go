@@ -7,7 +7,7 @@ type Timestamps struct {
 	UpdatedAt time.Time
 }
 
-func NewTimeStamps(createdAt, updatedAt time.Time) Timestamps {
+func NewTimestamps(createdAt, updatedAt time.Time) Timestamps {
 	return Timestamps{
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
