@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS estimate_items;
+DROP TABLE IF EXISTS estimates;
+DROP TABLE IF EXISTS repair_orders;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS services;
+DROP TABLE IF EXISTS vehicles;
+DROP TABLE IF EXISTS customers;
