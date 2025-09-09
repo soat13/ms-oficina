@@ -1,50 +1,59 @@
-.PHONY: install up down test mod fmt lint sh migrate-up migrate-down migrate-goto migrate-version
+.PHONY: install up down run test mod vendor tidy fmt lint sh \
+        migrate-up migrate-down migrate-status seed-up
 
-# Install and start the development environment
-install:
-	@if [ ! -f .env ]; then \
-		cp .env-example .env; \
-	fi
-	docker compose down -v --remove-orphans
-	docker compose up -d --build --force-recreate
-
-# Up and down the development environment
+# Infra
 up:
-	@if [ ! -f .env ]; then \
-		cp .env-example .env; \
-	fi
+	@if [ ! -f .env ]; then cp .env-example .env; fi
 	docker compose up -d
+
 down:
 	docker compose down
 
-# Quality assurance commands
+install:
+	@if [ ! -f .env ]; then cp .env-example .env; fi
+	docker compose down -v --remove-orphans
+	docker compose pull
+	docker compose up -d --build --force-recreate
+
+run:
+	docker compose exec app-dev go run ./cmd/api/main.go
+
+# QA
 test:
 	docker compose exec app-dev go test ./...
 mod:
+	docker compose exec app-dev go mod tidy
+vendor:
+	docker compose exec app-dev go mod vendor
+tidy:
 	docker compose exec app-dev go mod tidy
 fmt:
 	docker compose exec app-dev go fmt ./...
 lint:
 	docker compose exec app-dev go vet ./...
 
-# Access the application container shell
+# Shell
 sh:
 	docker compose exec app-dev bash
 
-# Database migrations
+# -------------------------------
+# sql-migrate rodando no app-dev
+# -------------------------------
 COMPOSE ?= docker compose --env-file .env
+GO_BIN           ?= /usr/local/go/bin/go
+SQL_MIGRATE_BIN  ?= /go/bin/sql-migrate
+SQL_MIGRATE_PKG  ?= github.com/rubenv/sql-migrate/sql-migrate@latest
+SQL_MIGRATE_CFG  ?= ./scripts/db/dbconfig.yml
 
-migrate-version:
-	$(COMPOSE) run --rm --entrypoint sh migrate -lc 'migrate -source file:///migrations -database "$$DATABASE_URL" version'
+migrate-install: up
+	$(COMPOSE) exec -T app-dev sh -lc 'test -x $(SQL_MIGRATE_BIN) || GOBIN=/go/bin $(GO_BIN) install $(SQL_MIGRATE_PKG)'
 
-migrate-up:
-	$(COMPOSE) run --rm --entrypoint sh migrate -lc 'migrate -source file:///migrations -database "$$DATABASE_URL" up'
+migrate-status: up migrate-install
+	$(COMPOSE) exec -T app-dev sh -lc '$(SQL_MIGRATE_BIN) status -config=$(SQL_MIGRATE_CFG) -env=development'
 
-migrate-down:
-	$(COMPOSE) run --rm --entrypoint sh migrate -lc 'migrate -source file:///migrations -database "$$DATABASE_URL" down 1'
+migrate-up: up migrate-install
+	$(COMPOSE) exec -T app-dev sh -lc '$(SQL_MIGRATE_BIN) up -config=$(SQL_MIGRATE_CFG) -env=development'
 
-migrate-goto:
-	$(COMPOSE) run --rm --entrypoint sh migrate -lc 'migrate -source file:///migrations -database "$$DATABASE_URL" goto $(N)'
+migrate-down: up migrate-install
+	$(COMPOSE) exec -T app-dev sh -lc '$(SQL_MIGRATE_BIN) down -config=$(SQL_MIGRATE_CFG) -env=development -limit=1'
 
-migrate-new:
-	$(COMPOSE) run --rm --entrypoint sh migrate -lc 'migrate create -ext sql -dir /migrations -seq $(NAME)'
