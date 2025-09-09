@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE customers
 (
     id         UUID PRIMARY KEY,
@@ -18,26 +19,29 @@ CREATE TABLE vehicles
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_vehicles_customer_id ON vehicles (customer_id);
 
 CREATE TABLE services
 (
-    id          UUID PRIMARY KEY,
-    name        VARCHAR(255) NOT NULL,
-    price_cents BIGINT       NOT NULL,
-    currency    VARCHAR(3)   NOT NULL DEFAULT 'BRL',
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    id         UUID PRIMARY KEY,
+    name       VARCHAR(255) NOT NULL,
+    price      BIGINT       NOT NULL,
+    currency   VARCHAR(3)   NOT NULL DEFAULT 'BRL',
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_services_name ON services (name);
 
 CREATE TABLE products
 (
-    id          UUID PRIMARY KEY,
-    name        VARCHAR(255) NOT NULL,
-    price_cents BIGINT       NOT NULL,
-    stock       INT          NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    id         UUID PRIMARY KEY,
+    name       VARCHAR(255) NOT NULL,
+    price      BIGINT       NOT NULL,
+    stock      INT          NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_products_name ON products (name);
 
 CREATE TABLE repair_orders
 (
@@ -48,6 +52,11 @@ CREATE TABLE repair_orders
     created_at  TIMESTAMP   NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP   NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_repair_orders_customer_id ON repair_orders (customer_id);
+CREATE INDEX idx_repair_orders_vehicle_id ON repair_orders (vehicle_id);
+CREATE INDEX idx_repair_orders_status ON repair_orders (status);
+CREATE INDEX idx_repair_orders_created_at ON repair_orders (created_at);
+
 
 CREATE TABLE estimates
 (
@@ -57,6 +66,9 @@ CREATE TABLE estimates
     created_at TIMESTAMP   NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP   NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_estimates_repair_id ON estimates (repair_id);
+CREATE INDEX idx_estimates_status ON estimates (status);
+CREATE INDEX idx_estimates_created_at ON estimates (created_at);
 
 CREATE TABLE estimate_items
 (
@@ -64,9 +76,20 @@ CREATE TABLE estimate_items
     estimate_id UUID         NOT NULL REFERENCES estimates (id) ON DELETE CASCADE,
     item_id     UUID         NOT NULL,
     item_name   VARCHAR(255) NOT NULL,
-    item_type   VARCHAR(20)  NOT NULL,-- todo: ENUM('service', 'product')
-    price_cents BIGINT       NOT NULL,
+    item_type   VARCHAR(20)  NOT NULL,
+    price       BIGINT       NOT NULL,
     quantity    INT          NOT NULL,
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_estimate_items_estimate_id ON estimate_items (estimate_id);
+CREATE INDEX idx_estimate_items_item ON estimate_items (item_id, item_type);
+
+-- +migrate Down
+DROP TABLE IF EXISTS estimate_items;
+DROP TABLE IF EXISTS estimates;
+DROP TABLE IF EXISTS repair_orders;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS services;
+DROP TABLE IF EXISTS vehicles;
+DROP TABLE IF EXISTS customers;

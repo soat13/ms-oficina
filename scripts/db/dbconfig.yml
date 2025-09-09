@@ -1,0 +1,14 @@
+common: &common
+  dialect: postgres
+  datasource: ${PG_DSN}
+  table: migrations
+
+development:
+  <<: *common
+  dir: scripts/db/migrations
+
+
+seed:
+  <<: *common
+  table: seeds_migrations
+  dir: scripts/db/test_seeders

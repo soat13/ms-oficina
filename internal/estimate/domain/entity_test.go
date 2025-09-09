@@ -2,6 +2,7 @@ package domain
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -10,8 +11,10 @@ import (
 
 func TestNewRepairOrder(t *testing.T) {
 
+	now := time.Now()
+
 	t.Run("should initialize with correct values", func(t *testing.T) {
-		estimate, err := NewEstimate(uuid.New())
+		estimate, err := NewEstimate(uuid.New(), now, now)
 		require.NoError(t, err)
 		require.NotNil(t, estimate)
 
@@ -22,7 +25,7 @@ func TestNewRepairOrder(t *testing.T) {
 	})
 
 	t.Run("should initialize with invalid repair", func(t *testing.T) {
-		estimate, err := NewEstimate(uuid.Nil)
+		estimate, err := NewEstimate(uuid.Nil, now, now)
 		assert.Error(t, err)
 		assert.Nil(t, estimate)
 	})

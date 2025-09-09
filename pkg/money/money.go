@@ -11,3 +11,7 @@ func New(cents int64) (Money, error) {
 
 	return Money{Cents: cents}, nil
 }
+
+func (m Money) Add(other Money) Money {
+	return Money{Cents: m.Cents + other.Cents}
+}
