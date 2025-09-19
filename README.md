@@ -22,10 +22,11 @@ exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 
 ## TODO
 
- - Criar swagger (Pisani)
  - CRUD: product (Pisani)
  - CRUD: customer (Lucas)
  - CRUD: vehicles (Marcos)
+ - Criar swagger (Pisani)
+ - Autenticação JWT
   - Verificar nome da tabela com a linguagem oblíqua
 
 ## Sem Make (comandos equivalentes)
