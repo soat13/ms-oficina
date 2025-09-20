@@ -111,3 +111,4 @@ func toDomain(m *productModel) *domain.Product {
 		UpdatedAt: m.UpdatedAt,
 	}
 }
+
