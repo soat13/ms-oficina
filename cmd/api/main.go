@@ -23,6 +23,11 @@ import (
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
+	// products
+	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
+	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/db"
+	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/http"
+
 	// shared
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
@@ -69,6 +74,16 @@ func main() {
 	listSvc := serviceApp.NewListServices(serviceRepo)
 
 	// -----------------------------------------------------------------------------
+	// Products wiring
+	// -----------------------------------------------------------------------------
+	productRepo := productDB.NewBunProductRepository(db.bunDB)
+	createProd := productApp.NewCreateProduct(productRepo)
+	updateProd := productApp.NewUpdateProduct(productRepo)
+	deleteProd := productApp.NewDeleteProduct(productRepo)
+	getProd := productApp.NewGetProduct(productRepo)
+	listProd := productApp.NewListProducts(productRepo)
+
+	// -----------------------------------------------------------------------------
 	// HTTP app & routes
 	// -----------------------------------------------------------------------------
 	app := newApp()
@@ -80,6 +95,10 @@ func main() {
 	// services
 	serviceHttpHandler := serviceHTTP.NewHandler(createSvc, updateSvc, deleteSvc, getSvc, listSvc)
 	serviceHTTP.Register(app, serviceHttpHandler)
+
+	// products routes (/admin/products/*)  // TODO: proteger com JWT
+	prodHandler := productHTTP.NewHandler(createProd, updateProd, deleteProd, getProd, listProd)
+	productHTTP.Register(app, prodHandler)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start
