@@ -25,6 +25,7 @@ import (
 	// services
 	serviceApp "github.com/soat13/fase-1-oficina/internal/service/application"
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
+	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
 	// customer
@@ -64,6 +65,7 @@ func main() {
 	// HTTP server setup
 	// -----------------------------------------------------------------------------
 	fiberApp := newApp()
+	serviceDocs.Register(fiberApp)
 	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
 
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
