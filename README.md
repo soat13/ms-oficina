@@ -26,8 +26,6 @@ exposta no host em `http://localhost` (porta 80 mapeada para 8080).
  - CRUD: customer (Lucas)
  - CRUD: vehicles (Marcos)
  - Criar swagger (Pisani)
- - Autenticação JWT
-  - Verificar nome da tabela com a linguagem oblíqua
 
 ## Sem Make (comandos equivalentes)
 - Subir os serviços:
@@ -41,6 +39,24 @@ exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 ## Variáveis de ambiente
 - `PG_DSN`: string de conexão do Postgres (definida no `.env` e no compose)
 - `PORT`: porta interna da API (default 8080 dentro do container)
+- `JWT_SECRET`: segredo HMAC para assinar tokens
+- `JWT_ISSUER`: issuer do token (default `oficina-api`)
+- `JWT_TTL_MINUTES`: tempo de expiração do token (default `60`)
+
+## Autenticação JWT
+
+Rotas existentes agora exigem JWT (exceto `/auth/login`).
+
+1) Obtenha um token:
+
+- `POST /auth/login`
+- Body: `{ "email": "admin@admin.com", "password": "secret123" }`
+- Resposta: `{ "token": "<JWT>" }`
+
+2) Use o token nas rotas protegidas:
+
+- Header: `Authorization: Bearer <JWT>`
+
 
 ## Endpoints úteis (Admin Services)
 Base URL (host): `http://localhost`

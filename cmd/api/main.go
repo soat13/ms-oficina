@@ -1,17 +1,20 @@
 package main
 
 import (
-	"context"
-	"database/sql"
-	"log"
-	"os"
+    "context"
+    "database/sql"
+    "log"
+    "os"
+    "strconv"
+    "strings"
+    "time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/logger"
+    _ "github.com/jackc/pgx/v5/stdlib"
+    "github.com/joho/godotenv"
+    "github.com/uptrace/bun"
+    "github.com/uptrace/bun/dialect/pgdialect"
 
 	// estimate
 	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
@@ -23,13 +26,19 @@ import (
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
-	// shared
-	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
-	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
+    // shared
+    "github.com/soat13/fase-1-oficina/internal/shared/eventbus"
+    "github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
 
-	// repair order listeners
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
-	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
+    // repair order listeners
+    "github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
+    repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
+
+    // auth
+    authApp "github.com/soat13/fase-1-oficina/internal/auth/application"
+    authDB "github.com/soat13/fase-1-oficina/internal/auth/infra/db"
+    authHTTP "github.com/soat13/fase-1-oficina/internal/auth/infra/http"
+    authJWT "github.com/soat13/fase-1-oficina/internal/auth/infra/jwt"
 )
 
 func main() {
@@ -71,7 +80,38 @@ func main() {
 	// -----------------------------------------------------------------------------
 	// HTTP app & routes
 	// -----------------------------------------------------------------------------
-	app := newApp()
+    app := newApp()
+
+    // -------------------------------------------------------------------------
+    // Auth wiring (JWT + login)
+    // -------------------------------------------------------------------------
+    jwtSecret := os.Getenv("JWT_SECRET")
+    if jwtSecret == "" {
+        log.Fatal("env JWT_SECRET not found")
+    }
+    issuer := os.Getenv("JWT_ISSUER")
+    if issuer == "" {
+        issuer = "oficina-api"
+    }
+    ttlMinutes := 60
+    if v := os.Getenv("JWT_TTL_MINUTES"); v != "" {
+        if n, err := strconv.Atoi(v); err == nil {
+            ttlMinutes = n
+        }
+    }
+    tokenSvc := authJWT.NewService(jwtSecret, issuer, time.Duration(ttlMinutes)*time.Minute)
+    userRepo := authDB.NewBunUserRepository(db.bunDB)
+    loginSvc := authApp.NewLoginService(userRepo, tokenSvc)
+    authHandler := authHTTP.NewHandler(loginSvc)
+    authHTTP.Register(app, authHandler)
+
+    // Protect all routes except /auth/*
+    app.Use(func(c *fiber.Ctx) error {
+        if strings.HasPrefix(c.Path(), "/auth/") {
+            return c.Next()
+        }
+        return authHTTP.JWTMiddleware(tokenSvc)(c)
+    })
 
 	// estimate routes
 	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate)
@@ -119,8 +159,7 @@ func newDB() *DB {
 }
 
 func newApp() *fiber.App {
-	app := fiber.New()
-	app.Use(logger.New())
-	// TODO: adicionar middleware de JWT e aplicar no grupo /admin/*
-	return app
+    app := fiber.New()
+    app.Use(logger.New())
+    return app
 }
