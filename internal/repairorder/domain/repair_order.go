@@ -35,3 +35,13 @@ func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 		Timestamps: entity.NewTimestamps(now, now),
 	}, nil
 }
+
+func (r *RepairOrder) MoveToAwaitingApproval() error {
+	if r.Status != repairorder.StatusInDiagnosis {
+		return ErrInvalidStatusTransition
+	}
+
+	r.Status = repairorder.StatusAwaitingApproval
+	r.Touch()
+	return nil
+}

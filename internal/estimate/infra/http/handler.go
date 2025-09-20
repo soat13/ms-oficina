@@ -13,8 +13,8 @@ import (
 
 type (
 	Handler struct {
-		estimateFromRepairOrder *app.CreateEstimateFromRepairOrder
-		validate                *validator.Validate
+		createUseCase *app.Create
+		validate      *validator.Validate
 	}
 
 	linePayload struct {
@@ -32,9 +32,9 @@ var (
 	ErrInvalidItemID = errors.New("invalid item id")
 )
 
-func NewHandler(estimateFromRepairOrder *app.CreateEstimateFromRepairOrder) *Handler {
-	v := validator.New()
-	v.RegisterStructValidation(func(structLevel validator.StructLevel) {
+func NewHandler(createUseCase *app.Create) *Handler {
+	bodyValidator := validator.New()
+	bodyValidator.RegisterStructValidation(func(structLevel validator.StructLevel) {
 		body := structLevel.Current().Interface().(createEstimateBody)
 		if len(body.Products) == 0 && len(body.Services) == 0 {
 			structLevel.ReportError(body.Products, "products", "Products", "at_least_one", "")
@@ -42,25 +42,24 @@ func NewHandler(estimateFromRepairOrder *app.CreateEstimateFromRepairOrder) *Han
 	}, createEstimateBody{})
 
 	return &Handler{
-		estimateFromRepairOrder: estimateFromRepairOrder,
-		validate:                v,
+		createUseCase: createUseCase,
+		validate:      bodyValidator,
 	}
 }
 
 func Register(app *fiber.App, h *Handler) {
-	app.Post("/repair-orders/:id/estimate", h.CreateFromRepairOrder)
+	app.Post("/repair-orders/:id/estimate", h.create)
 }
 
-func (h *Handler) CreateFromRepairOrder(ctx *fiber.Ctx) error {
+func (h *Handler) create(ctx *fiber.Ctx) error {
 
 	inputDTO, err := h.getCreateItems(ctx)
 
 	if err != nil {
-		println(err.Error())
 		return h.handleError(ctx, err)
 	}
 
-	out, err := h.estimateFromRepairOrder.Execute(ctx.Context(), inputDTO)
+	out, err := h.createUseCase.Execute(ctx.Context(), inputDTO)
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
@@ -78,8 +77,8 @@ func (h *Handler) getRepairID(c *fiber.Ctx) (uuid.UUID, error) {
 	return repairOrder, nil
 }
 
-func (h *Handler) getCreateItems(ctx *fiber.Ctx) (app.CreateEstimateInput, error) {
-	inputDTO := app.CreateEstimateInput{}
+func (h *Handler) getCreateItems(ctx *fiber.Ctx) (app.Input, error) {
+	inputDTO := app.Input{}
 
 	repairOrderID, err := h.getRepairID(ctx)
 	if err != nil {

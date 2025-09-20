@@ -34,7 +34,6 @@ const (
 	ProductItemType ItemType = "product"
 	ServiceItemType ItemType = "service"
 
-	StatusDraft            Status = "draft"
 	StatusAwaitingApproval Status = "awaiting_approval"
 	StatusApproved         Status = "approved"
 	StatusRejected         Status = "rejected"
@@ -50,7 +49,7 @@ func NewEstimate(repairID uuid.UUID, CratedAt, UpdatedAt time.Time) (*Estimate, 
 	entity := &Estimate{
 		ID:            uuid.New(),
 		RepairOrderID: repairID,
-		Status:        StatusDraft,
+		Status:        StatusAwaitingApproval,
 		items:         make(map[uuid.UUID]Item),
 		Timestamps:    pkgEntity.NewTimestamps(now, now),
 	}

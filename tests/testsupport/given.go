@@ -39,9 +39,6 @@ func ThereIsARepairOrderWithStatus(t *testing.T, db *bun.DB, status repairorder.
 	vehicleID := ThereIsAVehicle(t, db, uuid.Nil, customerID, plate, "Toyota", "Corolla", 2020)
 	repairOrderID := ThereIsARepairOrder(t, db, uuid.Nil, customerID, vehicleID, string(status))
 
-	_ = ThereIsARepairOrderItem(t, db, uuid.Nil, repairOrderID, EngineOilChangeID, "service", 1)
-	_ = ThereIsARepairOrderItem(t, db, uuid.Nil, repairOrderID, OilFilterID, "product", 1)
-
 	return repairOrderID
 }
 
@@ -102,20 +99,6 @@ func ThereIsARepairOrder(t *testing.T, db *bun.DB, id, customerID, vehicleID uui
 		ON CONFLICT (id) DO NOTHING
 	`, id, customerID, vehicleID, status).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir repair_order")
-	return id
-}
-
-func ThereIsARepairOrderItem(t *testing.T, db *bun.DB, id, repairOrderID, itemID uuid.UUID, itemType string, qty int) uuid.UUID {
-	t.Helper()
-	if id == uuid.Nil {
-		id = uuid.New()
-	}
-	_, err := db.NewRaw(`
-		INSERT INTO repair_order_items (id, repair_order_id, item_id, item_type, quantity)
-		VALUES (?, ?, ?, ?, ?)
-		ON CONFLICT (id) DO NOTHING
-	`, id, repairOrderID, itemID, itemType, qty).Exec(context.Background())
-	require.NoError(t, err, "falha ao inserir repair_order_item")
 	return id
 }
 

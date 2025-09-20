@@ -27,15 +27,6 @@ type repairOrderModel struct {
 	Status string    `bun:"status"`
 }
 
-type repairOrderItemModel struct {
-	bun.BaseModel `bun:"table:repair_order_items"`
-
-	RepairOrderID uuid.UUID `bun:"repair_order_id"`
-	ItemID        uuid.UUID `bun:"item_id"`
-	ItemType      string    `bun:"item_type"`
-	Quantity      int       `bun:"quantity"`
-}
-
 func (r *RepairOrderReader) GetByID(ctx context.Context, id uuid.UUID) (*estimateApplication.RepairOrderView, error) {
 	var m repairOrderModel
 
@@ -55,32 +46,9 @@ func (r *RepairOrderReader) GetByID(ctx context.Context, id uuid.UUID) (*estimat
 		return nil, nil
 	}
 
-	var items []repairOrderItemModel
-	if err := r.db.NewSelect().
-		Model(&items).
-		Where("repair_order_id = ?", id).
-		Scan(ctx); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-
-		return nil, err
-	}
-
 	view := &estimateApplication.RepairOrderView{
-		ID:       m.ID,
-		Status:   repairorder.Status(m.Status),
-		Services: make(map[uuid.UUID]int),
-		Products: make(map[uuid.UUID]int),
-	}
-
-	for _, item := range items {
-		switch item.ItemType {
-		case "service":
-			view.Services[item.ItemID] = item.Quantity
-		case "product":
-			view.Products[item.ItemID] = item.Quantity
-		}
+		ID:     m.ID,
+		Status: repairorder.Status(m.Status),
 	}
 
 	return view, nil

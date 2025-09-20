@@ -32,7 +32,7 @@ type repairOrderModel struct {
 	UpdatedAt  time.Time          `bun:"updated_at"`
 }
 
-func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (domain.RepairOrder, error) {
+func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
 	var m repairOrderModel
 	err := r.db.NewSelect().
 		Model(&m).
@@ -40,10 +40,10 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (d
 		Scan(ctx)
 
 	if err != nil {
-		return domain.RepairOrder{}, err
+		return nil, err
 	}
 
-	return domain.RepairOrder{
+	return &domain.RepairOrder{
 		ID:         m.ID,
 		CustomerID: m.CustomerID,
 		VehicleID:  m.VehicleID,
@@ -55,7 +55,7 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (d
 	}, nil
 }
 
-func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder domain.RepairOrder) (domain.RepairOrder, error) {
+func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) (*domain.RepairOrder, error) {
 	m := repairOrderModel{
 		ID:         repairOrder.ID,
 		CustomerID: repairOrder.CustomerID,
@@ -71,12 +71,11 @@ func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder domain.
 		Set("customer_id = EXCLUDED.customer_id").
 		Set("vehicle_id = EXCLUDED.vehicle_id").
 		Set("status = EXCLUDED.status").
-		Set("created_at = EXCLUDED.created_at").
 		Set("updated_at = EXCLUDED.updated_at").
 		Exec(ctx)
 
 	if err != nil {
-		return domain.RepairOrder{}, err
+		return nil, err
 	}
 
 	return repairOrder, nil
