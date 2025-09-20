@@ -38,6 +38,8 @@ func main() {
 	db := newDB()
 	defer db.bunDB.Close()
 
+	eventBus := eventbus.NewInMemoryBus()
+
 	// -----------------------------------------------------------------------------
 	// Estimate wiring
 	// -----------------------------------------------------------------------------
@@ -46,8 +48,6 @@ func main() {
 	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(db.bunDB)
 	estimateRepository := estimateInfraDB.NewBunEstimateRepository(db.bunDB)
 	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(db.bunDB)
-
-	eventBus := eventbus.NewInMemoryBus()
 	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
 
 	createEstimate := estimateApp.NewCreateEstimateFromRepairOrder(
@@ -73,14 +73,17 @@ func main() {
 	// -----------------------------------------------------------------------------
 	app := newApp()
 
-	// estimate routes
+	// estimate
 	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate)
 	estimateInfraHttp.Register(app, estimateHttpHandler)
 
-	// services routes (/admin/service/*)  // TODO: proteger com JWT
-	svcHandler := serviceHTTP.NewHandler(createSvc, updateSvc, deleteSvc, getSvc, listSvc)
-	serviceHTTP.Register(app, svcHandler)
+	// services
+	serviceHttpHandler := serviceHTTP.NewHandler(createSvc, updateSvc, deleteSvc, getSvc, listSvc)
+	serviceHTTP.Register(app, serviceHttpHandler)
 
+	// -----------------------------------------------------------------------------
+	// HTTP server start
+	// -----------------------------------------------------------------------------
 	port := os.Getenv("PORT")
 	log.Println("✅ app iniciado na porta: " + port)
 	if err := app.Listen(":" + port); err != nil {

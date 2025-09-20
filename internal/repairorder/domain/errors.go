@@ -5,8 +5,6 @@ import (
 )
 
 var (
-	ErrOperationNotAllowed        = errors.New("operation not allowed in current status")
-	ErrQuantityMustBeNonNegative  = errors.New("quantity must be greater than zero")
-	ErrInvalidItemType            = errors.New("invalid item type")
-	ErrCustomerOrVehicleIDInvalid = errors.New("customer or vehicle invalid")
+	ErrCustomerOrVehicleIDInvalid = errors.New("repair.order.customer.or.vehicle.id.invalid")
+	ErrInvalidStatusTransition    = errors.New("repair.order.invalid.status.transition")
 )

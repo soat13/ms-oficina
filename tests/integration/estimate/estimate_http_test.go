@@ -10,6 +10,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -41,8 +43,9 @@ func Test_POST_CreateEstimateFromRepairOrder_OK(t *testing.T) {
 
 	// THEN
 	require.Equal(t, fiber.StatusCreated, resp.StatusCode)
-	estimateItemsCountForRepairOrder(t, repairOrderID, 2)
-	// todo: improve this assert estimate and repair order status
+	expectedEstimateItemCount(t, repairOrderID, 2)
+	expectEstimateStatus(t, repairOrderID, domain.StatusAwaitingApproval)
+	expectRepairOrderStatus(t, repairOrderID, repairorder.StatusAwaitingApproval)
 }
 
 func Test_POST_CreateEstimateFromRepairOrder_InvalidID(t *testing.T) {
@@ -56,7 +59,7 @@ func Test_POST_CreateEstimateFromRepairOrder_InvalidID(t *testing.T) {
 
 	// THEN
 	require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
-	estimateItemsCountForRepairOrder(t, repairOrderID, 0)
+	expectedEstimateItemCount(t, repairOrderID, 0)
 }
 
 func Test_POST_CreateEstimateFromRepairOrder_InvalidStatus(t *testing.T) {
@@ -70,7 +73,7 @@ func Test_POST_CreateEstimateFromRepairOrder_InvalidStatus(t *testing.T) {
 
 	// THEN
 	require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
-	estimateItemsCountForRepairOrder(t, repairOrderID, 0)
+	expectedEstimateItemCount(t, repairOrderID, 0)
 }
 
 // -----------------------------------------------------------------------------
@@ -133,7 +136,7 @@ func ThereIsARepairOrderReceived(t *testing.T) uuid.UUID {
 // DB asserts (sem receber db)
 // -----------------------------------------------------------------------------
 
-func estimateItemsCountForRepairOrder(t *testing.T, repairOrderID uuid.UUID, expected int) {
+func expectedEstimateItemCount(t *testing.T, repairOrderID uuid.UUID, expected int) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -147,4 +150,37 @@ func estimateItemsCountForRepairOrder(t *testing.T, repairOrderID uuid.UUID, exp
 		`, repairOrderID).Scan(ctx, &count),
 	)
 	assert.Equal(t, expected, count)
+}
+
+func expectEstimateStatus(t *testing.T, repairOrderID uuid.UUID, expected domain.Status) {
+	t.Helper()
+	ctx := context.Background()
+
+	var status string
+	require.NoError(t,
+		env.db.NewRaw(`
+			SELECT e.status
+			FROM estimates e
+			JOIN repair_orders ro ON ro.id = e.repair_id
+			WHERE ro.id = ?
+		`, repairOrderID).Scan(ctx, &status),
+	)
+
+	assert.Equal(t, string(expected), status)
+}
+
+func expectRepairOrderStatus(t *testing.T, repairOrderID uuid.UUID, expected repairorder.Status) {
+	t.Helper()
+	ctx := context.Background()
+
+	var status string
+	require.NoError(t,
+		env.db.NewRaw(`
+			SELECT status
+			FROM repair_orders
+			WHERE id = ?
+		`, repairOrderID).Scan(ctx, &status),
+	)
+
+	assert.Equal(t, string(expected), status)
 }

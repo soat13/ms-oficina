@@ -18,7 +18,7 @@ func TestNewRepairOrder(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, estimate)
 
-		assert.Equal(t, StatusDraft, estimate.Status)
+		assert.Equal(t, StatusAwaitingApproval, estimate.Status)
 		assert.NotZero(t, estimate.CreatedAt)
 		assert.NotZero(t, estimate.UpdatedAt)
 		assert.Equal(t, estimate.CreatedAt, estimate.UpdatedAt)

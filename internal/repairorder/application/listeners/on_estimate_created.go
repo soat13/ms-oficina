@@ -16,8 +16,13 @@ func OnEstimateCreated(repository application.Repository) func(ctx context.Conte
 		}
 
 		repairOrder, err := repository.GetById(ctx, event.RepairOrderID)
+		if err != nil {
+			return err
+		}
 
-		// todo: move status and save
+		if err := repairOrder.MoveToAwaitingApproval(); err != nil {
+			return err
+		}
 
 		_, err = repository.Save(ctx, repairOrder)
 
