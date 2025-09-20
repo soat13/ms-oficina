@@ -16,7 +16,7 @@ install:
 	docker compose up -d --build --force-recreate
 
 run:
-	docker compose exec app-dev go run ./cmd/api/main.go
+	docker compose exec app-dev go run ./cmd/api
 
 # QA
 test:
@@ -56,4 +56,3 @@ migrate-up: up migrate-install
 
 migrate-down: up migrate-install
 	$(COMPOSE) exec -T app-dev sh -lc '$(SQL_MIGRATE_BIN) down -config=$(SQL_MIGRATE_CFG) -env=development -limit=1'
-

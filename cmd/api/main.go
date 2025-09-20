@@ -22,6 +22,7 @@ import (
 	serviceApp "github.com/soat13/fase-1-oficina/internal/service/application"
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
+    serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 
 	// shared
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
@@ -71,7 +72,9 @@ func main() {
 	// -----------------------------------------------------------------------------
 	// HTTP app & routes
 	// -----------------------------------------------------------------------------
-	app := newApp()
+    app := newApp()
+    // Swagger/OpenAPI docs (embutidos no pacote de service)
+    serviceDocs.Register(app)
 
 	// estimate routes
 	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate)
