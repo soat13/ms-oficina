@@ -23,6 +23,8 @@ import (
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
+	// customer
+
 	// shared
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
@@ -69,6 +71,17 @@ func main() {
 	deleteSvc := serviceApp.NewDeleteService(serviceRepo)
 	getSvc := serviceApp.NewGetService(serviceRepo)
 	listSvc := serviceApp.NewListServices(serviceRepo)
+
+	// TODO: add customer wiring
+	// -----------------------------------------------------------------------------
+	// Customer wiring
+	// -----------------------------------------------------------------------------
+	// customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
+	// createCus := customerApp.NewCreateCustomer(customerRepo)
+	// updateCus := customerApp.NewUpdateCustomer(customerRepo)
+	// deleteCus := customerApp.NewDeleteCustomer(customerRepo)
+	// getCus := customerApp.NewGetCustomer(customerRepo)
+	// listCus := customerApp.NewListCustomers(customerRepo)
 
 	// -----------------------------------------------------------------------------
 	// HTTP app & routes
