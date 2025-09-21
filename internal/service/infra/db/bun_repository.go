@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/uptrace/bun"
 
 	app "github.com/soat13/fase-1-oficina/internal/service/application"
@@ -28,7 +28,7 @@ type BunServiceRepository struct {
 	db *bun.DB
 }
 
-func NewBunServiceRepository(db *bun.DB) *BunServiceRepository {
+func NewBunServiceRepository(db *bun.DB) app.Repository {
 	return &BunServiceRepository{db: db}
 }
 
@@ -56,12 +56,11 @@ func (r *BunServiceRepository) Delete(ctx context.Context, id uuid.UUID) error {
 func (r *BunServiceRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Service, error) {
 	var m serviceModel
 	err := r.db.NewSelect().Model(&m).Where("id = ?", id).Scan(ctx)
-	if err == sql.ErrNoRows {
-		return nil, app.ErrServiceNotFound
-	}
-	if err != nil {
+
+	if err := bun_helper.IgnoreNoRows(err); err != nil {
 		return nil, err
 	}
+
 	return toDomain(&m), nil
 }
 
@@ -94,21 +93,23 @@ func toModel(s *domain.Service) *serviceModel {
 		ID:        s.ID,
 		Name:      s.Name,
 		Price:     s.Price.Cents,
-		Currency:  s.Currency,
 		CreatedAt: s.CreatedAt,
 		UpdatedAt: s.UpdatedAt,
 	}
 }
 
 func toDomain(m *serviceModel) *domain.Service {
+
+	if m == nil || m.ID == uuid.Nil {
+		return nil
+	}
+
 	price, _ := money.New(m.Price)
 
-	return &domain.Service{
-		ID:        m.ID,
-		Name:      m.Name,
-		Price:     price,
-		Currency:  m.Currency,
-		CreatedAt: m.CreatedAt,
-		UpdatedAt: m.UpdatedAt,
+	service, err := domain.NewService(m.ID, m.Name, price, m.CreatedAt, m.UpdatedAt)
+	if err != nil {
+		return nil
 	}
+
+	return service
 }

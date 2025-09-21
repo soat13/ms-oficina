@@ -19,13 +19,11 @@ type httpTestApp struct {
 	tdb *testsupport.TestDB
 }
 
-// Sobe app + DB para CADA teste (como em estimate) e fecha no Cleanup.
 func setupHTTP(t *testing.T) *httpTestApp {
 	t.Helper()
 
 	tdb := testsupport.NewTestDB(t)
 
-	// Repo + UCs
 	repo := serviceDB.NewBunServiceRepository(tdb.DB)
 	createUC := serviceApp.NewCreateService(repo)
 	updateUC := serviceApp.NewUpdateService(repo)
@@ -33,24 +31,20 @@ func setupHTTP(t *testing.T) *httpTestApp {
 	getUC := serviceApp.NewGetService(repo)
 	listUC := serviceApp.NewListServices(repo)
 
-	// Fiber app
 	app := fiber.New()
 	app.Use(logger.New())
 
-	// Handler + rotas (/admin/services/*)
 	h := serviceHTTP.NewHandler(createUC, updateUC, deleteUC, getUC, listUC)
 	serviceHTTP.Register(app, h)
 
 	return &httpTestApp{app: app, tdb: tdb}
 }
 
-// Ambiente visível pelos testes
 var env struct {
 	app *fiber.App
 	db  *bun.DB
 }
 
-// Inicializa app+db para CADA teste e garante fechamento via t.Cleanup
 func ensureSetup(t *testing.T) {
 	t.Helper()
 	ta := setupHTTP(t)

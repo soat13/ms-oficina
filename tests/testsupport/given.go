@@ -70,12 +70,12 @@ func ThereIsAVehicle(t *testing.T, db *bun.DB, id, customerID uuid.UUID, plate, 
 	return id
 }
 
-func ThereIsAService(t *testing.T, db *bun.DB, id uuid.UUID, name string, priceCents int64) uuid.UUID {
+func ThereIsAService(t *testing.T, db *bun.DB, id uuid.UUID, name string, price int64) uuid.UUID {
 	t.Helper()
 	if id == uuid.Nil {
 		id = uuid.New()
 	}
-	require.NoError(t, insertService(context.Background(), db, id, name, priceCents))
+	require.NoError(t, insertService(context.Background(), db, id, name, price))
 	return id
 }
 

@@ -7,6 +7,14 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/service/domain"
 )
 
+func toView(s *domain.Service) ServiceView {
+	return ServiceView{
+		ID:    s.ID,
+		Name:  s.Name,
+		Price: s.Price,
+	}
+}
+
 type Repository interface {
 	Create(ctx context.Context, s *domain.Service) error
 	Update(ctx context.Context, s *domain.Service) error

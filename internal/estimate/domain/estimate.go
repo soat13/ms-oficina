@@ -44,14 +44,11 @@ func NewEstimate(repairID uuid.UUID, CratedAt, UpdatedAt time.Time) (*Estimate, 
 		return nil, ErrRepairIDInvalid
 	}
 
-	now := time.Now()
-
 	entity := &Estimate{
 		ID:            uuid.New(),
 		RepairOrderID: repairID,
 		Status:        StatusAwaitingApproval,
 		items:         make(map[uuid.UUID]Item),
-		Timestamps:    pkgEntity.NewTimestamps(now, now),
 	}
 
 	if !CratedAt.IsZero() {
