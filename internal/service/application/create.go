@@ -10,18 +10,15 @@ import (
 )
 
 type CreateInput struct {
-	Name     string
-	Price    money.Money
-	Currency string // opcional: default BRL
-	Now      time.Time
+	Name  string
+	Price money.Money
+	Now   time.Time
 }
 
 type ServiceView struct {
-	ID         uuid.UUID   `json:"id"`
-	Name       string      `json:"name"`
-	Price      money.Money `json:"-"`
-	PriceCents int64       `json:"price_cents"`
-	Currency   string      `json:"currency"`
+	ID    uuid.UUID   `json:"id"`
+	Name  string      `json:"name"`
+	Price money.Money `json:"price"`
 }
 
 type CreateOutput struct {
@@ -36,8 +33,8 @@ func NewCreateService(repo Repository) *CreateService {
 	return &CreateService{repo: repo}
 }
 
-func (uc *CreateService) Execute(ctx context.Context, in CreateInput) (*CreateOutput, error) {
-	exists, err := uc.repo.ExistsByName(ctx, in.Name)
+func (uc *CreateService) Execute(ctx context.Context, input CreateInput) (*CreateOutput, error) {
+	exists, err := uc.repo.ExistsByName(ctx, input.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -45,22 +42,14 @@ func (uc *CreateService) Execute(ctx context.Context, in CreateInput) (*CreateOu
 		return nil, ErrDuplicateService
 	}
 
-	s, err := domain.NewService(uuid.Nil, in.Name, in.Price, in.Currency, in.Now)
+	s, err := domain.NewService(uuid.Nil, input.Name, input.Price, input.Now, input.Now)
 	if err != nil {
 		return nil, err
 	}
+
 	if err := uc.repo.Create(ctx, s); err != nil {
 		return nil, err
 	}
-	return &CreateOutput{Service: toView(s)}, nil
-}
 
-func toView(s *domain.Service) ServiceView {
-	return ServiceView{
-		ID:         s.ID,
-		Name:       s.Name,
-		Price:      s.Price,
-		PriceCents: s.Price.Cents,
-		Currency:   s.Currency,
-	}
+	return &CreateOutput{Service: toView(s)}, nil
 }
