@@ -48,18 +48,15 @@ type getResp struct {
 // Tests
 // -----------------------------------------------------------------------------
 
-func Test_AdminService_List_OrderByName(t *testing.T) {
+func TestAdminServiceListOrderByName(t *testing.T) {
 	ensureSetup(t)
 
-	// Given
 	brakeCheckID, alignID := givenServicesOutOfOrder(t)
 
-	// When
 	response := listServices(t, 50, 0)
 	var body listResp
 	decodeJSON(t, response, &body)
 
-	// Then
 	require.Equal(t, fiber.StatusOK, response.StatusCode)
 
 	brakeIdx := indexOfByID(body.Services, brakeCheckID)
@@ -70,19 +67,17 @@ func Test_AdminService_List_OrderByName(t *testing.T) {
 	require.Less(t, alignIdx, brakeIdx, "Alignment should come before Brake Check")
 }
 
-func Test_AdminService_Update_NotFound(t *testing.T) {
+func TestAdminServiceUpdateNotFound(t *testing.T) {
 	ensureSetup(t)
 
-	// When
 	unknown := uuid.New()
 	validName := "Valid Name"
 
-	// Then
 	resp := putUpdateService(t, unknown, updateBody{Name: &validName})
 	require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
-func Test_AdminService_Create_OK(t *testing.T) {
+func TestAdminServiceCreateOK(t *testing.T) {
 	ensureSetup(t)
 
 	payload := createBody{
@@ -102,7 +97,7 @@ func Test_AdminService_Create_OK(t *testing.T) {
 	require.Equal(t, 1, count)
 }
 
-func Test_AdminService_Create_InvalidBody(t *testing.T) {
+func TestAdminServiceCreateInvalidBody(t *testing.T) {
 	ensureSetup(t)
 
 	payload := createBody{Name: "", Price: 0}
@@ -110,7 +105,7 @@ func Test_AdminService_Create_InvalidBody(t *testing.T) {
 	require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 }
 
-func Test_AdminService_Create_DuplicateName(t *testing.T) {
+func TestAdminServiceACreateDuplicateName(t *testing.T) {
 	ensureSetup(t)
 
 	_ = testsupport.ThereIsAService(t, env.db, uuid.Nil, "Oil Change", 15000)
@@ -120,7 +115,7 @@ func Test_AdminService_Create_DuplicateName(t *testing.T) {
 	require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 }
 
-func Test_AdminService_GetByID_OK(t *testing.T) {
+func TestAdminServiceGetByIDOK(t *testing.T) {
 	ensureSetup(t)
 
 	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Rotation", 8000)
@@ -134,14 +129,14 @@ func Test_AdminService_GetByID_OK(t *testing.T) {
 	require.Equal(t, int64(8000), body.Service.Price)
 }
 
-func Test_AdminService_GetByID_NotFound(t *testing.T) {
+func TestAdminServiceGetByIDNotFound(t *testing.T) {
 	ensureSetup(t)
 
 	resp := getService(t, uuid.New())
 	require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
-func Test_AdminService_Update_OK(t *testing.T) {
+func TestAdminServiceUpdateOK(t *testing.T) {
 	ensureSetup(t)
 
 	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Tire Rotation", 7000)
@@ -167,7 +162,7 @@ func Test_AdminService_Update_OK(t *testing.T) {
 	require.Equal(t, newPrice, got.Price)
 }
 
-func Test_AdminService_Update_InvalidBody(t *testing.T) {
+func TestAdminServiceUpdateInvalidBody(t *testing.T) {
 	ensureSetup(t)
 
 	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Check A", 5000)
@@ -177,14 +172,13 @@ func Test_AdminService_Update_InvalidBody(t *testing.T) {
 	require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 }
 
-func Test_AdminService_Delete_OK(t *testing.T) {
+func TestAdminServiceDeleteOK(t *testing.T) {
 	ensureSetup(t)
 
 	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Temp", 1000)
 	resp := deleteService(t, sid)
 	require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
-	// verifica exclusão
 	var count int
 	require.NoError(t,
 		env.db.NewRaw(`SELECT COUNT(*) FROM services WHERE id = ?`, sid).

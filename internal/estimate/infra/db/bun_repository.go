@@ -68,42 +68,58 @@ func (r *BunEstimateRepository) GetByID(ctx context.Context, id uuid.UUID) (*dom
 }
 
 func (r *BunEstimateRepository) Save(ctx context.Context, estimate *domain.Estimate) error {
-
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	er := estimateModel{
-		ID:       estimate.ID,
-		RepairID: estimate.RepairOrderID,
-		Status:   string(estimate.Status),
+	estimateModel := estimateModel{
+		ID:        estimate.ID,
+		RepairID:  estimate.RepairOrderID,
+		Status:    string(estimate.Status),
+		UpdatedAt: time.Now(),
 	}
 
-	if _, err := tx.NewInsert().Model(&er).Exec(ctx); err != nil {
+	if _, err := tx.NewInsert().
+		Model(&estimateModel).
+		On(`CONFLICT (id) DO UPDATE
+		      SET status = EXCLUDED.status,
+		          updated_at = EXCLUDED.updated_at`).
+		Exec(ctx); err != nil {
 		return err
 	}
-	items := estimate.Items()
-	itemRows := make([]estimateItemModel, 0, len(items))
-	now := time.Now()
-	for _, item := range items {
-		itemRows = append(itemRows, estimateItemModel{
-			ID:         uuid.New(),
-			EstimateID: er.ID,
-			ItemID:     item.ID,
-			ItemName:   item.Name,
-			ItemType:   string(item.Type),
-			PriceCents: item.Price.Cents,
-			Quantity:   item.Quantity,
-			CreatedAt:  now,
-			UpdatedAt:  now,
-		})
+
+	count, err := tx.NewSelect().
+		Model((*estimateItemModel)(nil)).
+		Where("estimate_id = ?", estimateModel.ID).
+		Count(ctx)
+
+	if err != nil {
+		return err
 	}
 
-	if len(itemRows) > 0 {
-		if _, err := tx.NewInsert().Model(&itemRows).Exec(ctx); err != nil {
-			return err
+	if count == 0 {
+		items := estimate.Items()
+		if len(items) > 0 {
+			itemRows := make([]estimateItemModel, 0, len(items))
+			now := time.Now()
+			for _, item := range items {
+				itemRows = append(itemRows, estimateItemModel{
+					ID:         uuid.New(),
+					EstimateID: estimateModel.ID,
+					ItemID:     item.ID,
+					ItemName:   item.Name,
+					ItemType:   string(item.Type),
+					PriceCents: item.Price.Cents,
+					Quantity:   item.Quantity,
+					CreatedAt:  now,
+					UpdatedAt:  now,
+				})
+			}
+			if _, err := tx.NewInsert().Model(&itemRows).Exec(ctx); err != nil {
+				return err
+			}
 		}
 	}
 

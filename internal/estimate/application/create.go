@@ -20,7 +20,7 @@ type (
 		Qty       int
 	}
 
-	Input struct {
+	CreateInput struct {
 		RepairOrderID uuid.UUID
 		Now           time.Time
 		Products      map[uuid.UUID]int
@@ -46,7 +46,7 @@ type (
 	}
 )
 
-func NewCreateEstimateFromRepairOrder(
+func NewCreateEstimate(
 	repairOrderReader RepairOrderReader,
 	productCatalogReader ProductCatalogReader,
 	serviceCatalogReader ServiceCatalogReader,
@@ -62,7 +62,7 @@ func NewCreateEstimateFromRepairOrder(
 	}
 }
 
-func (c *Create) Execute(ctx context.Context, input Input) (*CreateEstimateOutput, error) {
+func (c *Create) Execute(ctx context.Context, input CreateInput) (*CreateEstimateOutput, error) {
 	repairOrder, err := c.validRepairOrderOrError(ctx, input.RepairOrderID)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (c *Create) publishEvent(ctx context.Context, estimate domain.Estimate) err
 	return nil
 }
 
-func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input Input) error {
+func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input CreateInput) error {
 	products, err := c.productCatalogReader.GetByIDs(ctx, maps.Keys(input.Products))
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func (c *Create) validRepairOrderOrError(ctx context.Context, repairID uuid.UUID
 	}
 
 	if repairOrder == nil {
-		return nil, ErrRepairOrderNotFound
+		return nil, repairorder.ErrRepairOrderNotFound
 	}
 
 	if repairOrder.Status != repairorder.StatusInDiagnosis {

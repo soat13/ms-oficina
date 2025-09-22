@@ -56,7 +56,7 @@ func TestOnEstimateApproved_OK(t *testing.T) {
 	payload, err := json.Marshal(event)
 	require.NoError(t, err)
 
-	handler := listeners.OnEstimateApproved(repository)
+	handler := listeners.OnEstimateApprovedByCustomer(repository)
 	err = handler(context.Background(), "estimate.approved", payload)
 	require.NoError(t, err)
 
@@ -85,7 +85,7 @@ func TestOnEstimateApproved_RepoErrorOnGet(t *testing.T) {
 	payload, err := json.Marshal(event)
 	require.NoError(t, err)
 
-	handler := listeners.OnEstimateApproved(repository)
+	handler := listeners.OnEstimateApprovedByCustomer(repository)
 	err = handler(context.Background(), "estimate.approved", payload)
 	require.Error(t, err)
 }
@@ -98,7 +98,7 @@ func TestOnEstimateApproved_InvalidJSON(t *testing.T) {
 
 	repository := mocks.NewMockRepository(ctrl)
 
-	handler := listeners.OnEstimateApproved(repository)
+	handler := listeners.OnEstimateApprovedByCustomer(repository)
 
 	payload := []byte(`{"repair_order_id":"not-a-uuid"}`)
 	err := handler(context.Background(), "estimate.approved", payload)
