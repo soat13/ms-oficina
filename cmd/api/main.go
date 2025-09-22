@@ -24,6 +24,9 @@ import (
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
 	// customer
+	customerApp "github.com/soat13/fase-1-oficina/internal/customer/application"
+	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
+	customerHTTP "github.com/soat13/fase-1-oficina/internal/customer/infra/http"
 
 	// shared
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
@@ -72,16 +75,15 @@ func main() {
 	getSvc := serviceApp.NewGetService(serviceRepo)
 	listSvc := serviceApp.NewListServices(serviceRepo)
 
-	// TODO: add customer wiring
 	// -----------------------------------------------------------------------------
 	// Customer wiring
 	// -----------------------------------------------------------------------------
-	// customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
-	// createCus := customerApp.NewCreateCustomer(customerRepo)
-	// updateCus := customerApp.NewUpdateCustomer(customerRepo)
-	// deleteCus := customerApp.NewDeleteCustomer(customerRepo)
-	// getCus := customerApp.NewGetCustomer(customerRepo)
-	// listCus := customerApp.NewListCustomers(customerRepo)
+	customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
+	createCus := customerApp.NewCreateCustomer(customerRepo)
+	updateCus := customerApp.NewUpdateCustomer(customerRepo)
+	deleteCus := customerApp.NewDeleteCustomer(customerRepo)
+	getCus := customerApp.NewGetCustomer(customerRepo)
+	listCus := customerApp.NewListCustomers(customerRepo)
 
 	// -----------------------------------------------------------------------------
 	// HTTP app & routes
@@ -95,6 +97,10 @@ func main() {
 	// services
 	serviceHttpHandler := serviceHTTP.NewHandler(createSvc, updateSvc, deleteSvc, getSvc, listSvc)
 	serviceHTTP.Register(app, serviceHttpHandler)
+
+	//customers
+	cusHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus)
+	customerHTTP.Register(app, cusHandler)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start
