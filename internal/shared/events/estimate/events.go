@@ -14,3 +14,12 @@ type Created struct {
 }
 
 func (Created) Topic() string { return "estimate.created" }
+
+type Approved struct {
+	EventID       uuid.UUID `json:"event_id"`
+	OccurredAt    time.Time `json:"occurred_at"`
+	EstimateID    uuid.UUID `json:"estimate_id"`
+	RepairOrderID uuid.UUID `json:"repair_order_id"`
+}
+
+func (Approved) Topic() string { return "estimate.approved" }

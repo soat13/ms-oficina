@@ -45,3 +45,13 @@ func (r *RepairOrder) MoveToAwaitingApproval() error {
 	r.Touch()
 	return nil
 }
+
+func (r *RepairOrder) MoveToApproved() error {
+	if r.Status != repairorder.StatusAwaitingApproval {
+		return ErrInvalidStatusTransition
+	}
+
+	r.Status = repairorder.StatusApproved
+	r.Touch()
+	return nil
+}

@@ -48,7 +48,9 @@ func main() {
 	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(db.bunDB)
 	estimateRepository := estimateInfraDB.NewBunEstimateRepository(db.bunDB)
 	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(db.bunDB)
+
 	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
+	eventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
 
 	createEstimate := estimateApp.NewCreateEstimateFromRepairOrder(
 		repairOrderReader,

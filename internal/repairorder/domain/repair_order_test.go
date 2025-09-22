@@ -49,3 +49,62 @@ func TestRepairOrder_touch(t *testing.T) {
 
 	assert.True(t, repairOrder.UpdatedAt.After(originalUpdatedAt))
 }
+
+func Test_MoveToAwaitingApproval_OK(t *testing.T) {
+	ro := withStatus(newRO(t), repairorder.StatusInDiagnosis)
+
+	before := ro.UpdatedAt
+	require.NoError(t, ro.MoveToAwaitingApproval())
+
+	assert.Equal(t, repairorder.StatusAwaitingApproval, ro.Status)
+	assert.True(t, ro.UpdatedAt.After(before))
+}
+
+func Test_MoveToAwaitingApproval_Invalid_FromReceived(t *testing.T) {
+	ro := withStatus(newRO(t), repairorder.StatusReceived)
+	beforeStatus := ro.Status
+	beforeUpdated := ro.UpdatedAt
+
+	err := ro.MoveToAwaitingApproval()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrInvalidStatusTransition)
+
+	assert.Equal(t, beforeStatus, ro.Status)
+	assert.Equal(t, beforeUpdated, ro.UpdatedAt)
+}
+
+func Test_MoveToApproved_OK(t *testing.T) {
+	ro := withStatus(newRO(t), repairorder.StatusAwaitingApproval)
+
+	before := ro.UpdatedAt
+
+	require.NoError(t, ro.MoveToApproved())
+	assert.Equal(t, repairorder.StatusApproved, ro.Status)
+	assert.True(t, ro.UpdatedAt.After(before))
+}
+
+func Test_MoveToApproved_Invalid_FromInDiagnosis(t *testing.T) {
+	ro := withStatus(newRO(t), repairorder.StatusInDiagnosis)
+	beforeStatus := ro.Status
+	beforeUpdated := ro.UpdatedAt
+
+	err := ro.MoveToApproved()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrInvalidStatusTransition)
+
+	assert.Equal(t, beforeStatus, ro.Status)
+	assert.Equal(t, beforeUpdated, ro.UpdatedAt)
+}
+
+func newRO(t *testing.T) *RepairOrder {
+	t.Helper()
+	ro, err := NewRepairOrder(uuid.New(), uuid.New())
+	require.NoError(t, err)
+	require.NotNil(t, ro)
+	return ro
+}
+
+func withStatus(ro *RepairOrder, st repairorder.Status) *RepairOrder {
+	ro.Status = st
+	return ro
+}
