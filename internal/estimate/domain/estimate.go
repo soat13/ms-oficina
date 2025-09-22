@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	pkgEntity "github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
@@ -35,6 +36,7 @@ const (
 	ServiceItemType ItemType = "service"
 
 	StatusAwaitingApproval Status = "awaiting_approval"
+	StatusAwaitingStock    Status = "awaiting_stock"
 	StatusApproved         Status = "approved"
 	StatusRejected         Status = "rejected"
 )
@@ -91,4 +93,14 @@ func (e *Estimate) Total() money.Money {
 	}
 
 	return total
+}
+
+func (e *Estimate) MoveToAwaitingStock() error {
+	if e.Status != StatusAwaitingApproval {
+		return errors.ErrInvalidStatusTransaction
+	}
+
+	e.Status = StatusAwaitingStock
+	e.Touch()
+	return nil
 }

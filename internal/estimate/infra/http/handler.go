@@ -7,14 +7,16 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
 )
 
 type (
 	Handler struct {
-		createUseCase *app.Create
-		validate      *validator.Validate
+		createUseCase  *app.Create
+		approveUseCase *app.Approve
+		validate       *validator.Validate
 	}
 
 	linePayload struct {
@@ -32,7 +34,7 @@ var (
 	ErrInvalidItemID = errors.New("invalid item id")
 )
 
-func NewHandler(createUseCase *app.Create) *Handler {
+func NewHandler(createUseCase *app.Create, approveUseCase *app.Approve) *Handler {
 	bodyValidator := validator.New()
 	bodyValidator.RegisterStructValidation(func(structLevel validator.StructLevel) {
 		body := structLevel.Current().Interface().(createEstimateBody)
@@ -42,13 +44,16 @@ func NewHandler(createUseCase *app.Create) *Handler {
 	}, createEstimateBody{})
 
 	return &Handler{
-		createUseCase: createUseCase,
-		validate:      bodyValidator,
+		approveUseCase: approveUseCase,
+		createUseCase:  createUseCase,
+		validate:       bodyValidator,
 	}
 }
 
 func Register(app *fiber.App, h *Handler) {
-	app.Post("/repair-orders/:id/estimate", h.create)
+	group := app.Group("admin")
+	group.Post("repair-orders/:id/estimate", h.create)
+	group.Post("estimates/:id/approve", h.approve)
 }
 
 func (h *Handler) create(ctx *fiber.Ctx) error {
@@ -59,17 +64,31 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.handleError(ctx, err)
 	}
 
-	out, err := h.createUseCase.Execute(ctx.Context(), inputDTO)
+	_, err = h.createUseCase.Execute(ctx.Context(), inputDTO)
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(out)
+	return ctx.SendStatus(fiber.StatusCreated)
 }
 
-func (h *Handler) getRepairID(c *fiber.Ctx) (uuid.UUID, error) {
+func (h *Handler) approve(ctx *fiber.Ctx) error {
+
+	id, err := h.getIDParam(ctx)
+	if err != nil {
+		return h.handleError(ctx, err)
+	}
+
+	err = h.approveUseCase.Execute(ctx.Context(), app.ApproveInput{ID: id})
+	if err != nil {
+		return h.handleError(ctx, err)
+	}
+
+	return ctx.SendStatus(fiber.StatusOK)
+}
+
+func (h *Handler) getIDParam(c *fiber.Ctx) (uuid.UUID, error) {
 	idStr := c.Params("id")
-	println(idStr)
 	repairOrder, err := uuid.Parse(idStr)
 	if err != nil {
 		return uuid.Nil, ErrInvalidRepairOrderID
@@ -77,10 +96,10 @@ func (h *Handler) getRepairID(c *fiber.Ctx) (uuid.UUID, error) {
 	return repairOrder, nil
 }
 
-func (h *Handler) getCreateItems(ctx *fiber.Ctx) (app.Input, error) {
-	inputDTO := app.Input{}
+func (h *Handler) getCreateItems(ctx *fiber.Ctx) (app.CreateInput, error) {
+	inputDTO := app.CreateInput{}
 
-	repairOrderID, err := h.getRepairID(ctx)
+	repairOrderID, err := h.getIDParam(ctx)
 	if err != nil {
 		return inputDTO, err
 	}
@@ -114,6 +133,13 @@ func (h *Handler) handleError(ctx *fiber.Ctx, err error) error {
 			"message": err.Error(),
 		})
 	}
+
+	log.Error().
+		Err(err).
+		Str("path", ctx.Path()).
+		Str("method", ctx.Method()).
+		Msg("unexpected error on request")
+
 	return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 		"code":    "INTERNAL_ERROR",
 		"message": "internal error",

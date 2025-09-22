@@ -3,6 +3,7 @@ module github.com/soat13/fase-1-oficina
 go 1.25.1
 
 require (
+	github.com/go-faker/faker/v4 v4.7.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/golang/mock v1.6.0
@@ -10,6 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
 	github.com/paemuri/brdoc v1.1.2
+	github.com/rs/zerolog v1.34.0
 	github.com/rubenv/sql-migrate v1.8.0
 	github.com/stretchr/testify v1.11.1
 	github.com/uptrace/bun v1.2.15
@@ -46,8 +48,8 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

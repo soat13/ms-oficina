@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
+	sharederrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 )
 
 var (
@@ -21,12 +22,16 @@ var errorMap = map[error]ErrorInfo{
 		Status: fiber.StatusBadRequest,
 		Code:   "INVALID_REPAIR_ORDER_ID",
 	},
-	app.ErrRepairOrderNotFound: {
+	app.ErrEstimateNotFound: {
 		Status: fiber.StatusNotFound,
-		Code:   "REPAIR_ORDER_NOT_FOUND",
+		Code:   "ESTIMATE_NOT_FOUND",
 	},
 	app.ErrInvalidRepairOrderStatus: {
 		Status: fiber.StatusUnprocessableEntity,
 		Code:   "INVALID_REPAIR_ORDER_STATUS",
+	},
+	sharederrors.ErrInvalidStatusTransaction: {
+		Status: fiber.StatusUnprocessableEntity,
+		Code:   "INVALID_STATUS_TRANSACTION",
 	},
 }

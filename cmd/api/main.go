@@ -55,9 +55,10 @@ func main() {
 	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(db.bunDB)
 
 	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
-	eventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
+	eventBus.Subscribe(estimate.ApprovedByCustomer{}.Topic(), listeners.OnEstimateApprovedByCustomer(repairOrderRepository))
+	// todo: add approvedByCustomer product subscriber to reduce stock
 
-	createEstimate := estimateApp.NewCreateEstimateFromRepairOrder(
+	createEstimate := estimateApp.NewCreateEstimate(
 		repairOrderReader,
 		productCatalogReader,
 		serviceCatalogReader,
@@ -65,15 +66,17 @@ func main() {
 		eventBus,
 	)
 
+	approveEstimate := estimateApp.NewApproveEstimate(estimateRepository, eventBus)
+
 	// -----------------------------------------------------------------------------
 	// Services wiring
 	// -----------------------------------------------------------------------------
 	serviceRepo := serviceDB.NewBunServiceRepository(db.bunDB)
-	createSvc := serviceApp.NewCreateService(serviceRepo)
-	updateSvc := serviceApp.NewUpdateService(serviceRepo)
-	deleteSvc := serviceApp.NewDeleteService(serviceRepo)
-	getSvc := serviceApp.NewGetService(serviceRepo)
-	listSvc := serviceApp.NewListServices(serviceRepo)
+	createService := serviceApp.NewCreateService(serviceRepo)
+	updateService := serviceApp.NewUpdateService(serviceRepo)
+	deleteService := serviceApp.NewDeleteService(serviceRepo)
+	getService := serviceApp.NewGetService(serviceRepo)
+	listService := serviceApp.NewListServices(serviceRepo)
 
 	// -----------------------------------------------------------------------------
 	// Customer wiring
@@ -91,11 +94,11 @@ func main() {
 	app := newApp()
 
 	// estimate
-	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate)
+	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approveEstimate)
 	estimateInfraHttp.Register(app, estimateHttpHandler)
 
 	// services
-	serviceHttpHandler := serviceHTTP.NewHandler(createSvc, updateSvc, deleteSvc, getSvc, listSvc)
+	serviceHttpHandler := serviceHTTP.NewHandler(createService, updateService, deleteService, getService, listService)
 	serviceHTTP.Register(app, serviceHttpHandler)
 
 	//customers
