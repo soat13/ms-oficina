@@ -7,6 +7,24 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
 )
 
+type CustomerView struct {
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Cellphone    string    `json:"cellphone"`
+	Document     string    `json:"document"`
+	DocumentType string    `json:"document_type"`
+}
+
+func toView(c *domain.Customer) CustomerView {
+	return CustomerView{
+		ID:           c.ID,
+		Name:         c.Name,
+		Cellphone:    c.Cellphone,
+		Document:     c.Document,
+		DocumentType: c.DocumentType,
+	}
+}
+
 type CustomerRepository interface {
 	Create(ctx context.Context, s *domain.Customer) error
 	Update(ctx context.Context, s *domain.Customer) error
