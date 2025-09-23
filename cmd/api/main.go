@@ -30,10 +30,6 @@ import (
 	// repair order listeners
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
 	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
-
-	// vehicle
-	vehicleApp "github.com/soat13/fase-1-oficina/internal/vehicle/application"
-	vehicleDB "github.com/soat13/fase-1-oficina/internal/vehicle/infra/db"
 )
 
 func main() {
@@ -71,12 +67,6 @@ func main() {
 	deleteSvc := serviceApp.NewDeleteService(serviceRepo)
 	getSvc := serviceApp.NewGetService(serviceRepo)
 	listSvc := serviceApp.NewListServices(serviceRepo)
-
-	// -----------------------------------------------------------------------------
-	// Vehicle wiring
-	// -----------------------------------------------------------------------------
-	vehicleRepo := vehicleDB.NewVehicleRepository(db.bunDB)
-	addVehicle := vehicleApp.NewAddVehicle(vehicleRepo)
 
 	// -----------------------------------------------------------------------------
 	// HTTP app & routes
