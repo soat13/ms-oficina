@@ -20,13 +20,8 @@ func NewListCustomers(repo CustomerRepository) *ListCustomers {
 }
 
 func (uc *ListCustomers) Execute(ctx context.Context, in ListInput) (*ListOutput, error) {
-	if in.Limit <= 0 {
-		in.Limit = 50
-	}
-	if in.Offset < 0 {
-		in.Offset = 0
-	}
-	items, err := uc.repo.List(ctx, in.Limit, in.Offset)
+	limit, offset := limitAndOffset(in)
+	items, err := uc.repo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -35,4 +30,15 @@ func (uc *ListCustomers) Execute(ctx context.Context, in ListInput) (*ListOutput
 		out = append(out, toView(c))
 	}
 	return &ListOutput{Customers: out}, nil
+}
+
+func limitAndOffset(input ListInput) (int, int) {
+	if input.Limit <= 0 {
+		input.Limit = 50
+	}
+	if input.Offset < 0 {
+		input.Offset = 0
+	}
+
+	return input.Limit, input.Offset
 }

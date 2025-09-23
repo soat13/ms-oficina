@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/uptrace/bun"
 
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
@@ -28,7 +28,7 @@ type BunCustomerRepository struct {
 	db *bun.DB
 }
 
-func NewBunCustomerRepository(db *bun.DB) *BunCustomerRepository {
+func NewBunCustomerRepository(db *bun.DB) app.CustomerRepository {
 	return &BunCustomerRepository{db: db}
 }
 
@@ -56,12 +56,11 @@ func (r *BunCustomerRepository) Delete(ctx context.Context, id uuid.UUID) error 
 func (r *BunCustomerRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
 	var m customerModel
 	err := r.db.NewSelect().Model(&m).Where("id = ?", id).Scan(ctx)
-	if err == sql.ErrNoRows {
-		return nil, app.ErrCustomerNotFound
-	}
-	if err != nil {
+
+	if err := bun_helper.IgnoreNoRows(err); err != nil {
 		return nil, err
 	}
+
 	return toDomain(&m), nil
 }
 
@@ -102,13 +101,15 @@ func toModel(c *domain.Customer) *customerModel {
 }
 
 func toDomain(m *customerModel) *domain.Customer {
-	return &domain.Customer{
-		ID:           m.ID,
-		Name:         m.Name,
-		Cellphone:    m.Cellphone,
-		Document:     m.Document,
-		DocumentType: m.DocumentType,
-		CreatedAt:    m.CreatedAt,
-		UpdatedAt:    m.UpdatedAt,
+	if m == nil || m.ID == uuid.Nil {
+		return nil
 	}
+
+	customer, err := domain.NewCustomer(m.ID, m.Name, m.Cellphone, m.Document, m.CreatedAt)
+	if err != nil {
+		return nil
+	}
+
+	customer.UpdatedAt = m.UpdatedAt
+	return customer
 }

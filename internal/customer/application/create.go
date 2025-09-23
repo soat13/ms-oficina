@@ -16,13 +16,6 @@ type CreateInput struct {
 	Now       time.Time
 }
 
-type CustomerView struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Cellphone string    `json:"cellphone"`
-	Document  string    `json:"document"`
-}
-
 type CreateOutput struct {
 	Customer CustomerView `json:"customer"`
 }
@@ -54,13 +47,4 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateO
 	}
 
 	return &CreateOutput{Customer: toView(customer)}, nil
-}
-
-func toView(c *domain.Customer) CustomerView {
-	return CustomerView{
-		ID:        c.ID,
-		Name:      c.Name,
-		Cellphone: c.Cellphone,
-		Document:  c.Document,
-	}
 }
