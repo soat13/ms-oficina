@@ -27,27 +27,27 @@ func NewUpdateCustomer(repo CustomerRepository) *UpdateCustomer {
 }
 
 func (uc *UpdateCustomer) Execute(ctx context.Context, in UpdateInput) (*UpdateOutput, error) {
-	c, err := uc.repo.GetByID(ctx, in.ID)
+	customer, err := uc.repo.GetByID(ctx, in.ID)
 	if err != nil {
 		return nil, err
 	}
-	if c == nil {
+	if customer == nil {
 		return nil, ErrCustomerNotFound
 	}
 
 	if in.Name != nil {
-		if err := c.ChangeName(*in.Name, in.Now); err != nil {
+		if err := customer.ChangeName(*in.Name, in.Now); err != nil {
 			return nil, err
 		}
 	}
 	if in.Cellphone != nil {
-		if err := c.ChangeCellphone(*in.Cellphone, in.Now); err != nil {
+		if err := customer.ChangeCellphone(*in.Cellphone, in.Now); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := uc.repo.Update(ctx, c); err != nil {
+	if err := uc.repo.Update(ctx, customer); err != nil {
 		return nil, err
 	}
-	return &UpdateOutput{Customer: toView(c)}, nil
+	return &UpdateOutput{Customer: toView(customer)}, nil
 }

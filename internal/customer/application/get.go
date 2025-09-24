@@ -23,12 +23,12 @@ func NewGetCustomer(repo CustomerRepository) *GetCustomer {
 }
 
 func (uc *GetCustomer) Execute(ctx context.Context, in GetInput) (*GetOutput, error) {
-	c, err := uc.repo.GetByID(ctx, in.ID)
+	customer, err := uc.repo.GetByID(ctx, in.ID)
 	if err != nil {
 		return nil, err
 	}
-	if c == nil {
+	if customer == nil {
 		return nil, ErrCustomerNotFound
 	}
-	return &GetOutput{Customer: toView(c)}, nil
+	return &GetOutput{Customer: toView(customer)}, nil
 }
