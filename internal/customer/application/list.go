@@ -1,6 +1,10 @@
 package application
 
-import "context"
+import (
+	"context"
+
+	"github.com/soat13/fase-1-oficina/pkg/maps"
+)
 
 type ListInput struct {
 	Limit  int
@@ -25,11 +29,9 @@ func (uc *ListCustomers) Execute(ctx context.Context, in ListInput) (*ListOutput
 	if err != nil {
 		return nil, err
 	}
-	out := make([]CustomerView, 0, len(items))
-	for _, c := range items {
-		out = append(out, toView(c))
-	}
-	return &ListOutput{Customers: out}, nil
+
+	customers := maps.Map(items, toView)
+	return &ListOutput{Customers: customers}, nil
 }
 
 func limitAndOffset(input ListInput) (int, int) {
