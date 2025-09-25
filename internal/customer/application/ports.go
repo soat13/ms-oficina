@@ -10,18 +10,18 @@ import (
 type CustomerView struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
-	Cellphone    string    `json:"cellphone"`
 	Document     string    `json:"document"`
 	DocumentType string    `json:"document_type"`
+	Cellphone    string    `json:"cellphone"`
 }
 
 func toView(c *domain.Customer) CustomerView {
 	return CustomerView{
 		ID:           c.ID,
 		Name:         c.Name,
-		Cellphone:    c.Cellphone,
 		Document:     c.Document,
 		DocumentType: c.DocumentType,
+		Cellphone:    c.Cellphone,
 	}
 }
 

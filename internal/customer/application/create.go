@@ -37,7 +37,7 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateO
 		return nil, ErrDuplicateCustomer
 	}
 
-	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Cellphone, in.Document, in.Now)
+	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.Cellphone, in.Now)
 	if err != nil {
 		return nil, err
 	}

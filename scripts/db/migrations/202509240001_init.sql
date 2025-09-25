@@ -1,14 +1,15 @@
 -- +migrate Up
 CREATE TABLE customers
 (
-    id              UUID PRIMARY KEY,
-    name            VARCHAR(255)            NOT NULL,
-    cellphone       VARCHAR(20)        NOT NULL,
-    document        VARCHAR(14)        UNIQUE NOT NULL,
-    document_type   VARCHAR(4)         NOT NULL,
-    created_at      TIMESTAMP          NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP          NOT NULL DEFAULT NOW()
+    id            UUID         PRIMARY KEY,
+    name          VARCHAR(255) NOT NULL,
+    document      VARCHAR(20)  UNIQUE NOT NULL,
+    document_type VARCHAR(4)   NOT NULL,
+    cellphone     VARCHAR(20)  NOT NULL,
+    created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_customers_document ON customers (document);
 
 CREATE TABLE vehicles
 (
