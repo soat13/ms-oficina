@@ -19,7 +19,7 @@ type Customer struct {
 	UpdatedAt    time.Time
 }
 
-func NewCustomer(id uuid.UUID, name string, cellphone string, document string, now time.Time) (*Customer, error) {
+func NewCustomer(id uuid.UUID, name, document, cellphone string, now time.Time) (*Customer, error) {
 	customer := &Customer{
 		ID:           uuidPkg.IDOrNew(id),
 		Name:         strings.TrimSpace(name),

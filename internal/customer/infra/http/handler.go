@@ -47,8 +47,8 @@ func Register(app *fiber.App, h *Handler) {
 
 type createBody struct {
 	Name      string `json:"name"        validate:"required,min=3"`
-	Cellphone string `json:"cellphone"   validate:"required,min=11"`
 	Document  string `json:"document"    validate:"required,min=11"`
+	Cellphone string `json:"cellphone"   validate:"required,min=11"`
 }
 
 type updateBody struct {
@@ -57,20 +57,22 @@ type updateBody struct {
 }
 
 type customerJSON struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Cellphone string    `json:"cellphone"`
-	Document  string    `json:"document"`
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Document     string    `json:"document"`
+	DocumentType string    `json:"document_type"`
+	Cellphone    string    `json:"cellphone"`
 }
 
 // -------- Helpers JSON --------
 
 func toJSON(v app.CustomerView) customerJSON {
 	return customerJSON{
-		ID:        v.ID,
-		Name:      v.Name,
-		Cellphone: v.Cellphone,
-		Document:  v.Document,
+		ID:           v.ID,
+		Name:         v.Name,
+		Document:     v.Document,
+		DocumentType: v.DocumentType,
+		Cellphone:    v.Cellphone,
 	}
 }
 

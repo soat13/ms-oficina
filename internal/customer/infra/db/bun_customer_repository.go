@@ -32,41 +32,41 @@ func NewBunCustomerRepository(db *bun.DB) app.CustomerRepository {
 	return &BunCustomerRepository{db: db}
 }
 
-func (r *BunCustomerRepository) Create(ctx context.Context, c *domain.Customer) error {
-	m := toModel(c)
-	_, err := r.db.NewInsert().Model(m).Exec(ctx)
+func (repo *BunCustomerRepository) Create(ctx context.Context, customer *domain.Customer) error {
+	model := toModel(customer)
+	_, err := repo.db.NewInsert().Model(model).Exec(ctx)
 	return err
 }
 
-func (r *BunCustomerRepository) Update(ctx context.Context, c *domain.Customer) error {
-	m := toModel(c)
-	_, err := r.db.NewUpdate().
-		Model(m).
+func (repo *BunCustomerRepository) Update(ctx context.Context, customer *domain.Customer) error {
+	model := toModel(customer)
+	_, err := repo.db.NewUpdate().
+		Model(model).
 		Column("name", "cellphone", "document", "document_type", "updated_at").
 		WherePK().
 		Exec(ctx)
 	return err
 }
 
-func (r *BunCustomerRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := r.db.NewDelete().Model(&customerModel{ID: id}).WherePK().Exec(ctx)
+func (repo *BunCustomerRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := repo.db.NewDelete().Model(&customerModel{ID: id}).WherePK().Exec(ctx)
 	return err
 }
 
-func (r *BunCustomerRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
-	var m customerModel
-	err := r.db.NewSelect().Model(&m).Where("id = ?", id).Scan(ctx)
+func (repo *BunCustomerRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
+	model := customerModel{ID: id}
+	err := repo.db.NewSelect().Model(&model).WherePK().Scan(ctx)
 
 	if err := bun_helper.IgnoreNoRows(err); err != nil {
 		return nil, err
 	}
 
-	return toDomain(&m), nil
+	return toDomain(&model), nil
 }
 
-func (r *BunCustomerRepository) List(ctx context.Context, limit, offset int) ([]*domain.Customer, error) {
+func (repo *BunCustomerRepository) List(ctx context.Context, limit int, offset int) ([]*domain.Customer, error) {
 	var rows []customerModel
-	if err := r.db.NewSelect().
+	if err := repo.db.NewSelect().
 		Model(&rows).
 		Order("name ASC").
 		Limit(limit).
@@ -81,8 +81,8 @@ func (r *BunCustomerRepository) List(ctx context.Context, limit, offset int) ([]
 	return out, nil
 }
 
-func (r *BunCustomerRepository) ExistsByDocument(ctx context.Context, document string) (bool, error) {
-	return r.db.NewSelect().
+func (repo *BunCustomerRepository) ExistsByDocument(ctx context.Context, document string) (bool, error) {
+	return repo.db.NewSelect().
 		Model((*customerModel)(nil)).
 		Where("document = ?", document).
 		Exists(ctx)
@@ -100,16 +100,16 @@ func toModel(c *domain.Customer) *customerModel {
 	}
 }
 
-func toDomain(m *customerModel) *domain.Customer {
-	if m == nil || m.ID == uuid.Nil {
+func toDomain(model *customerModel) *domain.Customer {
+	if model == nil || model.ID == uuid.Nil {
 		return nil
 	}
 
-	customer, err := domain.NewCustomer(m.ID, m.Name, m.Cellphone, m.Document, m.CreatedAt)
+	customer, err := domain.NewCustomer(model.ID, model.Name, model.Document, model.Cellphone, model.CreatedAt)
 	if err != nil {
 		return nil
 	}
 
-	customer.UpdatedAt = m.UpdatedAt
+	customer.UpdatedAt = model.UpdatedAt
 	return customer
 }
