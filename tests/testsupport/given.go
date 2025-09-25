@@ -34,24 +34,40 @@ func ThereIsARepairOrderWithStatus(t *testing.T, db *bun.DB, status repairorder.
 	cpf := "CPF" + tag
 	name := "Customer " + tag
 	plate := "T" + tag[:6]
+	documentType := "CPF"
+	cellphone := "11987654321"
 
-	customerID := ThereIsACustomer(t, db, uuid.Nil, name, cpf)
+	customerID := ThereIsACustomerWithID(t, db, uuid.Nil, name, cpf, documentType, cellphone)
 	vehicleID := ThereIsAVehicle(t, db, uuid.Nil, customerID, plate, "Toyota", "Corolla", 2020)
 	repairOrderID := ThereIsARepairOrder(t, db, uuid.Nil, customerID, vehicleID, string(status))
 
 	return repairOrderID
 }
 
-func ThereIsACustomer(t *testing.T, db *bun.DB, id uuid.UUID, name, cpfCnpj string) uuid.UUID {
+func ThereIsACustomerWithID(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone string) uuid.UUID {
 	t.Helper()
 	if id == uuid.Nil {
 		id = uuid.New()
 	}
 	_, err := db.NewRaw(`
-		INSERT INTO customers (id, name, cpf_cnpj)
-		VALUES (?, ?, ?)
+		INSERT INTO customers (id, name, document, document_type, cellphone)
+		VALUES (?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, cpfCnpj).Exec(context.Background())
+	`, id, name, document, documentType, cellphone).Exec(context.Background())
+	require.NoError(t, err, "falha ao inserir customer")
+	return id
+}
+
+func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone string) uuid.UUID {
+	t.Helper()
+	if id == uuid.Nil {
+		id = uuid.New()
+	}
+	_, err := db.NewRaw(`
+		INSERT INTO customers (id, name, document, document_type, cellphone)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT (id) DO NOTHING
+	`, id, name, document, documentType, cellphone).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }
