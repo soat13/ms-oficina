@@ -23,6 +23,11 @@ import (
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
+	// vehicle
+	vehicleApp "github.com/soat13/fase-1-oficina/internal/vehicle/application"
+	vehicleDB "github.com/soat13/fase-1-oficina/internal/vehicle/infra/db"
+	vehicleHTTP "github.com/soat13/fase-1-oficina/internal/vehicle/infra/http"
+
 	// shared
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
@@ -69,6 +74,16 @@ func main() {
 	listSvc := serviceApp.NewListServices(serviceRepo)
 
 	// -----------------------------------------------------------------------------
+	// Vehicle wiring
+	// -----------------------------------------------------------------------------
+	vehicleRepo := vehicleDB.NewVehicleRepository(db.bunDB)
+	createVehicle := vehicleApp.NewCreateVehicle(vehicleRepo)
+	updateVehicle := vehicleApp.NewUpdateVehicle(vehicleRepo)
+	deleteVehicle := vehicleApp.NewDeleteVehicle(vehicleRepo)
+	getVehicle := vehicleApp.NewGetVehicle(vehicleRepo)
+	listVehicles := vehicleApp.NewListVehicles(vehicleRepo)
+
+	// -----------------------------------------------------------------------------
 	// HTTP app & routes
 	// -----------------------------------------------------------------------------
 	app := newApp()
@@ -80,6 +95,10 @@ func main() {
 	// services
 	serviceHttpHandler := serviceHTTP.NewHandler(createSvc, updateSvc, deleteSvc, getSvc, listSvc)
 	serviceHTTP.Register(app, serviceHttpHandler)
+
+	// vehicle
+	vehicleHttpHandler := vehicleHTTP.NewHandler(createVehicle, updateVehicle, deleteVehicle, getVehicle, listVehicles)
+	vehicleHTTP.Register(app, vehicleHttpHandler)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start
