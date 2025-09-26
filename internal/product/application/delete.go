@@ -11,10 +11,10 @@ type DeleteInput struct {
 }
 
 type DeleteProduct struct {
-	repo Repository
+	repo ProductRepository
 }
 
-func NewDeleteProduct(repo Repository) *DeleteProduct {
+func NewDeleteProduct(repo ProductRepository) *DeleteProduct {
 	return &DeleteProduct{repo: repo}
 }
 
