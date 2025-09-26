@@ -11,8 +11,9 @@ import (
 
 type CreateInput struct {
 	Name      string
-	Cellphone string
 	Document  string
+	Cellphone string
+	Email     string
 	Now       time.Time
 }
 
@@ -29,7 +30,7 @@ func NewCreateCustomer(repo CustomerRepository) *CreateCustomer {
 }
 
 func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateOutput, error) {
-	exists, err := cr.repo.ExistsByDocument(ctx, in.Document)
+	exists, err := checkIfCustomerExists(ctx, cr.repo, in.Document, in.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateO
 		return nil, ErrDuplicateCustomer
 	}
 
-	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.Cellphone, in.Now)
+	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.Cellphone, in.Email, in.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -47,4 +48,17 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateO
 	}
 
 	return &CreateOutput{Customer: toView(customer)}, nil
+}
+
+func checkIfCustomerExists(ctx context.Context, repo CustomerRepository, document, email string) (bool, error) {
+	existsDoc, err := repo.ExistsByDocument(ctx, document)
+	if err != nil {
+		return false, err
+	}
+
+	existsEmail, err := repo.ExistsByEmail(ctx, email)
+	if err != nil {
+		return false, err
+	}
+	return existsDoc || existsEmail, nil
 }

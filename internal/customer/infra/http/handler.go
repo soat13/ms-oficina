@@ -49,11 +49,13 @@ type createBody struct {
 	Name      string `json:"name"        validate:"required,min=3"`
 	Document  string `json:"document"    validate:"required,min=11"`
 	Cellphone string `json:"cellphone"   validate:"required,min=11"`
+	Email     string `json:"email"       validate:"required,email"`
 }
 
 type updateBody struct {
 	Name      *string `json:"name"        validate:"omitempty,min=3"`
 	Cellphone *string `json:"cellphone"   validate:"omitempty,min=11"`
+	Email     *string `json:"email"       validate:"omitempty,email"`
 }
 
 type customerJSON struct {
@@ -62,6 +64,7 @@ type customerJSON struct {
 	Document     string    `json:"document"`
 	DocumentType string    `json:"document_type"`
 	Cellphone    string    `json:"cellphone"`
+	Email        string    `json:"email"`
 }
 
 // -------- Helpers JSON --------
@@ -73,6 +76,7 @@ func toJSON(v app.CustomerView) customerJSON {
 		Document:     v.Document,
 		DocumentType: v.DocumentType,
 		Cellphone:    v.Cellphone,
+		Email:        v.Email,
 	}
 }
 
@@ -89,8 +93,9 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 
 	out, err := h.create.Execute(ctx.Context(), app.CreateInput{
 		Name:      body.Name,
-		Cellphone: body.Cellphone,
 		Document:  body.Document,
+		Cellphone: body.Cellphone,
+		Email:     body.Email,
 		Now:       time.Now(),
 	})
 	if err != nil {
@@ -117,6 +122,7 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 		ID:        id,
 		Name:      body.Name,
 		Cellphone: body.Cellphone,
+		Email:     body.Email,
 		Now:       time.Now(),
 	})
 	if err != nil {

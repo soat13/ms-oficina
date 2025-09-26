@@ -11,6 +11,7 @@ type UpdateInput struct {
 	ID        uuid.UUID
 	Name      *string
 	Cellphone *string
+	Email     *string
 	Now       time.Time
 }
 
@@ -42,6 +43,19 @@ func (uc *UpdateCustomer) Execute(ctx context.Context, in UpdateInput) (*UpdateO
 	}
 	if in.Cellphone != nil {
 		if err := customer.ChangeCellphone(*in.Cellphone, in.Now); err != nil {
+			return nil, err
+		}
+	}
+	if in.Email != nil {
+		exists, err := uc.repo.ExistsByEmail(ctx, *in.Email)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, ErrDuplicateCustomer
+		}
+
+		if err := customer.ChangeEmail(*in.Email, in.Now); err != nil {
 			return nil, err
 		}
 	}

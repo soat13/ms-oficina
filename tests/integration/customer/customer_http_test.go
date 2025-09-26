@@ -22,20 +22,23 @@ import (
 
 type createBody struct {
 	Name      string `json:"name"`
-	Cellphone string `json:"cellphone"`
 	Document  string `json:"document"`
+	Cellphone string `json:"cellphone"`
+	Email     string `json:"email"`
 }
 
 type updateBody struct {
 	Name      *string `json:"name,omitempty"`
 	Cellphone *string `json:"cellphone,omitempty"`
+	Email     *string `json:"email,omitempty"`
 }
 
 type customerJSON struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
-	Cellphone string    `json:"cellphone"`
 	Document  string    `json:"document"`
+	Cellphone string    `json:"cellphone"`
+	Email     string    `json:"email"`
 }
 
 type listResp struct {
@@ -56,8 +59,9 @@ func TestCreateCustomer(t *testing.T) {
 
 		payload := createBody{
 			Name:      "Ana Silva",
-			Cellphone: "11987654321",
 			Document:  "11144477735",
+			Cellphone: "11987654321",
+			Email:     "ana@example.com",
 		}
 		resp := postCreateCustomer(t, payload)
 		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
@@ -65,8 +69,9 @@ func TestCreateCustomer(t *testing.T) {
 		var count int
 		require.NoError(t,
 			env.db.NewRaw(
-				`SELECT COUNT(*) FROM customers WHERE name = ? AND cellphone = ? AND document = ?`,
+				`SELECT COUNT(*) FROM customers WHERE name = ? AND cellphone = ? AND document = ? AND email = ?`,
 				payload.Name, payload.Cellphone, payload.Document,
+				payload.Email,
 			).Scan(context.Background(), &count),
 		)
 		require.Equal(t, 1, count)
@@ -75,7 +80,7 @@ func TestCreateCustomer(t *testing.T) {
 	t.Run("InvalidBody", func(t *testing.T) {
 		ensureSetup(t)
 
-		payload := createBody{Name: "", Cellphone: "", Document: ""}
+		payload := createBody{Name: "", Cellphone: "", Document: "", Email: ""}
 		resp := postCreateCustomer(t, payload)
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
@@ -83,12 +88,13 @@ func TestCreateCustomer(t *testing.T) {
 	t.Run("DuplicateDocument", func(t *testing.T) {
 		ensureSetup(t)
 
-		_ = testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "João Silva", "11144477735", "CPF", "11987654321")
+		_ = testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "João Silva", "11144477735", "CPF", "11987654321", "joao@example.com")
 
 		payload := createBody{
 			Name:      "Maria Silva",
 			Cellphone: "11987654322",
 			Document:  "11144477735",
+			Email:     "maria@example.com",
 		}
 		resp := postCreateCustomer(t, payload)
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
@@ -99,7 +105,7 @@ func TestGetCustomer(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		ensureSetup(t)
 
-		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Carlos Santos", "98765432100", "CPF", "11987654323")
+		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Carlos Santos", "98765432100", "CPF", "11987654323", "carlos@example.com")
 		resp := getCustomer(t, cid)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
@@ -123,27 +129,31 @@ func TestUpdateCustomer(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		ensureSetup(t)
 
-		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Pedro Oliveira", "11122233396", "CPF", "11987654324")
+		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Pedro Oliveira", "11122233396", "CPF", "11987654324", "pedro@example.com")
 
 		newName := "Pedro Oliveira Santos"
 		newCellphone := "11987654325"
+		newEmail := "pedro@example.com"
 
 		resp := putUpdateCustomer(t, cid, updateBody{
 			Name:      &newName,
 			Cellphone: &newCellphone,
+			Email:     &newEmail,
 		})
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		var got struct {
 			Name      string
 			Cellphone string
+			Email     string
 		}
 		require.NoError(t,
-			env.db.NewRaw(`SELECT name, cellphone FROM customers WHERE id = ?`, cid).
+			env.db.NewRaw(`SELECT name, cellphone, email FROM customers WHERE id = ?`, cid).
 				Scan(context.Background(), &got),
 		)
 		require.Equal(t, newName, got.Name)
 		require.Equal(t, newCellphone, got.Cellphone)
+		require.Equal(t, newEmail, got.Email)
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
@@ -159,7 +169,7 @@ func TestUpdateCustomer(t *testing.T) {
 	t.Run("InvalidBody", func(t *testing.T) {
 		ensureSetup(t)
 
-		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Test Customer", "52998224725", "CPF", "11987654326")
+		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Test Customer", "52998224725", "CPF", "11987654326", "test@example.com")
 
 		emptyName := ""
 		resp := putUpdateCustomer(t, cid, updateBody{Name: &emptyName})
@@ -171,7 +181,7 @@ func TestDeleteCustomer(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		ensureSetup(t)
 
-		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Temp Customer", "55566677789", "CPF", "11987654327")
+		cid := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Temp Customer", "55566677789", "CPF", "11987654327", "temp@example.com")
 		resp := deleteCustomer(t, cid)
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
@@ -218,8 +228,8 @@ func TestListCustomers(t *testing.T) {
 
 func givenCustomersOutOfOrder(t *testing.T) (uuid.UUID, uuid.UUID) {
 	t.Helper()
-	maria := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Maria Santos", "11144477735", "CPF", "11987654328")
-	joao := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "João Silva", "52998224725", "CPF", "11987654329")
+	maria := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "Maria Santos", "11144477735", "CPF", "11987654328", "maria@example.com")
+	joao := testsupport.ThereIsACustomerWithDocument(t, env.db, uuid.Nil, "João Silva", "52998224725", "CPF", "11987654329", "joao@example.com")
 	return maria, joao
 }
 
