@@ -36,38 +36,39 @@ func ThereIsARepairOrderWithStatus(t *testing.T, db *bun.DB, status repairorder.
 	plate := "T" + tag[:6]
 	documentType := "CPF"
 	cellphone := "11987654321"
+	email := "customer@example.com"
 
-	customerID := ThereIsACustomerWithID(t, db, uuid.Nil, name, cpf, documentType, cellphone)
+	customerID := ThereIsACustomerWithID(t, db, uuid.Nil, name, cpf, documentType, cellphone, email)
 	vehicleID := ThereIsAVehicle(t, db, uuid.Nil, customerID, plate, "Toyota", "Corolla", 2020)
 	repairOrderID := ThereIsARepairOrder(t, db, uuid.Nil, customerID, vehicleID, string(status))
 
 	return repairOrderID
 }
 
-func ThereIsACustomerWithID(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone string) uuid.UUID {
+func ThereIsACustomerWithID(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone, email string) uuid.UUID {
 	t.Helper()
 	if id == uuid.Nil {
 		id = uuid.New()
 	}
 	_, err := db.NewRaw(`
-		INSERT INTO customers (id, name, document, document_type, cellphone)
-		VALUES (?, ?, ?, ?, ?)
+		INSERT INTO customers (id, name, document, document_type, cellphone, email)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, document, documentType, cellphone).Exec(context.Background())
+	`, id, name, document, documentType, cellphone, email).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }
 
-func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone string) uuid.UUID {
+func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone, email string) uuid.UUID {
 	t.Helper()
 	if id == uuid.Nil {
 		id = uuid.New()
 	}
 	_, err := db.NewRaw(`
-		INSERT INTO customers (id, name, document, document_type, cellphone)
-		VALUES (?, ?, ?, ?, ?)
+		INSERT INTO customers (id, name, document, document_type, cellphone, email)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, document, documentType, cellphone).Exec(context.Background())
+	`, id, name, document, documentType, cellphone, email).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }

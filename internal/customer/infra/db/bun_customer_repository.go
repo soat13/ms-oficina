@@ -17,9 +17,10 @@ type customerModel struct {
 
 	ID           uuid.UUID `bun:",pk,type:uuid"`
 	Name         string    `bun:",notnull"`
-	Cellphone    string    `bun:",notnull"`
 	Document     string    `bun:",notnull"`
 	DocumentType string    `bun:",notnull"`
+	Cellphone    string    `bun:",notnull"`
+	Email        string    `bun:",notnull"`
 	CreatedAt    time.Time `bun:",nullzero,default:now()"`
 	UpdatedAt    time.Time `bun:",nullzero,default:now()"`
 }
@@ -42,7 +43,7 @@ func (repo *BunCustomerRepository) Update(ctx context.Context, customer *domain.
 	model := toModel(customer)
 	_, err := repo.db.NewUpdate().
 		Model(model).
-		Column("name", "cellphone", "document", "document_type", "updated_at").
+		Column("name", "document", "document_type", "cellphone", "email", "updated_at").
 		WherePK().
 		Exec(ctx)
 	return err
@@ -88,13 +89,21 @@ func (repo *BunCustomerRepository) ExistsByDocument(ctx context.Context, documen
 		Exists(ctx)
 }
 
+func (repo *BunCustomerRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	return repo.db.NewSelect().
+		Model((*customerModel)(nil)).
+		Where("email = ?", email).
+		Exists(ctx)
+}
+
 func toModel(c *domain.Customer) *customerModel {
 	return &customerModel{
 		ID:           c.ID,
 		Name:         c.Name,
-		Cellphone:    c.Cellphone,
 		Document:     c.Document,
 		DocumentType: c.DocumentType,
+		Cellphone:    c.Cellphone,
+		Email:        c.Email,
 		CreatedAt:    c.CreatedAt,
 		UpdatedAt:    c.UpdatedAt,
 	}
@@ -105,7 +114,7 @@ func toDomain(model *customerModel) *domain.Customer {
 		return nil
 	}
 
-	customer, err := domain.NewCustomer(model.ID, model.Name, model.Document, model.Cellphone, model.CreatedAt)
+	customer, err := domain.NewCustomer(model.ID, model.Name, model.Document, model.Cellphone, model.Email, model.CreatedAt)
 	if err != nil {
 		return nil
 	}

@@ -13,6 +13,7 @@ type CustomerView struct {
 	Document     string    `json:"document"`
 	DocumentType string    `json:"document_type"`
 	Cellphone    string    `json:"cellphone"`
+	Email        string    `json:"email"`
 }
 
 func toView(c *domain.Customer) CustomerView {
@@ -22,6 +23,7 @@ func toView(c *domain.Customer) CustomerView {
 		Document:     c.Document,
 		DocumentType: c.DocumentType,
 		Cellphone:    c.Cellphone,
+		Email:        c.Email,
 	}
 }
 
@@ -32,4 +34,5 @@ type CustomerRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error)
 	List(ctx context.Context, limit, offset int) ([]*domain.Customer, error)
 	ExistsByDocument(ctx context.Context, document string) (bool, error)
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
 }
