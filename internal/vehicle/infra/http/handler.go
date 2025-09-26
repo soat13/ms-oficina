@@ -159,7 +159,7 @@ func (h *Handler) Delete(ctx *fiber.Ctx) error {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid vehicle ID")
 	}
 
-	if err := h.delete.Execute(ctx.Context(), id); err != nil {
+	if err := h.delete.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
 		return h.handleError(ctx, err)
 	}
 

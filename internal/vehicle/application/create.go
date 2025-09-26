@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/vehicle/domain"
 )
 
@@ -13,15 +12,6 @@ type CreateInput struct {
 	Model      string
 	Brand      string
 	Year       int
-}
-
-type VehicleView struct {
-	ID         uuid.UUID `json:"id"`
-	CustomerId string    `json:"customer_id"`
-	Plate      string    `json:"plate"`
-	Model      string    `json:"model"`
-	Brand      string    `json:"brand"`
-	Year       int       `json:"year"`
 }
 
 type CreateOutput struct {
@@ -53,14 +43,4 @@ func (uc *CreateVehicle) Execute(ctx context.Context, in CreateInput) (*CreateOu
 		return nil, err
 	}
 	return &CreateOutput{Vehicle: toView(s)}, nil
-}
-
-func toView(s *domain.Vehicle) VehicleView {
-	return VehicleView{
-		CustomerId: s.CustomerId,
-		Plate:      s.Plate,
-		Model:      s.Model,
-		Brand:      s.Brand,
-		Year:       s.Year,
-	}
 }

@@ -7,19 +7,19 @@ import (
 	"github.com/google/uuid"
 )
 
+type UpdateInput struct {
+	ID    uuid.UUID
+	Model string
+	Brand string
+	Year  int
+}
+
 type UpdateVehicle struct {
 	repo VehicleRepository
 }
 
 func NewUpdateVehicle(repo VehicleRepository) *UpdateVehicle {
 	return &UpdateVehicle{repo: repo}
-}
-
-type UpdateInput struct {
-	ID    uuid.UUID
-	Model string
-	Brand string
-	Year  int
 }
 
 func (uc *UpdateVehicle) Execute(ctx context.Context, in UpdateInput) error {

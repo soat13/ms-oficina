@@ -4,17 +4,17 @@ import (
 	"context"
 )
 
+type ListInput struct {
+	Limit  int
+	Offset int
+}
+
 type ListVehicles struct {
 	repo VehicleRepository
 }
 
 func NewListVehicles(repo VehicleRepository) *ListVehicles {
 	return &ListVehicles{repo: repo}
-}
-
-type ListInput struct {
-	Limit  int
-	Offset int
 }
 
 func (uc *ListVehicles) Execute(ctx context.Context, in ListInput) ([]VehicleView, error) {
