@@ -83,10 +83,10 @@ func indexOfByName(items []productJSON, name string) int {
 func Test_AdminProduct_Update_NotFound(t *testing.T) {
 	ensureSetup(t)
 
-	unknown := uuid.New()
+	id := uuid.New()
 	validName := "Produto Válido"
 
-	resp := putUpdateProduct(t, unknown, updateBody{Name: &validName})
+	resp := putUpdateProduct(t, id, updateBody{Name: &validName})
 	require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
@@ -210,7 +210,7 @@ func Test_AdminProduct_Delete_OK(t *testing.T) {
 func postCreateProduct(t *testing.T, body createBody) *http.Response {
 	t.Helper()
 	bs, _ := json.Marshal(body)
-	req := httptest.NewRequest("POST", "/admin/products/", bytes.NewReader(bs)) // <-- plural
+	req := httptest.NewRequest("POST", "/admin/products/", bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := env.app.Test(req, -1)
 	require.NoError(t, err)
@@ -219,7 +219,7 @@ func postCreateProduct(t *testing.T, body createBody) *http.Response {
 
 func getProduct(t *testing.T, id uuid.UUID) *http.Response {
 	t.Helper()
-	req := httptest.NewRequest("GET", "/admin/products/"+id.String(), nil) // <-- plural
+	req := httptest.NewRequest("GET", "/admin/products/"+id.String(), nil)
 	resp, err := env.app.Test(req, -1)
 	require.NoError(t, err)
 	return resp
@@ -227,7 +227,7 @@ func getProduct(t *testing.T, id uuid.UUID) *http.Response {
 
 func listProducts(t *testing.T, limit, offset int) *http.Response {
 	t.Helper()
-	url := "/admin/products/" // <-- plural
+	url := "/admin/products/"
 	query := ""
 	if limit > 0 {
 		query += "limit=" + strconv.Itoa(limit)
