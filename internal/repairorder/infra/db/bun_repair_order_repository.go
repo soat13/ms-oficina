@@ -17,7 +17,7 @@ type BunRepairOrderRepository struct {
 	db *bun.DB
 }
 
-func NewBunRepairOrderRepository(db *bun.DB) application.Repository {
+func NewBunRepairOrderRepository(db *bun.DB) application.RepairOrderRepository {
 	return &BunRepairOrderRepository{db: db}
 }
 

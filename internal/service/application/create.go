@@ -15,21 +15,15 @@ type CreateInput struct {
 	Now   time.Time
 }
 
-type ServiceView struct {
-	ID    uuid.UUID   `json:"id"`
-	Name  string      `json:"name"`
-	Price money.Money `json:"price"`
-}
-
 type CreateOutput struct {
 	Service ServiceView `json:"service"`
 }
 
 type CreateService struct {
-	repo Repository
+	repo ServiceRepository
 }
 
-func NewCreateService(repo Repository) *CreateService {
+func NewCreateService(repo ServiceRepository) *CreateService {
 	return &CreateService{repo: repo}
 }
 

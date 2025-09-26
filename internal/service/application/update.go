@@ -20,10 +20,10 @@ type UpdateOutput struct {
 }
 
 type UpdateService struct {
-	repo Repository
+	repo ServiceRepository
 }
 
-func NewUpdateService(repo Repository) *UpdateService {
+func NewUpdateService(repo ServiceRepository) *UpdateService {
 	return &UpdateService{repo: repo}
 }
 

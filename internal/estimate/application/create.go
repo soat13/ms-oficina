@@ -41,7 +41,7 @@ type (
 		repairOrderReader    RepairOrderReader
 		productCatalogReader ProductCatalogReader
 		serviceCatalogReader ServiceCatalogReader
-		estimateRepository   Repository
+		estimateRepository   EstimateRepository
 		eventbus             eventbus.Bus
 	}
 )
@@ -50,7 +50,7 @@ func NewCreateEstimateFromRepairOrder(
 	repairOrderReader RepairOrderReader,
 	productCatalogReader ProductCatalogReader,
 	serviceCatalogReader ServiceCatalogReader,
-	repository Repository,
+	repository EstimateRepository,
 	eventBus eventbus.Bus,
 ) *Create {
 	return &Create{

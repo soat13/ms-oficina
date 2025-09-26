@@ -42,7 +42,7 @@ type BunEstimateRepository struct {
 	db *bun.DB
 }
 
-func NewBunEstimateRepository(db *bun.DB) application.Repository {
+func NewBunEstimateRepository(db *bun.DB) application.EstimateRepository {
 	return &BunEstimateRepository{db: db}
 }
 

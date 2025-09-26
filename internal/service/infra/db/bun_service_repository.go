@@ -18,7 +18,7 @@ type serviceModel struct {
 
 	ID        uuid.UUID `bun:",pk,type:uuid"`
 	Name      string    `bun:",notnull"`
-	Price     int64     `bun:",notnull"` // cents
+	Price     int64     `bun:",notnull"`
 	Currency  string    `bun:",notnull"`
 	CreatedAt time.Time `bun:",nullzero,default:now()"`
 	UpdatedAt time.Time `bun:",nullzero,default:now()"`
@@ -28,7 +28,7 @@ type BunServiceRepository struct {
 	db *bun.DB
 }
 
-func NewBunServiceRepository(db *bun.DB) app.Repository {
+func NewBunServiceRepository(db *bun.DB) app.ServiceRepository {
 	return &BunServiceRepository{db: db}
 }
 

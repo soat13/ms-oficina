@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	Repository interface {
+	EstimateRepository interface {
 		GetByID(ctx context.Context, id uuid.UUID) (*domain.Estimate, error)
 		Save(ctx context.Context, estimate *domain.Estimate) error
 	}
