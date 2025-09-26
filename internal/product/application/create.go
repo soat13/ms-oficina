@@ -16,14 +16,6 @@ type CreateInput struct {
 	Now   time.Time
 }
 
-type ProductView struct {
-	ID         uuid.UUID   `json:"id"`
-	Name       string      `json:"name"`
-	Price      money.Money `json:"-"`
-	PriceCents int64       `json:"price_cents"`
-	Stock      int         `json:"stock"`
-}
-
 type CreateOutput struct {
 	Product ProductView `json:"product"`
 }
@@ -53,14 +45,4 @@ func (uc *CreateProduct) Execute(ctx context.Context, in CreateInput) (*CreateOu
 		return nil, err
 	}
 	return &CreateOutput{Product: toView(p)}, nil
-}
-
-func toView(p *domain.Product) ProductView {
-	return ProductView{
-		ID:         p.ID,
-		Name:       p.Name,
-		Price:      p.Price,
-		PriceCents: p.Price.Cents,
-		Stock:      p.Stock,
-	}
 }

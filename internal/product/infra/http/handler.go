@@ -15,23 +15,23 @@ import (
 )
 
 type Handler struct {
-	create *app.CreateProduct
-	update *app.UpdateProduct
-	del    *app.DeleteProduct
-	get    *app.GetProduct
-	list   *app.ListProducts
-	v      *validator.Validate
+	create        *app.CreateProduct
+	update        *app.UpdateProduct
+	del           *app.DeleteProduct
+	get           *app.GetProduct
+	list          *app.ListProducts
+	bodyValitator *validator.Validate
 }
 
 func NewHandler(create *app.CreateProduct, update *app.UpdateProduct, del *app.DeleteProduct, get *app.GetProduct, list *app.ListProducts) *Handler {
-	v := validator.New()
+	bodyValitator := validator.New()
 	return &Handler{
-		create: create,
-		update: update,
-		del:    del,
-		get:    get,
-		list:   list,
-		v:      v,
+		create:        create,
+		update:        update,
+		del:           del,
+		get:           get,
+		list:          list,
+		bodyValitator: bodyValitator,
 	}
 }
 
@@ -83,7 +83,7 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&body); err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_JSON", "invalid JSON body")
 	}
-	if err := h.v.Struct(body); err != nil {
+	if err := h.bodyValitator.Struct(body); err != nil {
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
 	}
 
@@ -114,7 +114,7 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&body); err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_JSON", "invalid JSON body")
 	}
-	if err := h.v.Struct(body); err != nil {
+	if err := h.bodyValitator.Struct(body); err != nil {
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
 	}
 
