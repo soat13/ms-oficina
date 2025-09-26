@@ -12,10 +12,10 @@ type ListOutput struct {
 }
 
 type ListProducts struct {
-	repo Repository
+	repo ProductRepository
 }
 
-func NewListProducts(repo Repository) *ListProducts {
+func NewListProducts(repo ProductRepository) *ListProducts {
 	return &ListProducts{repo: repo}
 }
 

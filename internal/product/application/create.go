@@ -21,10 +21,10 @@ type CreateOutput struct {
 }
 
 type CreateProduct struct {
-	repo Repository
+	repo ProductRepository
 }
 
-func NewCreateProduct(repo Repository) *CreateProduct {
+func NewCreateProduct(repo ProductRepository) *CreateProduct {
 	return &CreateProduct{repo: repo}
 }
 

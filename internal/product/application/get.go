@@ -15,10 +15,10 @@ type GetOutput struct {
 }
 
 type GetProduct struct {
-	repo Repository
+	repo ProductRepository
 }
 
-func NewGetProduct(repo Repository) *GetProduct {
+func NewGetProduct(repo ProductRepository) *GetProduct {
 	return &GetProduct{repo: repo}
 }
 

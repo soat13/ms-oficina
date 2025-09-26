@@ -28,7 +28,7 @@ type BunProductRepository struct {
 	db *bun.DB
 }
 
-func NewBunProductRepository(db *bun.DB) *BunProductRepository {
+func NewBunProductRepository(db *bun.DB) app.ProductRepository {
 	return &BunProductRepository{db: db}
 }
 
@@ -111,4 +111,3 @@ func toDomain(m *productModel) *domain.Product {
 		UpdatedAt: m.UpdatedAt,
 	}
 }
-

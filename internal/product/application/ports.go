@@ -26,7 +26,7 @@ func toView(p *domain.Product) ProductView {
 	}
 }
 
-type Repository interface {
+type ProductRepository interface {
 	Create(ctx context.Context, p *domain.Product) error
 	Update(ctx context.Context, p *domain.Product) error
 	Delete(ctx context.Context, id uuid.UUID) error

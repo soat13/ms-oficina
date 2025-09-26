@@ -21,10 +21,10 @@ type UpdateOutput struct {
 }
 
 type UpdateProduct struct {
-	repo Repository
+	repo ProductRepository
 }
 
-func NewUpdateProduct(repo Repository) *UpdateProduct {
+func NewUpdateProduct(repo ProductRepository) *UpdateProduct {
 	return &UpdateProduct{repo: repo}
 }
 
