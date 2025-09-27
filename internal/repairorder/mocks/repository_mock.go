@@ -52,16 +52,57 @@ func (mr *MockRepositoryMockRecorder) GetById(ctx, id interface{}) *gomock.Call 
 }
 
 // Save mocks base method.
-func (m *MockRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) (*domain.RepairOrder, error) {
+func (m *MockRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", ctx, repairOrder)
-	ret0, _ := ret[0].(*domain.RepairOrder)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Save indicates an expected call of Save.
 func (mr *MockRepositoryMockRecorder) Save(ctx, repairOrder interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockRepository)(nil).Save), ctx, repairOrder)
+}
+
+// SaveIfApproved mocks base method.
+func (m *MockRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfApproved", ctx, ro)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveIfApproved indicates an expected call of SaveIfApproved.
+func (mr *MockRepositoryMockRecorder) SaveIfApproved(ctx, ro interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfApproved", reflect.TypeOf((*MockRepository)(nil).SaveIfApproved), ctx, ro)
+}
+
+// SaveIfInAwaitingApproval mocks base method.
+func (m *MockRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfInAwaitingApproval", ctx, ro)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveIfInAwaitingApproval indicates an expected call of SaveIfInAwaitingApproval.
+func (mr *MockRepositoryMockRecorder) SaveIfInAwaitingApproval(ctx, ro interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfInAwaitingApproval", reflect.TypeOf((*MockRepository)(nil).SaveIfInAwaitingApproval), ctx, ro)
+}
+
+// SaveIfInDiagnostics mocks base method.
+func (m *MockRepository) SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfInDiagnostics", ctx, ro)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveIfInDiagnostics indicates an expected call of SaveIfInDiagnostics.
+func (mr *MockRepositoryMockRecorder) SaveIfInDiagnostics(ctx, ro interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfInDiagnostics", reflect.TypeOf((*MockRepository)(nil).SaveIfInDiagnostics), ctx, ro)
 }

@@ -152,7 +152,7 @@ func (c *Create) validRepairOrderOrError(ctx context.Context, repairID uuid.UUID
 		return nil, repairorder.ErrRepairOrderNotFound
 	}
 
-	if repairOrder.Status != repairorder.StatusInDiagnosis {
+	if repairOrder.Status != repairorder.StatusInDiagnostics {
 		return nil, ErrInvalidRepairOrderStatus
 	}
 

@@ -11,12 +11,10 @@ import (
 
 func newRepairOrder() RepairOrder {
 	repairOrder, _ := NewRepairOrder(uuid.New(), uuid.New())
-
 	return *repairOrder
 }
 
 func TestNewRepairOrder(t *testing.T) {
-
 	t.Run("should initialize with correct values", func(t *testing.T) {
 		repairOrder, err := NewRepairOrder(uuid.New(), uuid.New())
 		require.NoError(t, err)
@@ -50,50 +48,93 @@ func TestRepairOrder_touch(t *testing.T) {
 	assert.True(t, repairOrder.UpdatedAt.After(originalUpdatedAt))
 }
 
-func Test_MoveToAwaitingApproval_OK(t *testing.T) {
-	ro := withStatus(newRO(t), repairorder.StatusInDiagnosis)
+func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
+	type actionFn func(ro *RepairOrder) error
 
-	before := ro.UpdatedAt
-	require.NoError(t, ro.MoveToAwaitingApproval())
+	moveToAwaiting := func(ro *RepairOrder) error { return ro.MoveToAwaitingApproval() }
+	moveToApproved := func(ro *RepairOrder) error { return ro.MoveToApproved() }
+	startExecution := func(ro *RepairOrder) error { return ro.StartExecution() }
 
-	assert.Equal(t, repairorder.StatusAwaitingApproval, ro.Status)
-	assert.True(t, ro.UpdatedAt.After(before))
-}
+	cases := []struct {
+		name       string
+		initial    repairorder.Status
+		act        actionFn
+		wantStatus repairorder.Status
+		wantErr    error
+	}{
+		// MoveToAwaitingApproval
+		{
+			name:       "InDiagnosis -> AwaitingApproval (OK)",
+			initial:    repairorder.StatusInDiagnostics,
+			act:        moveToAwaiting,
+			wantStatus: repairorder.StatusAwaitingApproval,
+			wantErr:    nil,
+		},
+		{
+			name:       "Received -> AwaitingApproval (ERR)",
+			initial:    repairorder.StatusReceived,
+			act:        moveToAwaiting,
+			wantStatus: repairorder.StatusReceived,
+			wantErr:    ErrInvalidStatusTransition,
+		},
 
-func Test_MoveToAwaitingApproval_Invalid_FromReceived(t *testing.T) {
-	ro := withStatus(newRO(t), repairorder.StatusReceived)
-	beforeStatus := ro.Status
-	beforeUpdated := ro.UpdatedAt
+		// MoveToApproved
+		{
+			name:       "AwaitingApproval -> Approved (OK)",
+			initial:    repairorder.StatusAwaitingApproval,
+			act:        moveToApproved,
+			wantStatus: repairorder.StatusApproved,
+			wantErr:    nil,
+		},
+		{
+			name:       "InDiagnosis -> Approved (ERR)",
+			initial:    repairorder.StatusInDiagnostics,
+			act:        moveToApproved,
+			wantStatus: repairorder.StatusInDiagnostics,
+			wantErr:    ErrInvalidStatusTransition,
+		},
 
-	err := ro.MoveToAwaitingApproval()
-	require.Error(t, err)
-	assert.ErrorIs(t, err, ErrInvalidStatusTransition)
+		// StartExecution
+		{
+			name:       "Approved -> InExecution (OK)",
+			initial:    repairorder.StatusApproved,
+			act:        startExecution,
+			wantStatus: repairorder.StatusInExecution,
+			wantErr:    nil,
+		},
+		{
+			name:       "AwaitingApproval -> InExecution (ERR)",
+			initial:    repairorder.StatusAwaitingApproval,
+			act:        startExecution,
+			wantStatus: repairorder.StatusAwaitingApproval,
+			wantErr:    ErrInvalidStatusTransition,
+		},
+	}
 
-	assert.Equal(t, beforeStatus, ro.Status)
-	assert.Equal(t, beforeUpdated, ro.UpdatedAt)
-}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			ro := newRO(t)
+			withStatus(ro, tc.initial)
 
-func Test_MoveToApproved_OK(t *testing.T) {
-	ro := withStatus(newRO(t), repairorder.StatusAwaitingApproval)
+			beforeStatus := ro.Status
+			beforeUpdated := ro.UpdatedAt
 
-	before := ro.UpdatedAt
+			err := tc.act(ro)
 
-	require.NoError(t, ro.MoveToApproved())
-	assert.Equal(t, repairorder.StatusApproved, ro.Status)
-	assert.True(t, ro.UpdatedAt.After(before))
-}
-
-func Test_MoveToApproved_Invalid_FromInDiagnosis(t *testing.T) {
-	ro := withStatus(newRO(t), repairorder.StatusInDiagnosis)
-	beforeStatus := ro.Status
-	beforeUpdated := ro.UpdatedAt
-
-	err := ro.MoveToApproved()
-	require.Error(t, err)
-	assert.ErrorIs(t, err, ErrInvalidStatusTransition)
-
-	assert.Equal(t, beforeStatus, ro.Status)
-	assert.Equal(t, beforeUpdated, ro.UpdatedAt)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				assert.Equal(t, tc.wantStatus, ro.Status)
+				assert.True(t, ro.UpdatedAt.After(beforeUpdated))
+			} else {
+				require.Error(t, err)
+				assert.ErrorIs(t, err, tc.wantErr)
+				assert.Equal(t, tc.wantStatus, ro.Status)
+				assert.Equal(t, beforeUpdated, ro.UpdatedAt)
+				assert.Equal(t, beforeStatus, ro.Status)
+			}
+		})
+	}
 }
 
 func newRO(t *testing.T) *RepairOrder {

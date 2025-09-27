@@ -24,7 +24,6 @@ func OnEstimateApprovedByCustomer(repository application.Repository) func(ctx co
 			return err
 		}
 
-		_, err = repository.Save(ctx, repairOrder)
-		return err
+		return repository.SaveIfInAwaitingApproval(ctx, repairOrder)
 	}
 }

@@ -37,7 +37,7 @@ func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 }
 
 func (r *RepairOrder) MoveToAwaitingApproval() error {
-	if r.Status != repairorder.StatusInDiagnosis {
+	if r.Status != repairorder.StatusInDiagnostics {
 		return ErrInvalidStatusTransition
 	}
 
@@ -52,6 +52,16 @@ func (r *RepairOrder) MoveToApproved() error {
 	}
 
 	r.Status = repairorder.StatusApproved
+	r.Touch()
+	return nil
+}
+
+func (r *RepairOrder) StartExecution() error {
+	if r.Status != repairorder.StatusApproved {
+		return ErrInvalidStatusTransition
+	}
+
+	r.Status = repairorder.StatusInExecution
 	r.Touch()
 	return nil
 }
