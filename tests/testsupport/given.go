@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 )
@@ -29,46 +30,57 @@ func ThereIsARepairOrderReceived(t *testing.T, db *bun.DB) uuid.UUID {
 func ThereIsARepairOrderWithStatus(t *testing.T, db *bun.DB, status repairorder.Status) uuid.UUID {
 	t.Helper()
 
-	// todo: implement faker for names, cpfs, plates, etc.
 	tag := strings.ToUpper(strings.ReplaceAll(uuid.New().String(), "-", ""))[:8]
-	cpf := "CPF" + tag
+	cpf := "85891302071"
 	name := "Customer " + tag
 	plate := "T" + tag[:6]
 	documentType := "CPF"
-	cellphone := "11987654321"
 	email := "customer@example.com"
+	phoneNumber := "11987654321"
 
-	customerID := ThereIsACustomerWithID(t, db, uuid.Nil, name, cpf, documentType, cellphone, email)
+	customerID := ThereIsACustomerWithID(t, db, uuid.Nil, name, cpf, documentType, phoneNumber, email)
 	vehicleID := ThereIsAVehicle(t, db, uuid.Nil, customerID, plate, "Toyota", "Corolla", 2020)
 	repairOrderID := ThereIsARepairOrder(t, db, uuid.Nil, customerID, vehicleID, string(status))
 
 	return repairOrderID
 }
 
-func ThereIsACustomerWithID(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone, email string) uuid.UUID {
+func ThereIsACustomerWithID(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, documentType, phoneNumber, email string) uuid.UUID {
 	t.Helper()
 	if id == uuid.Nil {
 		id = uuid.New()
 	}
-	_, err := db.NewRaw(`
-		INSERT INTO customers (id, name, document, document_type, cellphone, email)
+
+	// Normalize document to save only digits in database
+	doc, err := document.New(documentStr)
+	require.NoError(t, err, "invalid document in test")
+	normalizedDoc := doc.Value
+
+	_, err = db.NewRaw(`
+		INSERT INTO customers (id, name, document, document_type, phone_number, email)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, document, documentType, cellphone, email).Exec(context.Background())
+	`, id, name, normalizedDoc, documentType, phoneNumber, email).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }
 
-func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, document, documentType, cellphone, email string) uuid.UUID {
+func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, documentType, phoneNumber, email string) uuid.UUID {
 	t.Helper()
 	if id == uuid.Nil {
 		id = uuid.New()
 	}
-	_, err := db.NewRaw(`
-		INSERT INTO customers (id, name, document, document_type, cellphone, email)
+
+	// Normalize document to save only digits in database
+	doc, err := document.New(documentStr)
+	require.NoError(t, err, "invalid document in test")
+	normalizedDoc := doc.Value
+
+	_, err = db.NewRaw(`
+		INSERT INTO customers (id, name, document, document_type, phone_number, email)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, document, documentType, cellphone, email).Exec(context.Background())
+	`, id, name, normalizedDoc, documentType, phoneNumber, email).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }

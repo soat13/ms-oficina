@@ -5,38 +5,49 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	documentPkg "github.com/soat13/fase-1-oficina/pkg/document"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
-	uuidPkg "github.com/soat13/fase-1-oficina/pkg/uuid"
+	uuidPkg "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
 type Customer struct {
-	ID           uuid.UUID
-	Name         string
-	Document     string
-	DocumentType string
-	// TODO: ADD CELLPHONE VALUE OBJECT
-	Cellphone string
-	// TODO: ADD EMAIL VALUE OBJECT
-	Email string
+	ID          uuid.UUID
+	Name        string
+	Document    document.Document
+	Email       email.Email
+	PhoneNumber phone.PhoneNumber
 	entity.Timestamps
 }
 
-func NewCustomer(id uuid.UUID, name, document, cellphone, email string, now time.Time) (*Customer, error) {
+func NewCustomer(id uuid.UUID, name, documentStr, phoneNumberStr, emailStr string, now time.Time) (*Customer, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, ErrInvalidCustomerName
+	}
+	documentVO, docErr := document.New(documentStr)
+	if docErr != nil {
+		return nil, docErr
+	}
+	phoneNumberVO, phoneErr := phone.New(phoneNumberStr)
+	if phoneErr != nil {
+		return nil, phoneErr
+	}
+	emailVO, emailErr := email.New(emailStr)
+	if emailErr != nil {
+		return nil, emailErr
+	}
+
 	customer := &Customer{
-		ID:           uuidPkg.IDOrNew(id),
-		Name:         strings.TrimSpace(name),
-		Document:     strings.TrimSpace(document),
-		DocumentType: documentPkg.GetDocumentType(document),
-		Cellphone:    strings.TrimSpace(cellphone),
-		Email:        strings.TrimSpace(email),
+		ID:          uuidPkg.IDOrNew(id),
+		Name:        name,
+		Document:    documentVO,
+		PhoneNumber: phoneNumberVO,
+		Email:       emailVO,
+		Timestamps:  entity.NewTimestamps(now, now),
 	}
 
-	err := customer.validate()
-
-	if err != nil {
-		return nil, err
-	}
 	return customer, nil
 }
 
@@ -50,40 +61,22 @@ func (customer *Customer) ChangeName(newName string, now time.Time) error {
 	return nil
 }
 
-func (customer *Customer) ChangeCellphone(newCellphone string, now time.Time) error {
-	newCellphone = strings.TrimSpace(newCellphone)
-	if newCellphone == "" {
-		return ErrInvalidCustomerCellphone
+func (customer *Customer) ChangePhoneNumber(newPhoneNumber string, now time.Time) error {
+	phoneNumberVO, err := phone.New(newPhoneNumber)
+	if err != nil {
+		return err
 	}
-	customer.Cellphone = newCellphone
+	customer.PhoneNumber = phoneNumberVO
 	customer.UpdatedAt = now
 	return nil
 }
 
 func (customer *Customer) ChangeEmail(newEmail string, now time.Time) error {
-	newEmail = strings.TrimSpace(newEmail)
-	if newEmail == "" {
-		return ErrInvalidCustomerEmail
-	}
-	customer.Email = newEmail
-	customer.UpdatedAt = now
-	return nil
-}
-
-func (customer *Customer) validate() error {
-	if customer.Name == "" {
-		return ErrInvalidCustomerName
-	}
-	if customer.Cellphone == "" {
-		return ErrInvalidCustomerCellphone
-	}
-	if customer.Email == "" {
-		return ErrInvalidCustomerEmail
-	}
-	if err := documentPkg.ValidateDocument(customer.Document); err != nil {
+	emailVO, err := email.New(newEmail)
+	if err != nil {
 		return err
 	}
-	// TODO: VALIDATE EMAIL
-
+	customer.Email = emailVO
+	customer.UpdatedAt = now
 	return nil
 }
