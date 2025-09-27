@@ -9,6 +9,10 @@ type ListInput struct {
 	Offset int
 }
 
+type ListOutput struct {
+	Vehicles []VehicleView `json:"vehicles"`
+}
+
 type ListVehicles struct {
 	repo VehicleRepository
 }
@@ -17,7 +21,7 @@ func NewListVehicles(repo VehicleRepository) *ListVehicles {
 	return &ListVehicles{repo: repo}
 }
 
-func (uc *ListVehicles) Execute(ctx context.Context, in ListInput) ([]VehicleView, error) {
+func (uc *ListVehicles) Execute(ctx context.Context, in ListInput) (*ListOutput, error) {
 	vehicles, err := uc.repo.List(ctx, in.Limit, in.Offset)
 	if err != nil {
 		return nil, err
@@ -28,5 +32,5 @@ func (uc *ListVehicles) Execute(ctx context.Context, in ListInput) ([]VehicleVie
 		views = append(views, toView(v))
 	}
 
-	return views, nil
+	return &ListOutput{Vehicles: views}, nil
 }

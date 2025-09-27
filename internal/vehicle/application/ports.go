@@ -18,6 +18,7 @@ type VehicleView struct {
 
 func toView(s *domain.Vehicle) VehicleView {
 	return VehicleView{
+		ID:         s.ID,
 		CustomerId: s.CustomerId,
 		Plate:      s.Plate,
 		Model:      s.Model,

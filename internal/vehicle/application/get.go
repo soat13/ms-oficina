@@ -10,15 +10,27 @@ type GetVehicle struct {
 	repo VehicleRepository
 }
 
+type GetInput struct {
+	ID uuid.UUID
+}
+
+type GetOutput struct {
+	Vehicle VehicleView `json:"vehicle"`
+}
+
 func NewGetVehicle(repo VehicleRepository) *GetVehicle {
 	return &GetVehicle{repo: repo}
 }
 
-func (uc *GetVehicle) Execute(ctx context.Context, id uuid.UUID) (*VehicleView, error) {
-	vehicle, err := uc.repo.GetByID(ctx, id)
+func (uc *GetVehicle) Execute(ctx context.Context, in GetInput) (*GetOutput, error) {
+	vehicle, err := uc.repo.GetByID(ctx, in.ID)
 	if err != nil {
 		return nil, err
 	}
-	view := toView(vehicle)
-	return &view, nil
+
+	if vehicle == nil {
+		return nil, ErrVehicleNotFound
+	}
+
+	return &GetOutput{Vehicle: toView(vehicle)}, nil
 }

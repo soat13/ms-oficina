@@ -1,6 +1,6 @@
 .env
 vendor
-tests.http
+tests_vehicle.http
 
 # test files
 coverage.out

@@ -43,7 +43,7 @@ func Register(app *fiber.App, h *Handler) {
 	grp.Post("/", h.Create)
 	grp.Put("/:id", h.Update)
 	grp.Delete("/:id", h.Delete)
-	grp.Get("/:id", h.Get)
+	grp.Get("/:id", h.GetByID)
 	grp.Get("/", h.List)
 }
 
@@ -166,18 +166,18 @@ func (h *Handler) Delete(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (h *Handler) Get(ctx *fiber.Ctx) error {
+func (h *Handler) GetByID(ctx *fiber.Ctx) error {
 	id, err := uuid.Parse(ctx.Params("id"))
 	if err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid vehicle ID")
 	}
 
-	vehicle, err := h.get.Execute(ctx.Context(), id)
+	GetOutput, err := h.get.Execute(ctx.Context(), app.GetInput{ID: id})
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"vehicle": toJSON(*vehicle)})
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"vehicle": toJSON(GetOutput.Vehicle)})
 }
 
 func (h *Handler) List(ctx *fiber.Ctx) error {
@@ -189,10 +189,10 @@ func (h *Handler) List(ctx *fiber.Ctx) error {
 		return h.handleError(ctx, err)
 	}
 
-	var result []vehicleJSON
-	for _, v := range vehicles {
+	result := []vehicleJSON{}
+	for _, v := range vehicles.Vehicles {
 		result = append(result, toJSON(v))
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"vehicles": result})
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"data": result})
 }
