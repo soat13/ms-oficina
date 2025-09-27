@@ -94,7 +94,7 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
 	}
 
-	out, err := h.create.Execute(ctx.Context(), app.CreateInput{
+	err := h.create.Execute(ctx.Context(), app.CreateInput{
 		Name:        body.Name,
 		Document:    body.Document,
 		PhoneNumber: body.PhoneNumber,
@@ -104,7 +104,7 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"customer": toJSON(out.Customer)})
+	return ctx.SendStatus(fiber.StatusCreated)
 }
 
 func (h *Handler) Update(ctx *fiber.Ctx) error {
@@ -121,7 +121,7 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
 	}
 
-	out, err := h.update.Execute(ctx.Context(), app.UpdateInput{
+	err = h.update.Execute(ctx.Context(), app.UpdateInput{
 		ID:          id,
 		Name:        body.Name,
 		PhoneNumber: body.PhoneNumber,
@@ -131,7 +131,7 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"customer": toJSON(out.Customer)})
+	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 func (h *Handler) Delete(ctx *fiber.Ctx) error {
@@ -154,7 +154,7 @@ func (h *Handler) GetByID(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"customer": toJSON(out.Customer)})
+	return ctx.Status(fiber.StatusOK).JSON(toJSON(out.Customer))
 }
 
 func (h *Handler) List(ctx *fiber.Ctx) error {
@@ -169,7 +169,7 @@ func (h *Handler) List(ctx *fiber.Ctx) error {
 	for _, sv := range out.Customers {
 		resp = append(resp, toJSON(sv))
 	}
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"customers": resp})
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"data": resp})
 }
 
 // -------- Error mapping + helpers --------

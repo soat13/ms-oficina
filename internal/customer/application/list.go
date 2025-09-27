@@ -13,7 +13,7 @@ type ListInput struct {
 }
 
 type ListOutput struct {
-	Customers []CustomerView `json:"customers"`
+	Customers []CustomerView
 }
 
 type ListCustomers struct {
