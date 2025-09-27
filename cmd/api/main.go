@@ -10,6 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
+	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 
@@ -56,6 +58,15 @@ func main() {
 	// HTTP server setup
 	// -----------------------------------------------------------------------------
 	errorResolver := errorHelper.NewErrorResolver()
+
+	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
+	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
+
+	// -----------------------------------------------------------------------------
+	// HTTP server setup
+	// -----------------------------------------------------------------------------
+	fiberApp := newApp()
+	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
 
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
@@ -122,10 +133,6 @@ func main() {
 	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
 	eventBus.Subscribe(estimate.ApprovedByCustomer{}.Topic(), listeners.OnEstimateApprovedByCustomer(repairOrderRepository))
 	// todo: add approvedByCustomer product subscriber to reduce stock
-
-	//customers
-	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus)
-	customerHTTP.Register(fiberApp, customerHandler)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start
