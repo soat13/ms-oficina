@@ -24,8 +24,6 @@ func OnEstimateCreated(repository application.Repository) func(ctx context.Conte
 			return err
 		}
 
-		_, err = repository.Save(ctx, repairOrder)
-
-		return err
+		return repository.SaveIfInDiagnostics(ctx, repairOrder)
 	}
 }

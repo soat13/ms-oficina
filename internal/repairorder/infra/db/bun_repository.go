@@ -55,7 +55,7 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*
 	}, nil
 }
 
-func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) (*domain.RepairOrder, error) {
+func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) error {
 	m := repairOrderModel{
 		ID:         repairOrder.ID,
 		CustomerID: repairOrder.CustomerID,
@@ -74,9 +74,31 @@ func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain
 		Set("updated_at = EXCLUDED.updated_at").
 		Exec(ctx)
 
-	if err != nil {
-		return nil, err
-	}
+	return err
+}
 
-	return repairOrder, nil
+func (r *BunRepairOrderRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusApproved)
+}
+
+func (r *BunRepairOrderRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusAwaitingApproval)
+}
+
+func (r *BunRepairOrderRepository) SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusInDiagnostics)
+}
+
+func (r *BunRepairOrderRepository) saveIfStatus(
+	ctx context.Context,
+	ro *domain.RepairOrder,
+	status repairorder.Status,
+) error {
+	_, err := r.db.NewUpdate().
+		Model(ro).
+		Where("id = ?", ro.ID).
+		Where("status = ?", status).
+		Exec(ctx)
+
+	return err
 }

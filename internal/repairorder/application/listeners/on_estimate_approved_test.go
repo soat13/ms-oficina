@@ -41,7 +41,7 @@ func TestOnEstimateApproved_OK(t *testing.T) {
 		Return(repairOrder, nil)
 
 	repository.EXPECT().
-		Save(gomock.Any(), repairOrder).
+		SaveIfInAwaitingApproval(gomock.Any(), repairOrder).
 		DoAndReturn(func(_ context.Context, saved *domain.RepairOrder) (*domain.RepairOrder, error) {
 			require.Equal(t, repairorder.StatusApproved, saved.Status)
 			return saved, nil

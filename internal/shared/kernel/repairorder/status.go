@@ -4,10 +4,8 @@ type Status string
 
 const (
 	StatusReceived         Status = "received"
-	StatusAnalyzed         Status = "analyzed"
+	StatusInDiagnostics    Status = "in_diagnostics"
 	StatusAwaitingApproval Status = "awaiting_approval"
 	StatusApproved         Status = "approved"
-	StatusInDiagnosis      Status = "in_diagnosis"
-	StatusRejected         Status = "rejected"
-	StatusClosed           Status = "closed"
+	StatusInExecution      Status = "in_execution"
 )

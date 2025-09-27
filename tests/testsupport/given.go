@@ -23,7 +23,7 @@ var (
 
 func ThereIsARepairOrderInDiagnostics(t *testing.T, db *bun.DB) uuid.UUID {
 	t.Helper()
-	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusInDiagnosis)
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusInDiagnostics)
 }
 
 func ThereIsARepairOrderReceived(t *testing.T, db *bun.DB) uuid.UUID {
