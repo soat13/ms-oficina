@@ -5,10 +5,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/uptrace/bun"
+
+	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+
+	"github.com/soat13/fase-1-oficina/pkg/entity"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 )
@@ -33,14 +36,23 @@ type repairOrderModel struct {
 }
 
 func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
-	var m repairOrderModel
+	var model repairOrderModel
 	err := r.db.NewSelect().
-		Model(&m).
+		Model(&model).
 		Where("id = ?", id).
 		Scan(ctx)
 
-	if err != nil {
+	if bun_helper.IgnoreNoRows(err) != nil {
 		return nil, err
+	}
+
+	return r.toEntityOrNil(&model), nil
+}
+
+func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
+
+	if m.ID == uuid.Nil {
+		return nil
 	}
 
 	return &domain.RepairOrder{
@@ -52,7 +64,7 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*
 			CreatedAt: m.CreatedAt,
 			UpdatedAt: m.UpdatedAt,
 		},
-	}, nil
+	}
 }
 
 func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) error {

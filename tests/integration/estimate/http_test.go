@@ -130,7 +130,7 @@ func ThereIsARepairOrderInDiagnostics(t *testing.T) uuid.UUID {
 
 func ThereIsARepairOrderReceived(t *testing.T) uuid.UUID {
 	t.Helper()
-	return testsupport.ThereIsARepairOrderReceived(t, env.db)
+	return testsupport.ThereIsAReceivedRepairOrder(t, env.db)
 }
 
 func expectEstimateItemCount(t *testing.T, repairOrderID uuid.UUID, expected int) {

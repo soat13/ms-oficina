@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 )
@@ -38,7 +40,7 @@ func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 
 func (r *RepairOrder) MoveToAwaitingApproval() error {
 	if r.Status != repairorder.StatusInDiagnostics {
-		return ErrInvalidStatusTransition
+		return errors.ErrInvalidStatusTransaction
 	}
 
 	r.Status = repairorder.StatusAwaitingApproval
@@ -48,7 +50,7 @@ func (r *RepairOrder) MoveToAwaitingApproval() error {
 
 func (r *RepairOrder) MoveToApproved() error {
 	if r.Status != repairorder.StatusAwaitingApproval {
-		return ErrInvalidStatusTransition
+		return errors.ErrInvalidStatusTransaction
 	}
 
 	r.Status = repairorder.StatusApproved
@@ -58,7 +60,7 @@ func (r *RepairOrder) MoveToApproved() error {
 
 func (r *RepairOrder) StartExecution() error {
 	if r.Status != repairorder.StatusApproved {
-		return ErrInvalidStatusTransition
+		return errors.ErrInvalidStatusTransaction
 	}
 
 	r.Status = repairorder.StatusInExecution
