@@ -11,6 +11,9 @@ import (
 	"github.com/google/uuid"
 
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
 type Handler struct {
@@ -46,16 +49,16 @@ func Register(app *fiber.App, h *Handler) {
 // -------- DTOs --------
 
 type createBody struct {
-	Name      string `json:"name"        validate:"required,min=3"`
-	Document  string `json:"document"    validate:"required,min=11"`
-	Cellphone string `json:"cellphone"   validate:"required,min=11"`
-	Email     string `json:"email"       validate:"required,email"`
+	Name        string `json:"name"           validate:"required,min=3"`
+	Document    string `json:"document"       validate:"required,min=11"`
+	Email       string `json:"email"          validate:"required,email"`
+	PhoneNumber string `json:"phone_number"   validate:"required,min=11"`
 }
 
 type updateBody struct {
-	Name      *string `json:"name"        validate:"omitempty,min=3"`
-	Cellphone *string `json:"cellphone"   validate:"omitempty,min=11"`
-	Email     *string `json:"email"       validate:"omitempty,email"`
+	Name        *string `json:"name"           validate:"omitempty,min=3"`
+	Email       *string `json:"email"          validate:"omitempty"`
+	PhoneNumber *string `json:"phone_number"   validate:"omitempty,min=11"`
 }
 
 type customerJSON struct {
@@ -63,8 +66,8 @@ type customerJSON struct {
 	Name         string    `json:"name"`
 	Document     string    `json:"document"`
 	DocumentType string    `json:"document_type"`
-	Cellphone    string    `json:"cellphone"`
 	Email        string    `json:"email"`
+	PhoneNumber  string    `json:"phone_number"`
 }
 
 // -------- Helpers JSON --------
@@ -75,7 +78,7 @@ func toJSON(v app.CustomerView) customerJSON {
 		Name:         v.Name,
 		Document:     v.Document,
 		DocumentType: v.DocumentType,
-		Cellphone:    v.Cellphone,
+		PhoneNumber:  v.PhoneNumber,
 		Email:        v.Email,
 	}
 }
@@ -92,11 +95,11 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 	}
 
 	out, err := h.create.Execute(ctx.Context(), app.CreateInput{
-		Name:      body.Name,
-		Document:  body.Document,
-		Cellphone: body.Cellphone,
-		Email:     body.Email,
-		Now:       time.Now(),
+		Name:        body.Name,
+		Document:    body.Document,
+		PhoneNumber: body.PhoneNumber,
+		Email:       body.Email,
+		Now:         time.Now(),
 	})
 	if err != nil {
 		return h.handleError(ctx, err)
@@ -119,11 +122,11 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 	}
 
 	out, err := h.update.Execute(ctx.Context(), app.UpdateInput{
-		ID:        id,
-		Name:      body.Name,
-		Cellphone: body.Cellphone,
-		Email:     body.Email,
-		Now:       time.Now(),
+		ID:          id,
+		Name:        body.Name,
+		PhoneNumber: body.PhoneNumber,
+		Email:       body.Email,
+		Now:         time.Now(),
 	})
 	if err != nil {
 		return h.handleError(ctx, err)
@@ -177,11 +180,15 @@ func (h *Handler) handleError(ctx *fiber.Ctx, err error) error {
 		return writeError(ctx, fiber.StatusNotFound, "CUSTOMER_NOT_FOUND", err.Error())
 	case errors.Is(err, app.ErrDuplicateCustomer):
 		return writeError(ctx, fiber.StatusConflict, "CUSTOMER_ALREADY_EXISTS", err.Error())
+	case errors.Is(err, document.ErrInvalidDocument):
+		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_DOCUMENT", err.Error())
+	case errors.Is(err, phone.ErrInvalidPhoneNumber):
+		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_PHONE_NUMBER", err.Error())
+	case errors.Is(err, email.ErrInvalidEmail):
+		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_EMAIL", err.Error())
+	case strings.Contains(err.Error(), "invalid customer name"):
+		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_CUSTOMER_NAME", err.Error())
 	default:
-		msg := err.Error()
-		if strings.Contains(msg, "invalid customer name") || strings.Contains(msg, "invalid customer cellphone") || strings.Contains(msg, "invalid customer document") {
-			return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", msg)
-		}
 		return writeError(ctx, fiber.StatusInternalServerError, "INTERNAL_ERROR", "internal error")
 	}
 }

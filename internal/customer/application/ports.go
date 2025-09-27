@@ -12,18 +12,18 @@ type CustomerView struct {
 	Name         string    `json:"name"`
 	Document     string    `json:"document"`
 	DocumentType string    `json:"document_type"`
-	Cellphone    string    `json:"cellphone"`
 	Email        string    `json:"email"`
+	PhoneNumber  string    `json:"phone_number"`
 }
 
 func toView(c *domain.Customer) CustomerView {
 	return CustomerView{
 		ID:           c.ID,
 		Name:         c.Name,
-		Document:     c.Document,
-		DocumentType: c.DocumentType,
-		Cellphone:    c.Cellphone,
-		Email:        c.Email,
+		Document:     c.Document.Value,
+		DocumentType: c.Document.TypeString(),
+		Email:        c.Email.String(),
+		PhoneNumber:  c.PhoneNumber.String(),
 	}
 }
 

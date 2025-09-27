@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/pagination"
+	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
 type ListInput struct {

@@ -5,8 +5,8 @@ CREATE TABLE customers
     name          VARCHAR(255) NOT NULL,
     document      VARCHAR(20)  UNIQUE NOT NULL,
     document_type VARCHAR(4)   NOT NULL,
-    email         VARCHAR(255) NOT NULL UNIQUE,
-    cellphone     VARCHAR(20)  NOT NULL,
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    phone_number  VARCHAR(11)  NOT NULL,
     created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );

@@ -8,11 +8,11 @@ import (
 )
 
 type UpdateInput struct {
-	ID        uuid.UUID
-	Name      *string
-	Cellphone *string
-	Email     *string
-	Now       time.Time
+	ID          uuid.UUID
+	Name        *string
+	PhoneNumber *string
+	Email       *string
+	Now         time.Time
 }
 
 type UpdateOutput struct {
@@ -35,14 +35,13 @@ func (uc *UpdateCustomer) Execute(ctx context.Context, in UpdateInput) (*UpdateO
 	if customer == nil {
 		return nil, ErrCustomerNotFound
 	}
-
 	if in.Name != nil {
 		if err := customer.ChangeName(*in.Name, in.Now); err != nil {
 			return nil, err
 		}
 	}
-	if in.Cellphone != nil {
-		if err := customer.ChangeCellphone(*in.Cellphone, in.Now); err != nil {
+	if in.PhoneNumber != nil {
+		if err := customer.ChangePhoneNumber(*in.PhoneNumber, in.Now); err != nil {
 			return nil, err
 		}
 	}
