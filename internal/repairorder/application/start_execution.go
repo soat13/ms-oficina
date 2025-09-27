@@ -15,10 +15,10 @@ type StartExecution struct {
 	Repository Repository
 }
 
-type RepairOrderExecutionStarted struct {
-	OrderID    string
-	ActorID    string
-	OccurredAt int64
+func NewStartExecution(repository Repository) *StartExecution {
+	return &StartExecution{
+		Repository: repository,
+	}
 }
 
 func (uc *StartExecution) Execute(ctx context.Context, input StartExecutionInput) error {

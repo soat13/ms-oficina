@@ -4,9 +4,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 )
 
 func newRepairOrder() RepairOrder {
@@ -75,7 +77,7 @@ func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
 			initial:    repairorder.StatusReceived,
 			act:        moveToAwaiting,
 			wantStatus: repairorder.StatusReceived,
-			wantErr:    ErrInvalidStatusTransition,
+			wantErr:    errors.ErrInvalidStatusTransaction,
 		},
 
 		// MoveToApproved
@@ -91,7 +93,7 @@ func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
 			initial:    repairorder.StatusInDiagnostics,
 			act:        moveToApproved,
 			wantStatus: repairorder.StatusInDiagnostics,
-			wantErr:    ErrInvalidStatusTransition,
+			wantErr:    errors.ErrInvalidStatusTransaction,
 		},
 
 		// StartExecution
@@ -107,7 +109,7 @@ func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
 			initial:    repairorder.StatusAwaitingApproval,
 			act:        startExecution,
 			wantStatus: repairorder.StatusAwaitingApproval,
-			wantErr:    ErrInvalidStatusTransition,
+			wantErr:    errors.ErrInvalidStatusTransaction,
 		},
 	}
 
