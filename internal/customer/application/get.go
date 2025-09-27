@@ -11,7 +11,7 @@ type GetInput struct {
 }
 
 type GetOutput struct {
-	Customer CustomerView `json:"customer"`
+	Customer CustomerView
 }
 
 type GetCustomer struct {

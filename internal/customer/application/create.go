@@ -18,10 +18,6 @@ type CreateInput struct {
 	Now         time.Time
 }
 
-type CreateOutput struct {
-	Customer CustomerView `json:"customer"`
-}
-
 type CreateCustomer struct {
 	repo CustomerRepository
 }
@@ -30,25 +26,21 @@ func NewCreateCustomer(repo CustomerRepository) *CreateCustomer {
 	return &CreateCustomer{repo: repo}
 }
 
-func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateOutput, error) {
+func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) error {
 	exists, err := checkIfCustomerExists(ctx, cr.repo, in.Document, in.Email)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if exists {
-		return nil, ErrDuplicateCustomer
+		return ErrDuplicateCustomer
 	}
 
 	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email, in.Now)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if err := cr.repo.Create(ctx, customer); err != nil {
-		return nil, err
-	}
-
-	return &CreateOutput{Customer: toView(customer)}, nil
+	return cr.repo.Create(ctx, customer)
 }
 
 func checkIfCustomerExists(ctx context.Context, repo CustomerRepository, document, email string) (bool, error) {
