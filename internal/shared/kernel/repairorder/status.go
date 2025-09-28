@@ -8,4 +8,5 @@ const (
 	StatusAwaitingApproval Status = "awaiting_approval"
 	StatusApproved         Status = "approved"
 	StatusInExecution      Status = "in_execution"
+	StatusFinished         Status = "finished"
 )

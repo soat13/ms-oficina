@@ -11,8 +11,6 @@ import (
 )
 
 type (
-	RepairOrderStatus string
-
 	RepairOrder struct {
 		ID         uuid.UUID
 		CustomerID uuid.UUID
@@ -37,33 +35,28 @@ func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
 		Timestamps: entity.NewTimestamps(now, now),
 	}, nil
 }
+func (r *RepairOrder) FinishExecution() error {
+	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)
+}
 
 func (r *RepairOrder) MoveToAwaitingApproval() error {
-	if r.Status != repairorder.StatusInDiagnostics {
-		return errors.ErrInvalidStatusTransaction
-	}
-
-	r.Status = repairorder.StatusAwaitingApproval
-	r.Touch()
-	return nil
+	return r.moveStatus(repairorder.StatusInDiagnostics, repairorder.StatusAwaitingApproval)
 }
 
 func (r *RepairOrder) MoveToApproved() error {
-	if r.Status != repairorder.StatusAwaitingApproval {
-		return errors.ErrInvalidStatusTransaction
-	}
-
-	r.Status = repairorder.StatusApproved
-	r.Touch()
-	return nil
+	return r.moveStatus(repairorder.StatusAwaitingApproval, repairorder.StatusApproved)
 }
 
 func (r *RepairOrder) StartExecution() error {
-	if r.Status != repairorder.StatusApproved {
+	return r.moveStatus(repairorder.StatusApproved, repairorder.StatusInExecution)
+}
+
+func (r *RepairOrder) moveStatus(statusFrom, statusTo repairorder.Status) error {
+	if r.Status != statusFrom {
 		return errors.ErrInvalidStatusTransaction
 	}
 
-	r.Status = repairorder.StatusInExecution
+	r.Status = statusTo
 	r.Touch()
 	return nil
 }

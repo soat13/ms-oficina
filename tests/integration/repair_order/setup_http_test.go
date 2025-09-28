@@ -27,8 +27,9 @@ func setupHTTP(t *testing.T) *httpTestApp {
 
 	tdb := testsupport.NewTestDB(t)
 
-	roRepo := repairOrderDB.NewBunRepairOrderRepository(tdb.DB)
-	startExecUC := roapp.NewStartExecution(roRepo)
+	repository := repairOrderDB.NewBunRepairOrderRepository(tdb.DB)
+	startExecution := roapp.NewStartExecution(repository)
+	finishExecution := roapp.NewFinishExecution(repository)
 
 	app := fiber.New()
 	app.Use(logger.New())
@@ -39,7 +40,7 @@ func setupHTTP(t *testing.T) *httpTestApp {
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
 
 	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
-	h := repairOrderHTTP.NewHandler(startExecUC, errorHandler)
+	h := repairOrderHTTP.NewHandler(startExecution, finishExecution, errorHandler)
 	repairOrderHTTP.Register(app, h)
 
 	return &httpTestApp{app: app, tdb: tdb}
