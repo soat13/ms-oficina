@@ -8,13 +8,16 @@ import (
 
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
 	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
 type CreateInput struct {
 	Name        string
-	Document    string
-	Email       string
-	PhoneNumber string
+	Document    document.Document
+	Email       email.Email
+	PhoneNumber phone.PhoneNumber
 	Now         time.Time
 }
 
@@ -27,12 +30,9 @@ func NewCreateCustomer(repo CustomerRepository) *CreateCustomer {
 }
 
 func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) error {
-	exists, err := checkIfCustomerExists(ctx, cr.repo, in.Document, in.Email)
+	err := checkIfCustomerExists(ctx, cr.repo, in.Document, in.Email)
 	if err != nil {
 		return err
-	}
-	if exists {
-		return ErrDuplicateCustomer
 	}
 
 	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email, in.Now)
@@ -43,16 +43,22 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) error {
 	return cr.repo.Create(ctx, customer)
 }
 
-func checkIfCustomerExists(ctx context.Context, repo CustomerRepository, document, email string) (bool, error) {
-	document = string_helper.OnlyNumbers(document)
-	existsDoc, err := repo.ExistsByDocument(ctx, document)
+func checkIfCustomerExists(ctx context.Context, repo CustomerRepository, document document.Document, email email.Email) error {
+	existsDoc, err := repo.ExistsByDocument(ctx, string_helper.OnlyNumbers(document.Value))
 	if err != nil {
-		return false, err
+		return err
+	}
+	if existsDoc {
+		return ErrDuplicateDocument
 	}
 
-	existsEmail, err := repo.ExistsByEmail(ctx, email)
+	existsEmail, err := repo.ExistsByEmail(ctx, email.String())
 	if err != nil {
-		return false, err
+		return err
 	}
-	return existsDoc || existsEmail, nil
+	if existsEmail {
+		return ErrDuplicateEmail
+	}
+
+	return nil
 }

@@ -42,11 +42,7 @@ type customerJSON struct {
 }
 
 type listResp struct {
-	Customers []customerJSON `json:"customers"`
-}
-
-type getResp struct {
-	Customer customerJSON `json:"customer"`
+	Customers []customerJSON `json:"data"`
 }
 
 // -----------------------------------------------------------------------------
@@ -66,15 +62,7 @@ func TestCreateCustomer(t *testing.T) {
 		resp := postCreateCustomer(t, payload)
 		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
-		var count int
-		require.NoError(t,
-			env.db.NewRaw(
-				`SELECT COUNT(*) FROM customers WHERE name = ? AND phone_number = ? AND document = ? AND email = ?`,
-				payload.Name, payload.PhoneNumber, payload.Document,
-				payload.Email,
-			).Scan(context.Background(), &count),
-		)
-		require.Equal(t, 1, count)
+		assertCustomerCreated(t, payload)
 	})
 
 	t.Run("InvalidBody", func(t *testing.T) {
@@ -108,7 +96,7 @@ func TestCreateCustomer(t *testing.T) {
 		payload := createBody{
 			Name:        "Maria Silva",
 			PhoneNumber: "11987654322",
-			Document:    "111.444.777-35", // Same document but with formatting
+			Document:    "111.444.777-35",
 			Email:       "maria@example.com",
 		}
 		resp := postCreateCustomer(t, payload)
@@ -124,12 +112,12 @@ func TestGetCustomer(t *testing.T) {
 		resp := getCustomer(t, cid)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var body getResp
+		var body customerJSON
 		decodeJSON(t, resp, &body)
-		require.Equal(t, cid, body.Customer.ID)
-		require.Equal(t, "Carlos Santos", body.Customer.Name)
-		require.Equal(t, "11987654323", body.Customer.PhoneNumber)
-		require.Equal(t, "98765432100", body.Customer.Document)
+		require.Equal(t, cid, body.ID)
+		require.Equal(t, "Carlos Santos", body.Name)
+		require.Equal(t, "11987654323", body.PhoneNumber)
+		require.Equal(t, "98765432100", body.Document)
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
@@ -155,7 +143,7 @@ func TestUpdateCustomer(t *testing.T) {
 			PhoneNumber: &newPhoneNumber,
 			Email:       &newEmail,
 		})
-		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
 		var got struct {
 			Name        string
@@ -235,6 +223,22 @@ func TestListCustomers(t *testing.T) {
 		require.NotEqual(t, -1, joaoIdx, "João should be in the list")
 		require.Less(t, joaoIdx, mariaIdx, "João should come before Maria")
 	})
+}
+
+// -----------------------------------------------------------------------------
+// Database Helpers
+// -----------------------------------------------------------------------------
+
+func assertCustomerCreated(t *testing.T, payload createBody) {
+	t.Helper()
+	var count int
+	require.NoError(t,
+		env.db.NewRaw(
+			`SELECT COUNT(*) FROM customers WHERE name = ? AND phone_number = ? AND document = ? AND email = ?`,
+			payload.Name, payload.PhoneNumber, payload.Document, payload.Email,
+		).Scan(context.Background(), &count),
+	)
+	require.Equal(t, 1, count, "Customer should be created in database")
 }
 
 // -----------------------------------------------------------------------------

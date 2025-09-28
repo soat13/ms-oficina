@@ -76,10 +76,10 @@ func toJSON(v app.CustomerView) customerJSON {
 	return customerJSON{
 		ID:           v.ID,
 		Name:         v.Name,
-		Document:     v.Document,
-		DocumentType: v.DocumentType,
-		PhoneNumber:  v.PhoneNumber,
-		Email:        v.Email,
+		Document:     v.Document.Value,
+		DocumentType: v.Document.TypeString(),
+		PhoneNumber:  v.PhoneNumber.String(),
+		Email:        v.Email.String(),
 	}
 }
 
@@ -94,11 +94,24 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
 	}
 
-	err := h.create.Execute(ctx.Context(), app.CreateInput{
+	documentVO, err := document.New(body.Document)
+	if err != nil {
+		return h.handleError(ctx, err)
+	}
+	emailVO, err := email.New(body.Email)
+	if err != nil {
+		return h.handleError(ctx, err)
+	}
+	phoneVO, err := phone.New(body.PhoneNumber)
+	if err != nil {
+		return h.handleError(ctx, err)
+	}
+
+	err = h.create.Execute(ctx.Context(), app.CreateInput{
 		Name:        body.Name,
-		Document:    body.Document,
-		PhoneNumber: body.PhoneNumber,
-		Email:       body.Email,
+		Document:    documentVO,
+		PhoneNumber: phoneVO,
+		Email:       emailVO,
 		Now:         time.Now(),
 	})
 	if err != nil {
@@ -121,11 +134,29 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
 	}
 
+	var emailVO *email.Email
+	if body.Email != nil {
+		vo, err := email.New(*body.Email)
+		if err != nil {
+			return h.handleError(ctx, err)
+		}
+		emailVO = &vo
+	}
+
+	var phoneVO *phone.PhoneNumber
+	if body.PhoneNumber != nil {
+		vo, err := phone.New(*body.PhoneNumber)
+		if err != nil {
+			return h.handleError(ctx, err)
+		}
+		phoneVO = &vo
+	}
+
 	err = h.update.Execute(ctx.Context(), app.UpdateInput{
 		ID:          id,
 		Name:        body.Name,
-		PhoneNumber: body.PhoneNumber,
-		Email:       body.Email,
+		PhoneNumber: phoneVO,
+		Email:       emailVO,
 		Now:         time.Now(),
 	})
 	if err != nil {
@@ -178,7 +209,7 @@ func (h *Handler) handleError(ctx *fiber.Ctx, err error) error {
 	switch {
 	case errors.Is(err, app.ErrCustomerNotFound):
 		return writeError(ctx, fiber.StatusNotFound, "CUSTOMER_NOT_FOUND", err.Error())
-	case errors.Is(err, app.ErrDuplicateCustomer):
+	case errors.Is(err, app.ErrDuplicateDocument) || errors.Is(err, app.ErrDuplicateEmail):
 		return writeError(ctx, fiber.StatusConflict, "CUSTOMER_ALREADY_EXISTS", err.Error())
 	case errors.Is(err, document.ErrInvalidDocument):
 		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_DOCUMENT", err.Error())

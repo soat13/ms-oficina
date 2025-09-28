@@ -23,3 +23,11 @@ func Map[T, V any](slice []T, fn func(T) V) []V {
 	}
 	return result
 }
+
+func MapPtr[T, V any](slice []T, fn func(*T) V) []V {
+	result := make([]V, len(slice))
+	for i := range slice {
+		result[i] = fn(&slice[i])
+	}
+	return result
+}

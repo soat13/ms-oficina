@@ -21,62 +21,37 @@ type Customer struct {
 	entity.Timestamps
 }
 
-func NewCustomer(id uuid.UUID, name, documentStr, phoneNumberStr, emailStr string, now time.Time) (*Customer, error) {
+func NewCustomer(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email, now time.Time) (*Customer, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, ErrInvalidCustomerName
-	}
-	documentVO, docErr := document.New(documentStr)
-	if docErr != nil {
-		return nil, docErr
-	}
-	phoneNumberVO, phoneErr := phone.New(phoneNumberStr)
-	if phoneErr != nil {
-		return nil, phoneErr
-	}
-	emailVO, emailErr := email.New(emailStr)
-	if emailErr != nil {
-		return nil, emailErr
 	}
 
 	customer := &Customer{
 		ID:          uuidPkg.IDOrNew(id),
 		Name:        name,
-		Document:    documentVO,
-		PhoneNumber: phoneNumberVO,
-		Email:       emailVO,
+		Document:    document,
+		PhoneNumber: phoneNumber,
+		Email:       email,
 		Timestamps:  entity.NewTimestamps(now, now),
 	}
 
 	return customer, nil
 }
 
-func (customer *Customer) ChangeName(newName string, now time.Time) error {
+func (customer *Customer) ChangeName(newName string) error {
 	newName = strings.TrimSpace(newName)
 	if newName == "" {
 		return ErrInvalidCustomerName
 	}
 	customer.Name = newName
-	customer.UpdatedAt = now
 	return nil
 }
 
-func (customer *Customer) ChangePhoneNumber(newPhoneNumber string, now time.Time) error {
-	phoneNumberVO, err := phone.New(newPhoneNumber)
-	if err != nil {
-		return err
-	}
-	customer.PhoneNumber = phoneNumberVO
-	customer.UpdatedAt = now
-	return nil
+func (customer *Customer) ChangePhoneNumber(phoneNumber phone.PhoneNumber) {
+	customer.PhoneNumber = phoneNumber
 }
 
-func (customer *Customer) ChangeEmail(newEmail string, now time.Time) error {
-	emailVO, err := email.New(newEmail)
-	if err != nil {
-		return err
-	}
-	customer.Email = emailVO
-	customer.UpdatedAt = now
-	return nil
+func (customer *Customer) ChangeEmail(newEmail email.Email) {
+	customer.Email = newEmail
 }
