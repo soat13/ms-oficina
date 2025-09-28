@@ -21,12 +21,12 @@ func TestRepairOrderStartExecution(t *testing.T) {
 	ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		roID := testsupport.ThereIsAnApprovedRepairOrder(t, env.db)
+		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, env.db)
 
-		resp := postStartExecution(t, roID)
+		resp := postStartExecution(t, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, roID, repairorder.StatusInExecution)
+		expectRepairOrderStatus(t, repairOrderID, repairorder.StatusInExecution)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
@@ -58,6 +58,19 @@ func postStartExecution(t *testing.T, repairOrderID uuid.UUID) *http.Response {
 	}
 
 	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/start-execution", nil)
+}
+
+func postFinishExecution(t *testing.T, repairOrderID uuid.UUID) *http.Response {
+	t.Helper()
+
+	var id string
+	if repairOrderID == uuid.Nil {
+		id = "invalid"
+	} else {
+		id = repairOrderID.String()
+	}
+
+	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/finish-execution", nil)
 }
 
 func DoJSON(t *testing.T, app *fiber.App, method, path string, payload any) *http.Response {

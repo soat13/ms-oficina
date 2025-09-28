@@ -106,3 +106,17 @@ func (mr *MockRepositoryMockRecorder) SaveIfInDiagnostics(ctx, ro interface{}) *
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfInDiagnostics", reflect.TypeOf((*MockRepository)(nil).SaveIfInDiagnostics), ctx, ro)
 }
+
+// SaveIfInExecution mocks base method.
+func (m *MockRepository) SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfInExecution", ctx, ro)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveIfInExecution indicates an expected call of SaveIfInExecution.
+func (mr *MockRepositoryMockRecorder) SaveIfInExecution(ctx, ro interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfInExecution", reflect.TypeOf((*MockRepository)(nil).SaveIfInExecution), ctx, ro)
+}

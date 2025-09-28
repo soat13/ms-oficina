@@ -101,6 +101,10 @@ func (r *BunRepairOrderRepository) SaveIfInDiagnostics(ctx context.Context, ro *
 	return r.saveIfStatus(ctx, ro, repairorder.StatusInDiagnostics)
 }
 
+func (r *BunRepairOrderRepository) SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusInExecution)
+}
+
 func (r *BunRepairOrderRepository) saveIfStatus(
 	ctx context.Context,
 	ro *domain.RepairOrder,
