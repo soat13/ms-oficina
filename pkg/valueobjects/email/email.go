@@ -17,6 +17,6 @@ func (e Email) String() string {
 }
 
 func (e Email) IsValid() bool {
-	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	emailRegex := `^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,62}[a-zA-Z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,62}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$`
 	return regexp.MustCompile(emailRegex).MatchString(string(e))
 }

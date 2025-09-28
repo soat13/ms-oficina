@@ -5,13 +5,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
 type UpdateInput struct {
 	ID          uuid.UUID
 	Name        *string
-	PhoneNumber *string
-	Email       *string
+	PhoneNumber *phone.PhoneNumber
+	Email       *email.Email
 	Now         time.Time
 }
 
@@ -31,28 +33,25 @@ func (uc *UpdateCustomer) Execute(ctx context.Context, in UpdateInput) error {
 	if customer == nil {
 		return ErrCustomerNotFound
 	}
+
 	if in.Name != nil {
-		if err := customer.ChangeName(*in.Name, in.Now); err != nil {
+		if err := customer.ChangeName(*in.Name); err != nil {
 			return err
 		}
 	}
 	if in.PhoneNumber != nil {
-		if err := customer.ChangePhoneNumber(*in.PhoneNumber, in.Now); err != nil {
-			return err
-		}
+		customer.ChangePhoneNumber(*in.PhoneNumber)
 	}
 	if in.Email != nil {
-		exists, err := uc.repo.ExistsByEmail(ctx, *in.Email)
+		exists, err := uc.repo.ExistsByEmail(ctx, in.Email.String())
 		if err != nil {
 			return err
 		}
 		if exists {
-			return ErrDuplicateCustomer
+			return ErrDuplicateEmail
 		}
 
-		if err := customer.ChangeEmail(*in.Email, in.Now); err != nil {
-			return err
-		}
+		customer.ChangeEmail(*in.Email)
 	}
 
 	return uc.repo.Update(ctx, customer)

@@ -6,6 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/pkg/maps"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 	"github.com/uptrace/bun"
 
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
@@ -75,10 +79,8 @@ func (repo *BunCustomerRepository) List(ctx context.Context, limit int, offset i
 		Scan(ctx); err != nil {
 		return nil, err
 	}
-	out := make([]*domain.Customer, 0, len(rows))
-	for i := range rows {
-		out = append(out, toDomain(&rows[i]))
-	}
+
+	out := maps.MapPtr(rows, toDomain)
 	return out, nil
 }
 
@@ -114,7 +116,11 @@ func toDomain(model *customerModel) *domain.Customer {
 		return nil
 	}
 
-	customer, err := domain.NewCustomer(model.ID, model.Name, model.Document, model.PhoneNumber, model.Email, model.CreatedAt)
+	document, _ := document.New(model.Document)
+	phoneNumber, _ := phone.New(model.PhoneNumber)
+	email, _ := email.New(model.Email)
+
+	customer, err := domain.NewCustomer(model.ID, model.Name, document, phoneNumber, email, model.CreatedAt)
 	if err != nil {
 		return nil
 	}
