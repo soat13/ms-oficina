@@ -123,6 +123,16 @@ func main() {
 	listProd := productApp.NewListProducts(productRepo)
 
 	// -----------------------------------------------------------------------------
+	// Products wiring
+	// -----------------------------------------------------------------------------
+	productRepo := productDB.NewBunProductRepository(db.bunDB)
+	createProd := productApp.NewCreateProduct(productRepo)
+	updateProd := productApp.NewUpdateProduct(productRepo)
+	deleteProd := productApp.NewDeleteProduct(productRepo)
+	getProd := productApp.NewGetProduct(productRepo)
+	listProd := productApp.NewListProducts(productRepo)
+
+	// -----------------------------------------------------------------------------
 	// HTTP app & routes
 	// -----------------------------------------------------------------------------
 	customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
@@ -149,6 +159,10 @@ func main() {
 	//customers
 	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus)
 	customerHTTP.Register(fiberApp, customerHandler)
+
+	// products routes (/admin/products/*)  // TODO: proteger com JWT
+	prodHandler := productHTTP.NewHandler(createProd, updateProd, deleteProd, getProd, listProd)
+	productHTTP.Register(app, prodHandler)
 
 	// products routes (/admin/products/*)  // TODO: proteger com JWT
 	prodHandler := productHTTP.NewHandler(createProd, updateProd, deleteProd, getProd, listProd)
