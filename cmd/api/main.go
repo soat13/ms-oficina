@@ -25,6 +25,7 @@ import (
 	// services
 	serviceApp "github.com/soat13/fase-1-oficina/internal/service/application"
 	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
+	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
 
 	// customer
