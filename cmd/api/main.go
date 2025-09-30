@@ -39,6 +39,7 @@ import (
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
 
 	// shared
+	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
@@ -173,6 +174,7 @@ func newDB() *DB {
 func newApp() *fiber.App {
 	app := fiber.New()
 	app.Use(logger.New())
+	serviceDocs.Register(app)
 	// TODO: adicionar middleware de JWT e aplicar no grupo /admin/*
 	return app
 }

@@ -16,7 +16,7 @@ install:
 	docker compose up -d --build --force-recreate
 
 run:
-	docker compose exec app-dev go run ./cmd/api/main.go
+	docker compose exec app-dev go run ./cmd/api
 
 # QA
 test:

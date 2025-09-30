@@ -25,9 +25,20 @@ exposta no host em `http://localhost` (porta 80 mapeada para 8080).
  - CRUD: product (Pisani)
  - CRUD: customer (Lucas)
  - CRUD: vehicles (Marcos)
- - Criar swagger (Pisani)
  - Autenticação JWT
   - Verificar nome da tabela com a linguagem oblíqua
+
+## Swagger / OpenAPI
+
+Após subir a API, acesse a documentação:
+
+- UI: `http://localhost/docs`
+- Esquema: `http://localhost/openapi.yaml`
+
+Observações:
+- A UI usa assets do CDN (swagger-ui-dist). O arquivo do esquema fica embarcado no binário.
+- As rotas documentadas correspondem às implementadas em `internal/service/infra/http` e `internal/estimate/infra/http`.
+ 
 
 ## Sem Make (comandos equivalentes)
 - Subir os serviços:
@@ -36,7 +47,7 @@ exposta no host em `http://localhost` (porta 80 mapeada para 8080).
   - `docker compose exec -T app-dev sh -lc 'test -x /go/bin/sql-migrate || GOBIN=/go/bin /usr/local/go/bin/go install github.com/rubenv/sql-migrate/sql-migrate@latest'`
   - `docker compose exec -T app-dev sh -lc '/go/bin/sql-migrate up -config=./scripts/db/dbconfig.yml -env=development'`
 - Executar a API:
-  - `docker compose exec app-dev go run ./cmd/api/main.go`
+  - `docker compose exec app-dev go run ./cmd/api`
 
 ## Variáveis de ambiente
 - `PG_DSN`: string de conexão do Postgres (definida no `.env` e no compose)
