@@ -33,9 +33,6 @@ type LoginOutput struct {
 
 func (s *LoginService) Execute(ctx context.Context, in LoginInput) (LoginOutput, error) {
 	email := strings.ToLower(strings.TrimSpace(in.Email))
-	if email == "" || in.Password == "" {
-		return LoginOutput{}, ErrInvalidCredentials
-	}
 	user, err := s.repo.FindByEmail(ctx, email)
 	if err != nil {
 		return LoginOutput{}, ErrInvalidCredentials
