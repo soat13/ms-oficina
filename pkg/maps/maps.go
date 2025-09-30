@@ -15,3 +15,19 @@ func Values[K comparable, V any](m map[K]V) []V {
 	}
 	return values
 }
+
+func Map[T, V any](slice []T, fn func(T) V) []V {
+	result := make([]V, len(slice))
+	for i, v := range slice {
+		result[i] = fn(v)
+	}
+	return result
+}
+
+func MapPtr[T, V any](slice []T, fn func(*T) V) []V {
+	result := make([]V, len(slice))
+	for i := range slice {
+		result[i] = fn(&slice[i])
+	}
+	return result
+}

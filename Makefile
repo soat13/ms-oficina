@@ -37,7 +37,7 @@ sh:
 	docker compose exec app-dev bash
 
 # -------------------------------
-# sql-migrate rodando no app-dev
+# sql-migrate running on app-dev
 # -------------------------------
 COMPOSE ?= docker compose --env-file .env
 GO_BIN           ?= /usr/local/go/bin/go
@@ -56,3 +56,19 @@ migrate-up: up migrate-install
 
 migrate-down: up migrate-install
 	$(COMPOSE) exec -T app-dev sh -lc '$(SQL_MIGRATE_BIN) down -config=$(SQL_MIGRATE_CFG) -env=development -limit=1'
+
+# -------------------------------
+# Mockgen running on app-dev
+# -------------------------------
+DOCKER_EXEC := docker compose exec app-dev
+GO_BIN      := /usr/local/go/bin/go
+MOCKGEN     := /go/bin/mockgen
+
+mockgen-install:
+	$(DOCKER_EXEC) sh -lc 'test -x $(MOCKGEN) || $(GO_BIN) install github.com/golang/mock/mockgen@latest'
+
+mock: mockgen-install
+	$(DOCKER_EXEC) sh -lc '$(MOCKGEN) \
+	  -source=internal/repairorder/application/repository.go \
+	  -destination=internal/repairorder/mocks/repository_mock.go \
+	  -package=mocks'

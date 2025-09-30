@@ -12,10 +12,8 @@ type (
 	RepairOrderStatus string
 
 	RepairOrderView struct {
-		ID       uuid.UUID
-		Status   repairorder.Status
-		Services map[uuid.UUID]int
-		Products map[uuid.UUID]int
+		ID     uuid.UUID
+		Status repairorder.Status
 	}
 
 	RepairOrderReader interface {

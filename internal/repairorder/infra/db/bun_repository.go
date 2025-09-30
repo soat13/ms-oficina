@@ -5,10 +5,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/uptrace/bun"
+
+	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+
+	"github.com/soat13/fase-1-oficina/pkg/entity"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 )
@@ -32,18 +35,27 @@ type repairOrderModel struct {
 	UpdatedAt  time.Time          `bun:"updated_at"`
 }
 
-func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (domain.RepairOrder, error) {
-	var m repairOrderModel
+func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
+	var model repairOrderModel
 	err := r.db.NewSelect().
-		Model(&m).
+		Model(&model).
 		Where("id = ?", id).
 		Scan(ctx)
 
-	if err != nil {
-		return domain.RepairOrder{}, err
+	if bun_helper.IgnoreNoRows(err) != nil {
+		return nil, err
 	}
 
-	return domain.RepairOrder{
+	return r.toEntityOrNil(&model), nil
+}
+
+func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
+
+	if m.ID == uuid.Nil {
+		return nil
+	}
+
+	return &domain.RepairOrder{
 		ID:         m.ID,
 		CustomerID: m.CustomerID,
 		VehicleID:  m.VehicleID,
@@ -52,10 +64,10 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (d
 			CreatedAt: m.CreatedAt,
 			UpdatedAt: m.UpdatedAt,
 		},
-	}, nil
+	}
 }
 
-func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder domain.RepairOrder) (domain.RepairOrder, error) {
+func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) error {
 	m := repairOrderModel{
 		ID:         repairOrder.ID,
 		CustomerID: repairOrder.CustomerID,
@@ -71,13 +83,38 @@ func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder domain.
 		Set("customer_id = EXCLUDED.customer_id").
 		Set("vehicle_id = EXCLUDED.vehicle_id").
 		Set("status = EXCLUDED.status").
-		Set("created_at = EXCLUDED.created_at").
 		Set("updated_at = EXCLUDED.updated_at").
 		Exec(ctx)
 
-	if err != nil {
-		return domain.RepairOrder{}, err
-	}
+	return err
+}
 
-	return repairOrder, nil
+func (r *BunRepairOrderRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusApproved)
+}
+
+func (r *BunRepairOrderRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusAwaitingApproval)
+}
+
+func (r *BunRepairOrderRepository) SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusInDiagnostics)
+}
+
+func (r *BunRepairOrderRepository) SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusInExecution)
+}
+
+func (r *BunRepairOrderRepository) saveIfStatus(
+	ctx context.Context,
+	ro *domain.RepairOrder,
+	status repairorder.Status,
+) error {
+	_, err := r.db.NewUpdate().
+		Model(ro).
+		Where("id = ?", ro.ID).
+		Where("status = ?", status).
+		Exec(ctx)
+
+	return err
 }

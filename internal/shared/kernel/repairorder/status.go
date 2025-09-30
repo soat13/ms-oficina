@@ -3,10 +3,10 @@ package repairorder
 type Status string
 
 const (
-	StatusReceived    Status = "received"
-	StatusInDiagnosis Status = "in_diagnosis"
-	StatusAnalyzed    Status = "analyzed"
-	StatusApproved    Status = "approved"
-	StatusRejected    Status = "rejected"
-	StatusClosed      Status = "closed"
+	StatusReceived         Status = "received"
+	StatusInDiagnostics    Status = "in_diagnostics"
+	StatusAwaitingApproval Status = "awaiting_approval"
+	StatusApproved         Status = "approved"
+	StatusInExecution      Status = "in_execution"
+	StatusFinished         Status = "finished"
 )

@@ -23,12 +23,12 @@ func NewGetService(repo Repository) *GetService {
 }
 
 func (uc *GetService) Execute(ctx context.Context, in GetInput) (*GetOutput, error) {
-	s, err := uc.repo.GetByID(ctx, in.ID)
+	service, err := uc.repo.GetByID(ctx, in.ID)
 	if err != nil {
 		return nil, err
 	}
-	if s == nil {
+	if service == nil {
 		return nil, ErrServiceNotFound
 	}
-	return &GetOutput{Service: toView(s)}, nil
+	return &GetOutput{Service: toView(service)}, nil
 }

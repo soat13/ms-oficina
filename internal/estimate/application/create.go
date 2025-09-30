@@ -20,7 +20,7 @@ type (
 		Qty       int
 	}
 
-	CreateEstimateInput struct {
+	CreateInput struct {
 		RepairOrderID uuid.UUID
 		Now           time.Time
 		Products      map[uuid.UUID]int
@@ -37,7 +37,7 @@ type (
 		Estimate EstimateView
 	}
 
-	CreateEstimateFromRepairOrder struct {
+	Create struct {
 		repairOrderReader    RepairOrderReader
 		productCatalogReader ProductCatalogReader
 		serviceCatalogReader ServiceCatalogReader
@@ -46,14 +46,14 @@ type (
 	}
 )
 
-func NewCreateEstimateFromRepairOrder(
+func NewCreateEstimate(
 	repairOrderReader RepairOrderReader,
 	productCatalogReader ProductCatalogReader,
 	serviceCatalogReader ServiceCatalogReader,
 	repository Repository,
 	eventBus eventbus.Bus,
-) *CreateEstimateFromRepairOrder {
-	return &CreateEstimateFromRepairOrder{
+) *Create {
+	return &Create{
 		repairOrderReader:    repairOrderReader,
 		productCatalogReader: productCatalogReader,
 		serviceCatalogReader: serviceCatalogReader,
@@ -62,7 +62,7 @@ func NewCreateEstimateFromRepairOrder(
 	}
 }
 
-func (c *CreateEstimateFromRepairOrder) Execute(ctx context.Context, input CreateEstimateInput) (*CreateEstimateOutput, error) {
+func (c *Create) Execute(ctx context.Context, input CreateInput) (*CreateEstimateOutput, error) {
 	repairOrder, err := c.validRepairOrderOrError(ctx, input.RepairOrderID)
 	if err != nil {
 		return nil, err
@@ -81,14 +81,14 @@ func (c *CreateEstimateFromRepairOrder) Execute(ctx context.Context, input Creat
 		return nil, err
 	}
 
-	_ = c.publishEvent(ctx, *estimate) // todo: add transactional outbox pattern
+	_ = c.publishEvent(ctx, *estimate)
 
 	return &CreateEstimateOutput{
 		Estimate: toEstimateView(estimate),
 	}, nil
 }
 
-func (c *CreateEstimateFromRepairOrder) publishEvent(ctx context.Context, estimate domain.Estimate) error {
+func (c *Create) publishEvent(ctx context.Context, estimate domain.Estimate) error {
 	event := estimateEvent.Created{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
@@ -104,7 +104,7 @@ func (c *CreateEstimateFromRepairOrder) publishEvent(ctx context.Context, estima
 	return nil
 }
 
-func (c *CreateEstimateFromRepairOrder) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input CreateEstimateInput) error {
+func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input CreateInput) error {
 	products, err := c.productCatalogReader.GetByIDs(ctx, maps.Keys(input.Products))
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (c *CreateEstimateFromRepairOrder) addItemsFromRepairOrder(ctx context.Cont
 	return nil
 }
 
-func (c *CreateEstimateFromRepairOrder) addItemsToEstimate(
+func (c *Create) addItemsToEstimate(
 	estimate *domain.Estimate,
 	itemQuantity map[uuid.UUID]int,
 	items []CatalogItemView,
@@ -142,17 +142,17 @@ func (c *CreateEstimateFromRepairOrder) addItemsToEstimate(
 	return nil
 }
 
-func (c *CreateEstimateFromRepairOrder) validRepairOrderOrError(ctx context.Context, repairID uuid.UUID) (*RepairOrderView, error) {
+func (c *Create) validRepairOrderOrError(ctx context.Context, repairID uuid.UUID) (*RepairOrderView, error) {
 	repairOrder, err := c.repairOrderReader.GetByID(ctx, repairID)
 	if err != nil {
 		return nil, err
 	}
 
 	if repairOrder == nil {
-		return nil, ErrRepairOrderNotFound
+		return nil, repairorder.ErrRepairOrderNotFound
 	}
 
-	if repairOrder.Status != repairorder.StatusInDiagnosis {
+	if repairOrder.Status != repairorder.StatusInDiagnostics {
 		return nil, ErrInvalidRepairOrderStatus
 	}
 

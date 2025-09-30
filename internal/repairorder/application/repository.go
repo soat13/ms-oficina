@@ -9,7 +9,11 @@ import (
 
 type (
 	Repository interface {
-		GetById(ctx context.Context, id uuid.UUID) (domain.RepairOrder, error)
-		Save(ctx context.Context, repairOrder domain.RepairOrder) (domain.RepairOrder, error)
+		GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error)
+		Save(ctx context.Context, repairOrder *domain.RepairOrder) error
+		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error
 	}
 )
