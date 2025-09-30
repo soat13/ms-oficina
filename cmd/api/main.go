@@ -108,12 +108,17 @@ func main() {
 	// -----------------------------------------------------------------------------
 	// Customer wiring
 	// -----------------------------------------------------------------------------
+<<<<<<< HEAD
 	customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
 	createCus := customerApp.NewCreateCustomer(customerRepo)
 	updateCus := customerApp.NewUpdateCustomer(customerRepo)
 	deleteCus := customerApp.NewDeleteCustomer(customerRepo)
 	getCus := customerApp.NewGetCustomer(customerRepo)
 	listCus := customerApp.NewListCustomers(customerRepo)
+=======
+    app := newApp()
+    serviceDocs.Register(app)
+>>>>>>> af6503e (Update cmd/api/main.go)
 
 	// -----------------------------------------------------------------------------
 	// Repairorder wiring
