@@ -73,7 +73,6 @@ func main() {
 	// HTTP app & routes
 	// -----------------------------------------------------------------------------
     app := newApp()
-    // Swagger/OpenAPI docs (embutidos no pacote de service)
     serviceDocs.Register(app)
 
 	// estimate routes
