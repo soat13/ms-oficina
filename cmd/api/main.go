@@ -32,6 +32,15 @@ import (
 	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
 	customerHTTP "github.com/soat13/fase-1-oficina/internal/customer/infra/http"
 
+	// products
+	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
+	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/db"
+	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/http"
+
+	// shared
+	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
+
 	// repair order listeners
 	repairOrderApp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
@@ -104,7 +113,17 @@ func main() {
 	serviceHTTP.Register(fiberApp, serviceHttpHandler)
 
 	// -----------------------------------------------------------------------------
-	// Customer wiring
+	// Products wiring
+	// -----------------------------------------------------------------------------
+	productRepo := productDB.NewBunProductRepository(db.bunDB)
+	createProd := productApp.NewCreateProduct(productRepo)
+	updateProd := productApp.NewUpdateProduct(productRepo)
+	deleteProd := productApp.NewDeleteProduct(productRepo)
+	getProd := productApp.NewGetProduct(productRepo)
+	listProd := productApp.NewListProducts(productRepo)
+
+	// -----------------------------------------------------------------------------
+	// HTTP app & routes
 	// -----------------------------------------------------------------------------
 	customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
 	createCus := customerApp.NewCreateCustomer(customerRepo)
@@ -130,6 +149,10 @@ func main() {
 	//customers
 	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus)
 	customerHTTP.Register(fiberApp, customerHandler)
+
+	// products routes (/admin/products/*)  // TODO: proteger com JWT
+	prodHandler := productHTTP.NewHandler(createProd, updateProd, deleteProd, getProd, listProd)
+	productHTTP.Register(app, prodHandler)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start

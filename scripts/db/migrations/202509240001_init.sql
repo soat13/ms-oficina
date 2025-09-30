@@ -60,6 +60,19 @@ CREATE INDEX idx_repair_orders_vehicle_id ON repair_orders (vehicle_id);
 CREATE INDEX idx_repair_orders_status ON repair_orders (status);
 CREATE INDEX idx_repair_orders_created_at ON repair_orders (created_at);
 
+CREATE TABLE repair_order_items
+(
+    id              UUID PRIMARY KEY,
+    repair_order_id UUID         NOT NULL REFERENCES repair_orders (id) ON DELETE CASCADE,
+    item_id         UUID         NOT NULL,
+    item_type       VARCHAR(20)  NOT NULL, -- "service" ou "product"
+    quantity        INT          NOT NULL,
+    created_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_repair_order_items_repair_order_id ON repair_order_items (repair_order_id);
+CREATE INDEX idx_repair_order_items_item ON repair_order_items (item_id, item_type);
+
 
 CREATE TABLE estimates
 (
@@ -89,10 +102,13 @@ CREATE INDEX idx_estimate_items_estimate_id ON estimate_items (estimate_id);
 CREATE INDEX idx_estimate_items_item ON estimate_items (item_id, item_type);
 
 -- +migrate Down
+/*
 DROP TABLE IF EXISTS estimate_items;
 DROP TABLE IF EXISTS estimates;
+DROP TABLE IF EXISTS repair_order_items;
 DROP TABLE IF EXISTS repair_orders;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS services;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS customers;
+*/

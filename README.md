@@ -22,7 +22,6 @@ exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 
 ## TODO
 
- - CRUD: product (Pisani)
  - CRUD: customer (Lucas)
  - CRUD: vehicles (Marcos)
  - Criar swagger (Pisani)
@@ -87,3 +86,24 @@ seeds de teste automaticamente.
 - `internal/*/{domain,application,infra}` — camadas por contexto de domínio
 - `scripts/db/migrations` — migrações SQL
 - `tests/` — testes de integração e utilitários de banco
+
+## Endpoints úteis (Admin Products)
+Base URL (host): `http://localhost`
+
+- Criar produto:
+  - `POST /admin/products/`
+  - Body JSON:
+    `{ "name": "Filtro de Óleo", "price_cents": 4500, "stock": 10 }`
+
+- Listar produtos:
+  - `GET /admin/products/?limit=50&offset=0`
+
+- Buscar por ID:
+  - `GET /admin/products/{id}`
+
+- Atualizar produto:
+  - `PUT /admin/products/{id}`
+  - Body JSON (parcial): `{ "name": "Filtro XYZ", "stock": 12 }`
+
+- Deletar produto:
+  - `DELETE /admin/products/{id}`
