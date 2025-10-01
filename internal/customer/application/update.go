@@ -42,16 +42,14 @@ func (uc *UpdateCustomer) Execute(ctx context.Context, in UpdateInput) error {
 	if in.PhoneNumber != nil {
 		customer.ChangePhoneNumber(*in.PhoneNumber)
 	}
-	if in.Email != nil {
+	if in.Email != nil && customer.Email.String() != in.Email.String() {
 		exists, err := uc.repo.ExistsByEmail(ctx, in.Email.String())
 		if err != nil {
 			return err
 		}
-		if exists {
-			return ErrDuplicateEmail
+		if !exists {
+			customer.ChangeEmail(*in.Email)
 		}
-
-		customer.ChangeEmail(*in.Email)
 	}
 
 	return uc.repo.Update(ctx, customer)

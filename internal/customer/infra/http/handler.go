@@ -1,9 +1,7 @@
 package http
 
 import (
-	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -11,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
+	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
@@ -23,24 +22,35 @@ type Handler struct {
 	getUseCase    *app.GetCustomer
 	listUseCase   *app.ListCustomers
 	validate      *validator.Validate
+	errorHandler  *fiberHelper.ErrorHandler
 }
 
-func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, delete *app.DeleteCustomer, get *app.GetCustomer, list *app.ListCustomers) *Handler {
+func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, delete *app.DeleteCustomer, get *app.GetCustomer, list *app.ListCustomers, errorHandler *fiberHelper.ErrorHandler) *Handler {
 	validate := validator.New()
-	return &Handler{
+	handler := &Handler{
 		createUseCase: create,
 		updateUseCase: update,
 		deleteUseCase: delete,
 		getUseCase:    get,
 		listUseCase:   list,
 		validate:      validate,
+		errorHandler:  errorHandler,
 	}
+
+	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrCustomerNotFound)
+	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateDocument)
+	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateEmail)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(document.ErrInvalidDocument)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(phone.ErrInvalidPhoneNumber)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(email.ErrInvalidEmail)
+
+	return handler
 }
 
 func Register(app *fiber.App, h *Handler) {
 	grp := app.Group("/admin/customers") // TODO: PROTECT WITH JWT
 	grp.Post("/", h.create)
-	grp.Put("/:id", h.update)
+	grp.Patch("/:id", h.update)
 	grp.Delete("/:id", h.delete)
 	grp.Get("/:id", h.getByID)
 	grp.Get("/", h.list)
@@ -88,23 +98,29 @@ func toJSON(v app.CustomerView) customerJSON {
 func (h *Handler) create(ctx *fiber.Ctx) error {
 	var body createBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return writeError(ctx, fiber.StatusBadRequest, "INVALID_JSON", "invalid JSON body")
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    "INVALID_JSON",
+			"message": "invalid JSON body",
+		})
 	}
 	if err := h.validate.Struct(body); err != nil {
-		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"code":    "INVALID_BODY",
+			"message": err.Error(),
+		})
 	}
 
 	documentVO, err := document.New(body.Document)
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	emailVO, err := email.New(body.Email)
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	phoneVO, err := phone.New(body.PhoneNumber)
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	err = h.createUseCase.Execute(ctx.Context(), app.CreateInput{
@@ -115,30 +131,36 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		Now:         time.Now(),
 	})
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusCreated)
 }
 
 func (h *Handler) update(ctx *fiber.Ctx) error {
-	id, err := parseID(ctx.Params("id"))
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
 	if err != nil {
-		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid id")
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	var body updateBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return writeError(ctx, fiber.StatusBadRequest, "INVALID_JSON", "invalid JSON body")
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    "INVALID_JSON",
+			"message": "invalid JSON body",
+		})
 	}
 	if err := h.validate.Struct(body); err != nil {
-		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_BODY", err.Error())
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"code":    "INVALID_BODY",
+			"message": err.Error(),
+		})
 	}
 
 	var emailVO *email.Email
 	if body.Email != nil {
 		vo, err := email.New(*body.Email)
 		if err != nil {
-			return h.handleError(ctx, err)
+			return h.errorHandler.Handle(ctx, err)
 		}
 		emailVO = &vo
 	}
@@ -147,7 +169,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 	if body.PhoneNumber != nil {
 		vo, err := phone.New(*body.PhoneNumber)
 		if err != nil {
-			return h.handleError(ctx, err)
+			return h.errorHandler.Handle(ctx, err)
 		}
 		phoneVO = &vo
 	}
@@ -160,30 +182,30 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		Now:         time.Now(),
 	})
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 func (h *Handler) delete(ctx *fiber.Ctx) error {
-	id, err := parseID(ctx.Params("id"))
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
 	if err != nil {
-		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid id")
+		return h.errorHandler.Handle(ctx, err)
 	}
 	if err := h.deleteUseCase.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 func (h *Handler) getByID(ctx *fiber.Ctx) error {
-	id, err := parseID(ctx.Params("id"))
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
 	if err != nil {
-		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid id")
+		return h.errorHandler.Handle(ctx, err)
 	}
 	out, err := h.getUseCase.Execute(ctx.Context(), app.GetInput{ID: id})
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.Status(fiber.StatusOK).JSON(toJSON(out.Customer))
 }
@@ -194,7 +216,7 @@ func (h *Handler) list(ctx *fiber.Ctx) error {
 
 	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Limit: limit, Offset: offset})
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 	resp := make([]customerJSON, 0, len(out.Customers))
 	for _, sv := range out.Customers {
@@ -203,30 +225,7 @@ func (h *Handler) list(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"data": resp})
 }
 
-// -------- Error mapping + helpers --------
-
-func (h *Handler) handleError(ctx *fiber.Ctx, err error) error {
-	switch {
-	case errors.Is(err, app.ErrCustomerNotFound):
-		return writeError(ctx, fiber.StatusNotFound, "CUSTOMER_NOT_FOUND", err.Error())
-	case errors.Is(err, app.ErrDuplicateDocument) || errors.Is(err, app.ErrDuplicateEmail):
-		return writeError(ctx, fiber.StatusConflict, "CUSTOMER_ALREADY_EXISTS", err.Error())
-	case errors.Is(err, document.ErrInvalidDocument):
-		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_DOCUMENT", err.Error())
-	case errors.Is(err, phone.ErrInvalidPhoneNumber):
-		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_PHONE_NUMBER", err.Error())
-	case errors.Is(err, email.ErrInvalidEmail):
-		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_EMAIL", err.Error())
-	case strings.Contains(err.Error(), "invalid customer name"):
-		return writeError(ctx, fiber.StatusUnprocessableEntity, "INVALID_CUSTOMER_NAME", err.Error())
-	default:
-		return writeError(ctx, fiber.StatusInternalServerError, "INTERNAL_ERROR", "internal error")
-	}
-}
-
-func parseID(s string) (uuid.UUID, error) {
-	return uuid.Parse(s)
-}
+// -------- Helpers --------
 
 func atoiDefault(s string, def int) int {
 	if s == "" {
