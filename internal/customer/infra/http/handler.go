@@ -17,33 +17,33 @@ import (
 )
 
 type Handler struct {
-	create   *app.CreateCustomer
-	update   *app.UpdateCustomer
-	del      *app.DeleteCustomer
-	get      *app.GetCustomer
-	list     *app.ListCustomers
-	validate *validator.Validate
+	createUseCase *app.CreateCustomer
+	updateUseCase *app.UpdateCustomer
+	deleteUseCase *app.DeleteCustomer
+	getUseCase    *app.GetCustomer
+	listUseCase   *app.ListCustomers
+	validate      *validator.Validate
 }
 
-func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, del *app.DeleteCustomer, get *app.GetCustomer, list *app.ListCustomers) *Handler {
+func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, delete *app.DeleteCustomer, get *app.GetCustomer, list *app.ListCustomers) *Handler {
 	validate := validator.New()
 	return &Handler{
-		create:   create,
-		update:   update,
-		del:      del,
-		get:      get,
-		list:     list,
-		validate: validate,
+		createUseCase: create,
+		updateUseCase: update,
+		deleteUseCase: delete,
+		getUseCase:    get,
+		listUseCase:   list,
+		validate:      validate,
 	}
 }
 
 func Register(app *fiber.App, h *Handler) {
-	grp := app.Group("/admin/customers") // proteja com JWT no setup/main
-	grp.Post("/", h.Create)
-	grp.Put("/:id", h.Update)
-	grp.Delete("/:id", h.Delete)
-	grp.Get("/:id", h.GetByID)
-	grp.Get("/", h.List)
+	grp := app.Group("/admin/customers") // TODO: PROTECT WITH JWT
+	grp.Post("/", h.create)
+	grp.Put("/:id", h.update)
+	grp.Delete("/:id", h.delete)
+	grp.Get("/:id", h.getByID)
+	grp.Get("/", h.list)
 }
 
 // -------- DTOs --------
@@ -85,7 +85,7 @@ func toJSON(v app.CustomerView) customerJSON {
 
 // -------- Handlers --------
 
-func (h *Handler) Create(ctx *fiber.Ctx) error {
+func (h *Handler) create(ctx *fiber.Ctx) error {
 	var body createBody
 	if err := ctx.BodyParser(&body); err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_JSON", "invalid JSON body")
@@ -107,7 +107,7 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 		return h.handleError(ctx, err)
 	}
 
-	err = h.create.Execute(ctx.Context(), app.CreateInput{
+	err = h.createUseCase.Execute(ctx.Context(), app.CreateInput{
 		Name:        body.Name,
 		Document:    documentVO,
 		PhoneNumber: phoneVO,
@@ -120,7 +120,7 @@ func (h *Handler) Create(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusCreated)
 }
 
-func (h *Handler) Update(ctx *fiber.Ctx) error {
+func (h *Handler) update(ctx *fiber.Ctx) error {
 	id, err := parseID(ctx.Params("id"))
 	if err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid id")
@@ -152,7 +152,7 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 		phoneVO = &vo
 	}
 
-	err = h.update.Execute(ctx.Context(), app.UpdateInput{
+	err = h.updateUseCase.Execute(ctx.Context(), app.UpdateInput{
 		ID:          id,
 		Name:        body.Name,
 		PhoneNumber: phoneVO,
@@ -165,34 +165,34 @@ func (h *Handler) Update(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (h *Handler) Delete(ctx *fiber.Ctx) error {
+func (h *Handler) delete(ctx *fiber.Ctx) error {
 	id, err := parseID(ctx.Params("id"))
 	if err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid id")
 	}
-	if err := h.del.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
+	if err := h.deleteUseCase.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
 		return h.handleError(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (h *Handler) GetByID(ctx *fiber.Ctx) error {
+func (h *Handler) getByID(ctx *fiber.Ctx) error {
 	id, err := parseID(ctx.Params("id"))
 	if err != nil {
 		return writeError(ctx, fiber.StatusBadRequest, "INVALID_ID", "invalid id")
 	}
-	out, err := h.get.Execute(ctx.Context(), app.GetInput{ID: id})
+	out, err := h.getUseCase.Execute(ctx.Context(), app.GetInput{ID: id})
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
 	return ctx.Status(fiber.StatusOK).JSON(toJSON(out.Customer))
 }
 
-func (h *Handler) List(ctx *fiber.Ctx) error {
+func (h *Handler) list(ctx *fiber.Ctx) error {
 	limit := atoiDefault(ctx.Query("limit"), 50)
 	offset := atoiDefault(ctx.Query("offset"), 0)
 
-	out, err := h.list.Execute(ctx.Context(), app.ListInput{Limit: limit, Offset: offset})
+	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Limit: limit, Offset: offset})
 	if err != nil {
 		return h.handleError(ctx, err)
 	}
