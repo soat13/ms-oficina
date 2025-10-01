@@ -12,6 +12,8 @@ import (
 	customerApp "github.com/soat13/fase-1-oficina/internal/customer/application"
 	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
 	customerHTTP "github.com/soat13/fase-1-oficina/internal/customer/infra/http"
+	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
+	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 )
 
 type httpTestApp struct {
@@ -34,7 +36,9 @@ func setupHTTP(t *testing.T) *httpTestApp {
 	app := fiber.New()
 	app.Use(logger.New())
 
-	h := customerHTTP.NewHandler(createUC, updateUC, deleteUC, getUC, listUC)
+	errorResolver := errorHelper.NewErrorResolver()
+	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
+	h := customerHTTP.NewHandler(createUC, updateUC, deleteUC, getUC, listUC, errorHandler)
 	customerHTTP.Register(app, h)
 
 	return &httpTestApp{app: app, tdb: tdb}
