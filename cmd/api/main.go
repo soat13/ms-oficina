@@ -59,17 +59,13 @@ func main() {
 	errorResolver := errorHelper.NewErrorResolver()
 
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
+	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidJSON)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidBody)
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
 
-	// -----------------------------------------------------------------------------
-	// HTTP server setup
-	// -----------------------------------------------------------------------------
 	fiberApp := newApp()
 	serviceDocs.Register(fiberApp)
 	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
-
-	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
-	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
 
 	// -----------------------------------------------------------------------------
 	// Estimate wiring
@@ -130,7 +126,7 @@ func main() {
 	// todo: add approvedByCustomer product subscriber to reduce stock
 
 	//customers
-	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus)
+	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus, errorHandler)
 	customerHTTP.Register(fiberApp, customerHandler)
 
 	// -----------------------------------------------------------------------------

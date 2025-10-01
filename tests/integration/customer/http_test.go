@@ -304,7 +304,7 @@ func listCustomers(t *testing.T, limit, offset int) *http.Response {
 func putUpdateCustomer(t *testing.T, id uuid.UUID, body updateBody) *http.Response {
 	t.Helper()
 	bs, _ := json.Marshal(body)
-	req := httptest.NewRequest("PUT", "/admin/customers/"+id.String(), bytes.NewReader(bs))
+	req := httptest.NewRequest("PATCH", "/admin/customers/"+id.String(), bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := env.app.Test(req, -1)
 	require.NoError(t, err)
