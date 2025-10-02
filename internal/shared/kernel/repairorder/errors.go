@@ -3,5 +3,5 @@ package repairorder
 import "errors"
 
 var (
-	ErrRepairOrderNotFound = errors.New("catalog.item.not.found")
+	ErrRepairOrderNotFound = errors.New("REPAIR_ORDER_NOT_FOUND")
 )

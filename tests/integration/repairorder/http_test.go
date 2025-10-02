@@ -17,6 +17,42 @@ import (
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
 )
 
+func TestRepairOrderReleaseVehicle(t *testing.T) {
+	ensureSetup(t)
+
+	t.Run("Success", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsAFinishedRepairOrder(t, env.db)
+
+		resp := postReleaseVehicle(t, repairOrderID)
+
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
+		expectRepairOrderStatus(t, repairOrderID, repairorder.StatusReleased)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		resp := postStartExecution(t, uuid.New())
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+}
+
+func TestRepairOrderFinishExecution(t *testing.T) {
+	ensureSetup(t)
+
+	t.Run("Success", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInExecution(t, env.db)
+
+		resp := postFinishExecution(t, repairOrderID)
+
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
+		expectRepairOrderStatus(t, repairOrderID, repairorder.StatusFinished)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		resp := postStartExecution(t, uuid.New())
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+}
+
 func TestRepairOrderStartExecution(t *testing.T) {
 	ensureSetup(t)
 
@@ -49,28 +85,20 @@ func expectRepairOrderStatus(t *testing.T, repairOrderID uuid.UUID, expected rep
 
 func postStartExecution(t *testing.T, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
-
-	var id string
-	if repairOrderID == uuid.Nil {
-		id = "invalid"
-	} else {
-		id = repairOrderID.String()
-	}
-
+	id := UuidAsString(t, repairOrderID)
 	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/start-execution", nil)
 }
 
 func postFinishExecution(t *testing.T, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
-
-	var id string
-	if repairOrderID == uuid.Nil {
-		id = "invalid"
-	} else {
-		id = repairOrderID.String()
-	}
-
+	id := UuidAsString(t, repairOrderID)
 	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/finish-execution", nil)
+}
+
+func postReleaseVehicle(t *testing.T, repairOrderID uuid.UUID) *http.Response {
+	t.Helper()
+	id := UuidAsString(t, repairOrderID)
+	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/release-vehicle", nil)
 }
 
 func DoJSON(t *testing.T, app *fiber.App, method, path string, payload any) *http.Response {
@@ -95,4 +123,13 @@ func DoJSON(t *testing.T, app *fiber.App, method, path string, payload any) *htt
 
 	t.Cleanup(func() { _ = resp.Body.Close() })
 	return resp
+}
+
+func UuidAsString(t *testing.T, id uuid.UUID) string {
+	t.Helper()
+	if id == uuid.Nil {
+		return "invalid"
+	}
+
+	return id.String()
 }

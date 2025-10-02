@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 
@@ -62,6 +63,7 @@ func main() {
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidJSON)
 	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidBody)
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
+	errorResolver.RegisterHTTPNotFoundError(sharedRepairOrder.ErrRepairOrderNotFound)
 
 	fiberApp := newApp()
 	serviceDocs.Register(fiberApp)
@@ -117,15 +119,19 @@ func main() {
 	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(db.bunDB)
 	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
 	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
+	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
 
-	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(startExecution, finishExecution, errorHandler)
+	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(startExecution, finishExecution, releaseVehicle, errorHandler)
 	repairOrderHTTP.Register(fiberApp, repairOrderHTTPHandler)
 
+	// Event listeners
 	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
 	eventBus.Subscribe(estimate.ApprovedByCustomer{}.Topic(), listeners.OnEstimateApprovedByCustomer(repairOrderRepository))
 	// todo: add approvedByCustomer product subscriber to reduce stock
 
-	//customers
+	// -----------------------------------------------------------------------------
+	// Customers wiring
+	// -----------------------------------------------------------------------------
 	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus, errorHandler)
 	customerHTTP.Register(fiberApp, customerHandler)
 

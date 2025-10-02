@@ -21,6 +21,11 @@ var (
 	EngineOilChangeID = uuid.MustParse("1f094799-f210-63a0-a800-e67186b3a9f6")
 )
 
+func ThereIsAFinishedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusFinished)
+}
+
 func ThereIsAnApprovedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
 	t.Helper()
 	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusApproved)
