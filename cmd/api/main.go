@@ -34,6 +34,11 @@ import (
 	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
 	customerHTTP "github.com/soat13/fase-1-oficina/internal/customer/infra/http"
 
+	// user
+	userApp "github.com/soat13/fase-1-oficina/internal/user/application"
+	userDB "github.com/soat13/fase-1-oficina/internal/user/infra/db"
+	userHTTP "github.com/soat13/fase-1-oficina/internal/user/infra/http"
+
 	// repair order listeners
 	repairOrderApp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
@@ -61,9 +66,14 @@ func main() {
 
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidJSON)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidBody)
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
 	errorResolver.RegisterHTTPNotFoundError(sharedRepairOrder.ErrRepairOrderNotFound)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidDocument)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidPhoneNumber)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidEmail)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrPasswordTooShort)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrPasswordTooLong)
+	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidPasswordHash)
 
 	fiberApp := newApp()
 	serviceDocs.Register(fiberApp)
@@ -134,6 +144,19 @@ func main() {
 	// -----------------------------------------------------------------------------
 	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus, errorHandler)
 	customerHTTP.Register(fiberApp, customerHandler)
+
+	// -----------------------------------------------------------------------------
+	// User wiring
+	// -----------------------------------------------------------------------------
+	userRepo := userDB.NewBunUserRepository(db.bunDB)
+	createUser := userApp.NewCreateUser(userRepo)
+	updateUser := userApp.NewUpdateUser(userRepo)
+	deleteUser := userApp.NewDeleteUser(userRepo)
+	getUser := userApp.NewGetUser(userRepo)
+	listUser := userApp.NewListUsers(userRepo)
+
+	userHandler := userHTTP.NewHandler(createUser, updateUser, deleteUser, getUser, listUser, errorHandler)
+	userHTTP.Register(fiberApp, userHandler)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start

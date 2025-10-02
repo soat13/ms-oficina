@@ -12,11 +12,11 @@ import (
 )
 
 type CustomerView struct {
-	ID          uuid.UUID         `json:"id"`
-	Name        string            `json:"name"`
-	Document    document.Document `json:"document"`
-	Email       email.Email       `json:"email"`
-	PhoneNumber phone.PhoneNumber `json:"phone_number"`
+	ID          uuid.UUID
+	Name        string
+	Document    document.Document
+	Email       email.Email
+	PhoneNumber phone.PhoneNumber
 }
 
 func toView(c *domain.Customer) CustomerView {

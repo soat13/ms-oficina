@@ -81,3 +81,24 @@ func TestLimitAndOffset_DefaultValue(t *testing.T) {
 	assert.Equal(t, pager.Limit, expectedDefaultLimit)
 	assert.Equal(t, pager.Offset, expectedDefaultOffset)
 }
+
+func TestAtoiDefault(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		def   int
+		want  int
+	}{
+		{name: "valid input", input: "10", def: 50, want: 10},
+		{name: "empty input", input: "", def: 50, want: 50},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := AtoiDefault(tt.input, tt.def)
+			if got != tt.want {
+				t.Errorf("AtoiDefault() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
