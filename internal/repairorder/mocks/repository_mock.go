@@ -79,6 +79,20 @@ func (mr *MockRepositoryMockRecorder) SaveIfApproved(ctx, ro interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfApproved", reflect.TypeOf((*MockRepository)(nil).SaveIfApproved), ctx, ro)
 }
 
+// SaveIfFinished mocks base method.
+func (m *MockRepository) SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfFinished", ctx, ro)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveIfFinished indicates an expected call of SaveIfFinished.
+func (mr *MockRepositoryMockRecorder) SaveIfFinished(ctx, ro interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfFinished", reflect.TypeOf((*MockRepository)(nil).SaveIfFinished), ctx, ro)
+}
+
 // SaveIfInAwaitingApproval mocks base method.
 func (m *MockRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
 	m.ctrl.T.Helper()

@@ -6,10 +6,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
 	"github.com/uptrace/bun"
 
-	roapp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	repairOrderApp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
@@ -28,8 +29,9 @@ func setupHTTP(t *testing.T) *httpTestApp {
 	tdb := testsupport.NewTestDB(t)
 
 	repository := repairOrderDB.NewBunRepairOrderRepository(tdb.DB)
-	startExecution := roapp.NewStartExecution(repository)
-	finishExecution := roapp.NewFinishExecution(repository)
+	startExecution := repairOrderApp.NewStartExecution(repository)
+	finishExecution := repairOrderApp.NewFinishExecution(repository)
+	releaseVehicle := repairOrderApp.NewReleaseVehicle(repository)
 
 	app := fiber.New()
 	app.Use(logger.New())
@@ -38,9 +40,10 @@ func setupHTTP(t *testing.T) *httpTestApp {
 
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
+	errorResolver.RegisterHTTPNotFoundError(sharedRepairOrder.ErrRepairOrderNotFound)
 
 	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
-	h := repairOrderHTTP.NewHandler(startExecution, finishExecution, errorHandler)
+	h := repairOrderHTTP.NewHandler(startExecution, finishExecution, releaseVehicle, errorHandler)
 	repairOrderHTTP.Register(app, h)
 
 	return &httpTestApp{app: app, tdb: tdb}

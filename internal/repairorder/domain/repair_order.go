@@ -51,6 +51,10 @@ func (r *RepairOrder) StartExecution() error {
 	return r.moveStatus(repairorder.StatusApproved, repairorder.StatusInExecution)
 }
 
+func (r *RepairOrder) ReleaseVehicle() error {
+	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusReleased)
+}
+
 func (r *RepairOrder) moveStatus(statusFrom, statusTo repairorder.Status) error {
 	if r.Status != statusFrom {
 		return errors.ErrInvalidStatusTransaction

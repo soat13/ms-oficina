@@ -9,4 +9,5 @@ const (
 	StatusApproved         Status = "approved"
 	StatusInExecution      Status = "in_execution"
 	StatusFinished         Status = "finished"
+	StatusReleased         Status = "released"
 )

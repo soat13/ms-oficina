@@ -15,5 +15,6 @@ type (
 		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error
 	}
 )
