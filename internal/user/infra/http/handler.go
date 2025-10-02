@@ -7,26 +7,29 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	app "github.com/soat13/fase-1-oficina/internal/customer/application"
-	"github.com/soat13/fase-1-oficina/internal/customer/domain"
+	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	app "github.com/soat13/fase-1-oficina/internal/user/application"
+	"github.com/soat13/fase-1-oficina/internal/user/domain"
+	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
 type Handler struct {
-	createUseCase *app.CreateCustomer
-	updateUseCase *app.UpdateCustomer
-	deleteUseCase *app.DeleteCustomer
-	getUseCase    *app.GetCustomer
-	listUseCase   *app.ListCustomers
+	createUseCase *app.CreateUser
+	updateUseCase *app.UpdateUser
+	deleteUseCase *app.DeleteUser
+	getUseCase    *app.GetUser
+	listUseCase   *app.ListUsers
 	validate      *validator.Validate
 	errorHandler  *fiberHelper.ErrorHandler
 }
 
-func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, delete *app.DeleteCustomer, get *app.GetCustomer, list *app.ListCustomers, errorHandler *fiberHelper.ErrorHandler) *Handler {
+func NewHandler(create *app.CreateUser, update *app.UpdateUser, delete *app.DeleteUser, get *app.GetUser, list *app.ListUsers, errorHandler *fiberHelper.ErrorHandler) *Handler {
 	validate := validator.New()
 	handler := &Handler{
 		createUseCase: create,
@@ -38,19 +41,18 @@ func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, delete *
 		errorHandler:  errorHandler,
 	}
 
-	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrCustomerNotFound)
-	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateDocument)
+	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrUserNotFound)
 	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateEmail)
-	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidCustomerName)
-	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(document.ErrInvalidDocument)
-	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(phone.ErrInvalidPhoneNumber)
-	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(email.ErrInvalidEmail)
+	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateDocument)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidUserName)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(role.ErrInvalidRole)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(role.ErrRolesRequired)
 
 	return handler
 }
 
 func Register(app *fiber.App, h *Handler) {
-	grp := app.Group("/admin/customers") // TODO: PROTECT WITH JWT
+	grp := app.Group("/admin/users") // TODO: PROTECT WITH JWT
 	grp.Post("/", h.create)
 	grp.Patch("/:id", h.update)
 	grp.Delete("/:id", h.delete)
@@ -61,37 +63,43 @@ func Register(app *fiber.App, h *Handler) {
 // -------- DTOs --------
 
 type createBody struct {
-	Name        string `json:"name"           validate:"required,min=3"`
-	Document    string `json:"document"       validate:"required,min=11"`
-	Email       string `json:"email"          validate:"required,email"`
-	PhoneNumber string `json:"phone_number"   validate:"required,min=11"`
+	Name        string   `json:"name"         validate:"required,min=3"`
+	Document    string   `json:"document"     validate:"required,min=11"`
+	Email       string   `json:"email"        validate:"required,email"`
+	PhoneNumber string   `json:"phone_number" validate:"required,min=11"`
+	Password    string   `json:"password"     validate:"required,min=8"`
+	Roles       []string `json:"roles"        validate:"required,min=1,dive,required"`
 }
 
 type updateBody struct {
-	Name        *string `json:"name"           validate:"omitempty,min=3"`
-	Email       *string `json:"email"          validate:"omitempty"`
-	PhoneNumber *string `json:"phone_number"   validate:"omitempty,min=11"`
+	Name        *string   `json:"name"         validate:"omitempty,min=3"`
+	Email       *string   `json:"email"        validate:"omitempty,email"`
+	PhoneNumber *string   `json:"phone_number" validate:"omitempty,min=11"`
+	Password    *string   `json:"password"     validate:"omitempty,min=8"`
+	Roles       *[]string `json:"roles"        validate:"omitempty,min=1,dive,required"`
 }
 
-type customerJSON struct {
+type userJSON struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
 	Document     string    `json:"document"`
 	DocumentType string    `json:"document_type"`
 	Email        string    `json:"email"`
 	PhoneNumber  string    `json:"phone_number"`
+	Roles        []string  `json:"roles"`
 }
 
 // -------- Helpers JSON --------
 
-func toJSON(v app.CustomerView) customerJSON {
-	return customerJSON{
+func toJSON(v app.UserView) userJSON {
+	return userJSON{
 		ID:           v.ID,
 		Name:         v.Name,
 		Document:     v.Document.Value,
 		DocumentType: v.Document.TypeString(),
-		PhoneNumber:  v.PhoneNumber.String(),
 		Email:        v.Email.String(),
+		PhoneNumber:  v.PhoneNumber.String(),
+		Roles:        v.Roles.Strings(),
 	}
 }
 
@@ -100,10 +108,7 @@ func toJSON(v app.CustomerView) customerJSON {
 func (h *Handler) create(ctx *fiber.Ctx) error {
 	var body createBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"code":    "INVALID_JSON",
-			"message": "invalid JSON body",
-		})
+		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
@@ -124,12 +129,22 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
+	passwordVO, err := password.New(body.Password)
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+	rolesVO, err := role.NewRoles(body.Roles)
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
 
 	err = h.createUseCase.Execute(ctx.Context(), app.CreateInput{
 		Name:        body.Name,
 		Document:    documentVO,
 		PhoneNumber: phoneVO,
 		Email:       emailVO,
+		Password:    passwordVO,
+		Roles:       rolesVO,
 		Now:         time.Now(),
 	})
 	if err != nil {
@@ -146,10 +161,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 
 	var body updateBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"code":    "INVALID_JSON",
-			"message": "invalid JSON body",
-		})
+		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
@@ -176,12 +188,31 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		phoneVO = &vo
 	}
 
+	var passwordVO *password.Password
+	if body.Password != nil {
+		vo, err := password.New(*body.Password)
+		if err != nil {
+			return h.errorHandler.Handle(ctx, err)
+		}
+		passwordVO = &vo
+	}
+
+	var rolesVO *role.Roles
+	if body.Roles != nil {
+		vo, err := role.NewRoles(*body.Roles)
+		if err != nil {
+			return h.errorHandler.Handle(ctx, err)
+		}
+		rolesVO = &vo
+	}
+
 	err = h.updateUseCase.Execute(ctx.Context(), app.UpdateInput{
 		ID:          id,
 		Name:        body.Name,
 		PhoneNumber: phoneVO,
 		Email:       emailVO,
-		Now:         time.Now(),
+		Password:    passwordVO,
+		Roles:       rolesVO,
 	})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
@@ -209,7 +240,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(toJSON(out.Customer))
+	return ctx.Status(fiber.StatusOK).JSON(toJSON(out.User))
 }
 
 func (h *Handler) list(ctx *fiber.Ctx) error {
@@ -219,6 +250,6 @@ func (h *Handler) list(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	resp := maps.Map(out.Customers, toJSON)
+	resp := maps.Map(out.Users, toJSON)
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"data": resp})
 }

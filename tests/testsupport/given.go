@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lib/pq"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 
@@ -141,6 +142,33 @@ func ThereIsARepairOrder(t *testing.T, db *bun.DB, id, customerID, vehicleID uui
 	`, id, customerID, vehicleID, status).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir repair_order")
 	return id
+}
+
+func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, phoneNumber, email, password string, roles []string) uuid.UUID {
+	t.Helper()
+	if id == uuid.Nil {
+		id = uuid.New()
+	}
+
+	// Normalize document to save only digits in database
+	doc, err := document.New(documentStr)
+	require.NoError(t, err, "invalid document in test")
+	normalizedDoc := doc.Value
+
+	hashedPassword := hashPassword(t, password)
+	_, err = db.NewRaw(`
+		INSERT INTO users (id, name, document, document_type, email, phone_number, password, roles)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT (id) DO NOTHING
+	`, id, name, normalizedDoc, doc.TypeString(), email, phoneNumber, hashedPassword, pq.Array(roles)).Exec(context.Background())
+	require.NoError(t, err, "failed to insert user")
+	return id
+}
+
+func hashPassword(t *testing.T, password string) string {
+	t.Helper()
+	hash := "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy" // "password123" hashed
+	return hash
 }
 
 func insertService(ctx context.Context, db *bun.DB, id uuid.UUID, name string, cents int64) error {
