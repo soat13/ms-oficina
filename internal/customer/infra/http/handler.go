@@ -1,14 +1,13 @@
 package http
 
 import (
-	"time"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
+	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
@@ -61,16 +60,16 @@ func Register(app *fiber.App, h *Handler) {
 // -------- DTOs --------
 
 type createBody struct {
-	Name        string `json:"name"           validate:"required,min=3"`
-	Document    string `json:"document"       validate:"required,min=11"`
-	Email       string `json:"email"          validate:"required,email"`
-	PhoneNumber string `json:"phone_number"   validate:"required,min=11"`
+	Name        string `json:"name"         validate:"required,min=3"`
+	Document    string `json:"document"     validate:"required,min=11"`
+	Email       string `json:"email"        validate:"required,email"`
+	PhoneNumber string `json:"phone_number" validate:"required,min=11"`
 }
 
 type updateBody struct {
-	Name        *string `json:"name"           validate:"omitempty,min=3"`
-	Email       *string `json:"email"          validate:"omitempty"`
-	PhoneNumber *string `json:"phone_number"   validate:"omitempty,min=11"`
+	Name        *string `json:"name"         validate:"omitempty,min=3"`
+	Email       *string `json:"email"        validate:"omitempty,email"`
+	PhoneNumber *string `json:"phone_number" validate:"omitempty,min=11"`
 }
 
 type customerJSON struct {
@@ -100,10 +99,7 @@ func toJSON(v app.CustomerView) customerJSON {
 func (h *Handler) create(ctx *fiber.Ctx) error {
 	var body createBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"code":    "INVALID_JSON",
-			"message": "invalid JSON body",
-		})
+		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
@@ -130,7 +126,6 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		Document:    documentVO,
 		PhoneNumber: phoneVO,
 		Email:       emailVO,
-		Now:         time.Now(),
 	})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
@@ -146,10 +141,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 
 	var body updateBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"code":    "INVALID_JSON",
-			"message": "invalid JSON body",
-		})
+		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
@@ -181,7 +173,6 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		Name:        body.Name,
 		PhoneNumber: phoneVO,
 		Email:       emailVO,
-		Now:         time.Now(),
 	})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)

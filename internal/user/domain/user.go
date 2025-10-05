@@ -25,12 +25,13 @@ type User struct {
 	entity.Timestamps
 }
 
-func NewUser(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email, password password.Password, roles role.Roles, now time.Time) (*User, error) {
+func NewUser(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email, password password.Password, roles role.Roles) (*User, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, ErrInvalidUserName
 	}
 
+	now := time.Now()
 	user := &User{
 		ID:          uuidPkg.IDOrNew(id),
 		Name:        name,

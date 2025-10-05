@@ -129,7 +129,7 @@ func toDomain(model *userModel) *domain.User {
 	pwd, _ := password.FromHash(model.Password)
 	roles, _ := roleVO.NewRoles(model.Roles)
 
-	user, err := domain.NewUser(model.ID, model.Name, doc, phoneNumber, em, pwd, roles, model.CreatedAt)
+	user, err := domain.NewUser(model.ID, model.Name, doc, phoneNumber, em, pwd, roles)
 	if err != nil {
 		return nil
 	}

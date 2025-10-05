@@ -104,8 +104,8 @@ func toModel(c *domain.Customer) *customerModel {
 		Name:         c.Name,
 		Document:     c.Document.Value,
 		DocumentType: c.Document.TypeString(),
-		PhoneNumber:  c.PhoneNumber.String(),
 		Email:        c.Email.String(),
+		PhoneNumber:  c.PhoneNumber.String(),
 		CreatedAt:    c.CreatedAt,
 		UpdatedAt:    c.UpdatedAt,
 	}
@@ -116,11 +116,11 @@ func toDomain(model *customerModel) *domain.Customer {
 		return nil
 	}
 
-	document, _ := document.New(model.Document)
+	doc, _ := document.New(model.Document)
 	phoneNumber, _ := phone.New(model.PhoneNumber)
 	email, _ := email.New(model.Email)
 
-	customer, err := domain.NewCustomer(model.ID, model.Name, document, phoneNumber, email, model.CreatedAt)
+	customer, err := domain.NewCustomer(model.ID, model.Name, doc, phoneNumber, email)
 	if err != nil {
 		return nil
 	}

@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/user/domain"
@@ -22,7 +21,6 @@ type (
 		Email       email.Email
 		Password    password.Password
 		Roles       role.Roles
-		Now         time.Time
 	}
 
 	CreateUser struct {
@@ -40,7 +38,7 @@ func (uc *CreateUser) Execute(ctx context.Context, in CreateInput) error {
 		return err
 	}
 
-	user, err := domain.NewUser(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email, in.Password, in.Roles, in.Now)
+	user, err := domain.NewUser(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email, in.Password, in.Roles)
 	if err != nil {
 		return err
 	}

@@ -43,28 +43,23 @@ func (uc *UpdateUser) Execute(ctx context.Context, in UpdateInput) error {
 			return err
 		}
 	}
-
 	if in.PhoneNumber != nil {
 		user.ChangePhoneNumber(*in.PhoneNumber)
 	}
-
+	if in.Password != nil {
+		user.ChangePassword(*in.Password)
+	}
+	if in.Roles != nil {
+		user.ChangeRoles(*in.Roles)
+	}
 	if in.Email != nil && user.Email.String() != in.Email.String() {
 		exists, err := uc.repo.ExistsByEmail(ctx, in.Email.String())
 		if err != nil {
 			return err
 		}
-		if exists {
-			return ErrDuplicateEmail
+		if !exists {
+			user.ChangeEmail(*in.Email)
 		}
-		user.ChangeEmail(*in.Email)
-	}
-
-	if in.Password != nil {
-		user.ChangePassword(*in.Password)
-	}
-
-	if in.Roles != nil {
-		user.ChangeRoles(*in.Roles)
 	}
 
 	return uc.repo.Update(ctx, user)

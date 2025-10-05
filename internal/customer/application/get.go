@@ -6,17 +6,19 @@ import (
 	"github.com/google/uuid"
 )
 
-type GetInput struct {
-	ID uuid.UUID
-}
+type (
+	GetInput struct {
+		ID uuid.UUID
+	}
 
-type GetOutput struct {
-	Customer CustomerView
-}
+	GetOutput struct {
+		Customer CustomerView
+	}
 
-type GetCustomer struct {
-	repo CustomerRepository
-}
+	GetCustomer struct {
+		repo CustomerRepository
+	}
+)
 
 func NewGetCustomer(repo CustomerRepository) *GetCustomer {
 	return &GetCustomer{repo: repo}

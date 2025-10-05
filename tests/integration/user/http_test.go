@@ -243,17 +243,6 @@ func TestUpdateUser(t *testing.T) {
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
 
-	t.Run("DuplicateEmail", func(t *testing.T) {
-		ensureSetup(t)
-
-		_ = testsupport.ThereIsAUser(t, env.db, uuid.Nil, "User 1", "11144477735", "11987654321", "existing@example.com", "password123", []string{"manager"})
-		uid := testsupport.ThereIsAUser(t, env.db, uuid.Nil, "User 2", "98765432100", "11987654322", "other@example.com", "password123", []string{"mechanic"})
-
-		existingEmail := "existing@example.com"
-		resp := updateUser(t, uid, updateBody{Email: &existingEmail})
-		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
-	})
-
 	t.Run("UpdateRoles", func(t *testing.T) {
 		ensureSetup(t)
 

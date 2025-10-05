@@ -2,24 +2,24 @@ package application
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
-type UpdateInput struct {
-	ID          uuid.UUID
-	Name        *string
-	PhoneNumber *phone.PhoneNumber
-	Email       *email.Email
-	Now         time.Time
-}
+type (
+	UpdateInput struct {
+		ID          uuid.UUID
+		Name        *string
+		PhoneNumber *phone.PhoneNumber
+		Email       *email.Email
+	}
 
-type UpdateCustomer struct {
-	repo CustomerRepository
-}
+	UpdateCustomer struct {
+		repo CustomerRepository
+	}
+)
 
 func NewUpdateCustomer(repo CustomerRepository) *UpdateCustomer {
 	return &UpdateCustomer{repo: repo}

@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -13,17 +12,18 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
-type CreateInput struct {
-	Name        string
-	Document    document.Document
-	Email       email.Email
-	PhoneNumber phone.PhoneNumber
-	Now         time.Time
-}
+type (
+	CreateInput struct {
+		Name        string
+		Document    document.Document
+		Email       email.Email
+		PhoneNumber phone.PhoneNumber
+	}
 
-type CreateCustomer struct {
-	repo CustomerRepository
-}
+	CreateCustomer struct {
+		repo CustomerRepository
+	}
+)
 
 func NewCreateCustomer(repo CustomerRepository) *CreateCustomer {
 	return &CreateCustomer{repo: repo}
@@ -35,7 +35,7 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) error {
 		return err
 	}
 
-	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email, in.Now)
+	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email)
 	if err != nil {
 		return err
 	}
