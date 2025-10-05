@@ -14,6 +14,11 @@ type ErrorHandler struct {
 }
 
 func NewErrorHandler(errorResolver *errorHelper.Resolver) *ErrorHandler {
+
+	if errorResolver == nil {
+		errorResolver = errorHelper.NewErrorResolver()
+	}
+
 	return &ErrorHandler{
 		ErrorResolver: errorResolver,
 	}
