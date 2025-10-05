@@ -78,7 +78,7 @@ func TestNewUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewUser(tt.id, tt.userName, tt.document, tt.phoneNumber, tt.email, tt.password, tt.roles, tt.now)
+			got, err := NewUser(tt.id, tt.userName, tt.document, tt.phoneNumber, tt.email, tt.password, tt.roles)
 			if err != tt.wantErr {
 				t.Errorf("NewUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -102,14 +102,13 @@ func TestNewUser(t *testing.T) {
 }
 
 func TestUserChangeName(t *testing.T) {
-	now := time.Now()
 	doc, _ := document.New("12345678900")
 	phone, _ := phone.New("11987654321")
 	em, _ := email.New("test@example.com")
 	pwd, _ := password.New("password123")
 	roles, _ := role.NewRoles([]string{"manager"})
 
-	user, _ := NewUser(uuid.Nil, "Old Name", doc, phone, em, pwd, roles, now)
+	user, _ := NewUser(uuid.Nil, "Old Name", doc, phone, em, pwd, roles)
 	err := user.ChangeName("New Name")
 
 	if err != nil {
@@ -126,7 +125,6 @@ func TestUserChangeName(t *testing.T) {
 }
 
 func TestUserChangePhoneNumber(t *testing.T) {
-	now := time.Now()
 	doc, _ := document.New("12345678900")
 	oldPhone, _ := phone.New("11987654321")
 	newPhone, _ := phone.New("11987654322")
@@ -134,7 +132,7 @@ func TestUserChangePhoneNumber(t *testing.T) {
 	pwd, _ := password.New("password123")
 	roles, _ := role.NewRoles([]string{"mechanic"})
 
-	user, _ := NewUser(uuid.Nil, "Test User", doc, oldPhone, em, pwd, roles, now)
+	user, _ := NewUser(uuid.Nil, "Test User", doc, oldPhone, em, pwd, roles)
 	user.ChangePhoneNumber(newPhone)
 
 	if user.PhoneNumber != newPhone {
@@ -143,7 +141,6 @@ func TestUserChangePhoneNumber(t *testing.T) {
 }
 
 func TestUserChangeEmail(t *testing.T) {
-	now := time.Now()
 	doc, _ := document.New("12345678900")
 	phone, _ := phone.New("11987654321")
 	oldEmail, _ := email.New("old@example.com")
@@ -151,7 +148,7 @@ func TestUserChangeEmail(t *testing.T) {
 	pwd, _ := password.New("password123")
 	roles, _ := role.NewRoles([]string{"attendant"})
 
-	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, oldEmail, pwd, roles, now)
+	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, oldEmail, pwd, roles)
 	user.ChangeEmail(newEmail)
 
 	if user.Email != newEmail {
@@ -160,7 +157,6 @@ func TestUserChangeEmail(t *testing.T) {
 }
 
 func TestUserChangePassword(t *testing.T) {
-	now := time.Now()
 	doc, _ := document.New("12345678900")
 	phone, _ := phone.New("11987654321")
 	em, _ := email.New("test@example.com")
@@ -168,7 +164,7 @@ func TestUserChangePassword(t *testing.T) {
 	newPwd, _ := password.New("newpassword")
 	roles, _ := role.NewRoles([]string{"mechanic"})
 
-	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, em, oldPwd, roles, now)
+	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, em, oldPwd, roles)
 	user.ChangePassword(newPwd)
 
 	if !user.Password.Matches("newpassword") {
@@ -177,14 +173,13 @@ func TestUserChangePassword(t *testing.T) {
 }
 
 func TestUserChangeRoles(t *testing.T) {
-	now := time.Now()
 	doc, _ := document.New("12345678900")
 	phone, _ := phone.New("11987654321")
 	em, _ := email.New("test@example.com")
 	pwd, _ := password.New("password123")
 	initialRoles, _ := role.NewRoles([]string{"attendant"})
 
-	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, em, pwd, initialRoles, now)
+	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, em, pwd, initialRoles)
 
 	tests := []struct {
 		name     string

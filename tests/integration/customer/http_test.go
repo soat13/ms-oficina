@@ -34,11 +34,12 @@ type updateBody struct {
 }
 
 type customerJSON struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Document    string    `json:"document"`
-	Email       string    `json:"email"`
-	PhoneNumber string    `json:"phone_number"`
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Document     string    `json:"document"`
+	DocumentType string    `json:"document_type"`
+	Email        string    `json:"email"`
+	PhoneNumber  string    `json:"phone_number"`
 }
 
 type listResp struct {

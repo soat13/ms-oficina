@@ -1,8 +1,6 @@
 package http
 
 import (
-	"time"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -145,7 +143,6 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		Email:       emailVO,
 		Password:    passwordVO,
 		Roles:       rolesVO,
-		Now:         time.Now(),
 	})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)

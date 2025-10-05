@@ -21,12 +21,13 @@ type Customer struct {
 	entity.Timestamps
 }
 
-func NewCustomer(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email, now time.Time) (*Customer, error) {
+func NewCustomer(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email) (*Customer, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, ErrInvalidCustomerName
 	}
 
+	now := time.Now()
 	customer := &Customer{
 		ID:          uuidPkg.IDOrNew(id),
 		Name:        name,
@@ -45,13 +46,16 @@ func (customer *Customer) ChangeName(newName string) error {
 		return ErrInvalidCustomerName
 	}
 	customer.Name = newName
+	customer.Touch()
 	return nil
 }
 
 func (customer *Customer) ChangePhoneNumber(phoneNumber phone.PhoneNumber) {
 	customer.PhoneNumber = phoneNumber
+	customer.Touch()
 }
 
 func (customer *Customer) ChangeEmail(newEmail email.Email) {
 	customer.Email = newEmail
+	customer.Touch()
 }
