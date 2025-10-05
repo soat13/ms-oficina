@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
+	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
@@ -33,7 +34,7 @@ type CustomerRepository interface {
 	Update(ctx context.Context, s *domain.Customer) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error)
-	List(ctx context.Context, limit, offset int) ([]*domain.Customer, error)
+	List(ctx context.Context, pager pagination.Pagination) ([]*domain.Customer, error)
 	ExistsByDocument(ctx context.Context, document string) (bool, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 }

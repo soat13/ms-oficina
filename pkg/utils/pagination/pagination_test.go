@@ -1,6 +1,10 @@
 package pagination
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestLimitAndOffset(t *testing.T) {
 	tests := []struct {
@@ -63,29 +67,17 @@ func TestLimitAndOffset(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotLimit, gotOffset := LimitAndOffset(tt.inputLimit, tt.inputOffset)
-
-			if gotLimit != tt.wantLimit {
-				t.Errorf("LimitAndOffset() limit = %v, want %v", gotLimit, tt.wantLimit)
-			}
-
-			if gotOffset != tt.wantOffset {
-				t.Errorf("LimitAndOffset() offset = %v, want %v", gotOffset, tt.wantOffset)
-			}
+			pager := New(tt.inputLimit, tt.inputOffset)
+			assert.Equal(t, pager.Limit, tt.wantLimit)
+			assert.Equal(t, pager.Offset, tt.wantOffset)
 		})
 	}
 }
 
 func TestLimitAndOffset_DefaultValue(t *testing.T) {
-	limit, offset := LimitAndOffset(0, 0)
-
+	pager := New(0, 0)
 	expectedDefaultLimit := 50
-	if limit != expectedDefaultLimit {
-		t.Errorf("Default limit should be %d, got %d", expectedDefaultLimit, limit)
-	}
-
 	expectedDefaultOffset := 0
-	if offset != expectedDefaultOffset {
-		t.Errorf("Default offset should be %d, got %d", expectedDefaultOffset, offset)
-	}
+	assert.Equal(t, pager.Limit, expectedDefaultLimit)
+	assert.Equal(t, pager.Offset, expectedDefaultOffset)
 }

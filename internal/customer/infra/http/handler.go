@@ -1,7 +1,6 @@
 package http
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -211,28 +210,16 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 }
 
 func (h *Handler) list(ctx *fiber.Ctx) error {
-	limit := atoiDefault(ctx.Query("limit"), 50)
-	offset := atoiDefault(ctx.Query("offset"), 0)
+	pager := fiberHelper.NewPagination(ctx, 50, 0)
 
-	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Limit: limit, Offset: offset})
+	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Pager: *pager})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
+
 	resp := make([]customerJSON, 0, len(out.Customers))
 	for _, sv := range out.Customers {
 		resp = append(resp, toJSON(sv))
 	}
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"data": resp})
-}
-
-// -------- Helpers --------
-
-func atoiDefault(s string, def int) int {
-	if s == "" {
-		return def
-	}
-	if n, err := strconv.Atoi(s); err == nil {
-		return n
-	}
-	return def
 }

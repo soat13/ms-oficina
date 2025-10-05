@@ -8,8 +8,7 @@ import (
 )
 
 type ListInput struct {
-	Limit  int
-	Offset int
+	Pager pagination.Pagination
 }
 
 type ListOutput struct {
@@ -25,8 +24,7 @@ func NewListCustomers(repo CustomerRepository) *ListCustomers {
 }
 
 func (uc *ListCustomers) Execute(ctx context.Context, in ListInput) (*ListOutput, error) {
-	limit, offset := pagination.LimitAndOffset(in.Limit, in.Offset)
-	items, err := uc.repo.List(ctx, limit, offset)
+	items, err := uc.repo.List(ctx, in.Pager)
 	if err != nil {
 		return nil, err
 	}
