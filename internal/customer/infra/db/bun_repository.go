@@ -81,8 +81,7 @@ func (repo *BunCustomerRepository) List(ctx context.Context, pager pagination.Pa
 		return nil, err
 	}
 
-	out := maps.MapPtr(rows, toDomain)
-	return out, nil
+	return maps.MapPtr(rows, toDomain), nil
 }
 
 func (repo *BunCustomerRepository) ExistsByDocument(ctx context.Context, document string) (bool, error) {

@@ -6,6 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/pkg/maps"
+	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 	"github.com/uptrace/bun"
 
 	app "github.com/soat13/fase-1-oficina/internal/service/application"
@@ -18,27 +20,27 @@ type serviceModel struct {
 
 	ID        uuid.UUID `bun:",pk,type:uuid"`
 	Name      string    `bun:",notnull"`
-	Price     int64     `bun:",notnull"` // cents
+	Price     int64     `bun:",notnull"`
 	Currency  string    `bun:",notnull"`
 	CreatedAt time.Time `bun:",nullzero,default:now()"`
 	UpdatedAt time.Time `bun:",nullzero,default:now()"`
 }
 
-type BunServiceRepository struct {
+type BunRepository struct {
 	db *bun.DB
 }
 
-func NewBunServiceRepository(db *bun.DB) app.Repository {
-	return &BunServiceRepository{db: db}
+func NewBunRepository(db *bun.DB) app.Repository {
+	return &BunRepository{db: db}
 }
 
-func (r *BunServiceRepository) Create(ctx context.Context, s *domain.Service) error {
+func (r *BunRepository) Create(ctx context.Context, s *domain.Service) error {
 	m := toModel(s)
 	_, err := r.db.NewInsert().Model(m).Exec(ctx)
 	return err
 }
 
-func (r *BunServiceRepository) Update(ctx context.Context, s *domain.Service) error {
+func (r *BunRepository) Update(ctx context.Context, s *domain.Service) error {
 	m := toModel(s)
 	_, err := r.db.NewUpdate().
 		Model(m).
@@ -48,12 +50,12 @@ func (r *BunServiceRepository) Update(ctx context.Context, s *domain.Service) er
 	return err
 }
 
-func (r *BunServiceRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *BunRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model(&serviceModel{ID: id}).WherePK().Exec(ctx)
 	return err
 }
 
-func (r *BunServiceRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Service, error) {
+func (r *BunRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Service, error) {
 	var m serviceModel
 	err := r.db.NewSelect().Model(&m).Where("id = ?", id).Scan(ctx)
 
@@ -64,24 +66,21 @@ func (r *BunServiceRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 	return toDomain(&m), nil
 }
 
-func (r *BunServiceRepository) List(ctx context.Context, limit, offset int) ([]*domain.Service, error) {
-	var rows []serviceModel
+func (r *BunRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.Service, error) {
+	var serviceModels []serviceModel
 	if err := r.db.NewSelect().
-		Model(&rows).
+		Model(&serviceModels).
 		Order("name ASC").
-		Limit(limit).
-		Offset(offset).
+		Limit(pager.Limit).
+		Offset(pager.Offset).
 		Scan(ctx); err != nil {
 		return nil, err
 	}
-	out := make([]*domain.Service, 0, len(rows))
-	for i := range rows {
-		out = append(out, toDomain(&rows[i]))
-	}
-	return out, nil
+
+	return maps.MapPtr(serviceModels, toDomain), nil
 }
 
-func (r *BunServiceRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
+func (r *BunRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
 	return r.db.NewSelect().
 		Model((*serviceModel)(nil)).
 		Where("LOWER(name) = LOWER(?)", name).

@@ -2,13 +2,14 @@ package http
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
+	"github.com/soat13/fase-1-oficina/pkg/maps"
 
 	app "github.com/soat13/fase-1-oficina/internal/service/application"
 	"github.com/soat13/fase-1-oficina/pkg/money"
@@ -88,15 +89,17 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 		return writeError(c, fiber.StatusUnprocessableEntity, "INVALID_BODY", "invalid service price")
 	}
 
-	out, err := h.create.Execute(c.Context(), app.CreateInput{
+	_, err = h.create.Execute(c.Context(), app.CreateInput{
 		Name:  body.Name,
 		Price: pr,
 		Now:   h.now(),
 	})
+
 	if err != nil {
 		return h.handleError(c, err)
 	}
-	return h.json(c, fiber.StatusCreated, getJSON{Service: toJSON(out.Service)})
+
+	return c.SendStatus(fiber.StatusCreated)
 }
 
 func (h *Handler) Update(c *fiber.Ctx) error {
@@ -151,19 +154,18 @@ func (h *Handler) GetByID(c *fiber.Ctx) error {
 }
 
 func (h *Handler) List(c *fiber.Ctx) error {
-	limit := atoiDefault(c.Query("limit"), 50)
-	offset := atoiDefault(c.Query("offset"), 0)
+	pagination := fiberHelper.NewPagination(c, 50, 0)
 
-	out, err := h.list.Execute(c.Context(), app.ListInput{Limit: limit, Offset: offset})
+	out, err := h.list.Execute(c.Context(), app.ListInput{Pager: *pagination})
 	if err != nil {
 		return h.handleError(c, err)
 	}
 
-	resp := make([]serviceJSON, 0, len(out.Services))
-	for _, sv := range out.Services {
-		resp = append(resp, toJSON(sv))
+	response := listJSON{
+		Services: maps.Map(out.Services, toJSON),
 	}
-	return h.json(c, fiber.StatusOK, listJSON{Services: resp})
+
+	return h.json(c, fiber.StatusOK, response)
 }
 
 func toJSON(v app.ServiceView) serviceJSON {
@@ -174,8 +176,8 @@ func toJSON(v app.ServiceView) serviceJSON {
 	}
 }
 
-func (h *Handler) json(c *fiber.Ctx, status int, v any) error {
-	return c.Status(status).JSON(v)
+func (h *Handler) json(c *fiber.Ctx, status int, value any) error {
+	return c.Status(status).JSON(value)
 }
 
 func (h *Handler) bindAndValidate(c *fiber.Ctx, dst any) error {
@@ -205,16 +207,6 @@ func moneyPtr(cents *int64) (*money.Money, error) {
 		return nil, err
 	}
 	return &m, nil
-}
-
-func atoiDefault(s string, def int) int {
-	if s == "" {
-		return def
-	}
-	if n, err := strconv.Atoi(s); err == nil {
-		return n
-	}
-	return def
 }
 
 func (h *Handler) handleError(c *fiber.Ctx, err error) error {
