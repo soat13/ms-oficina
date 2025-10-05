@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
+	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
@@ -69,13 +70,13 @@ func (repo *BunCustomerRepository) GetByID(ctx context.Context, id uuid.UUID) (*
 	return toDomain(&model), nil
 }
 
-func (repo *BunCustomerRepository) List(ctx context.Context, limit int, offset int) ([]*domain.Customer, error) {
+func (repo *BunCustomerRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.Customer, error) {
 	var rows []customerModel
 	if err := repo.db.NewSelect().
 		Model(&rows).
 		Order("name ASC").
-		Limit(limit).
-		Offset(offset).
+		Limit(pager.Limit).
+		Offset(pager.Offset).
 		Scan(ctx); err != nil {
 		return nil, err
 	}
