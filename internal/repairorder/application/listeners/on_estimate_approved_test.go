@@ -9,12 +9,12 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 	"github.com/stretchr/testify/require"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/mocks"
-	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 )
@@ -56,7 +56,7 @@ func TestOnEstimateApproved_OK(t *testing.T) {
 	payload, err := json.Marshal(event)
 	require.NoError(t, err)
 
-	handler := listeners.OnEstimateApprovedByCustomer(repository)
+	handler := listeners.OnEstimateApproved(repository)
 	err = handler(context.Background(), "estimate.approved", payload)
 	require.NoError(t, err)
 
@@ -85,7 +85,7 @@ func TestOnEstimateApproved_RepoErrorOnGet(t *testing.T) {
 	payload, err := json.Marshal(event)
 	require.NoError(t, err)
 
-	handler := listeners.OnEstimateApprovedByCustomer(repository)
+	handler := listeners.OnEstimateApproved(repository)
 	err = handler(context.Background(), "estimate.approved", payload)
 	require.Error(t, err)
 }
@@ -98,7 +98,7 @@ func TestOnEstimateApproved_InvalidJSON(t *testing.T) {
 
 	repository := mocks.NewMockRepository(ctrl)
 
-	handler := listeners.OnEstimateApprovedByCustomer(repository)
+	handler := listeners.OnEstimateApproved(repository)
 
 	payload := []byte(`{"repair_order_id":"not-a-uuid"}`)
 	err := handler(context.Background(), "estimate.approved", payload)

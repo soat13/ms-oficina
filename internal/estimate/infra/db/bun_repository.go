@@ -38,15 +38,15 @@ type (
 	}
 )
 
-type BunEstimateRepository struct {
+type BunRepository struct {
 	db *bun.DB
 }
 
-func NewBunEstimateRepository(db *bun.DB) application.Repository {
-	return &BunEstimateRepository{db: db}
+func NewBunRepository(db *bun.DB) application.Repository {
+	return &BunRepository{db: db}
 }
 
-func (r *BunEstimateRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Estimate, error) {
+func (r *BunRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Estimate, error) {
 	var model estimateModel
 	if err := r.db.NewSelect().
 		Model(&model).
@@ -67,7 +67,7 @@ func (r *BunEstimateRepository) GetByID(ctx context.Context, id uuid.UUID) (*dom
 	return toEntity(model, itemRows)
 }
 
-func (r *BunEstimateRepository) Save(ctx context.Context, estimate *domain.Estimate) error {
+func (r *BunRepository) Save(ctx context.Context, estimate *domain.Estimate) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -127,6 +127,16 @@ func (r *BunEstimateRepository) Save(ctx context.Context, estimate *domain.Estim
 		return err
 	}
 	return nil
+}
+
+func (r *BunRepository) SaveIfAwaitingStock(ctx context.Context, estimate *domain.Estimate) error {
+	_, err := r.db.NewUpdate().
+		Model(estimate).
+		Where("id = ?", estimate.ID).
+		Where("status = ?", domain.StatusAwaitingStock).
+		Exec(ctx)
+
+	return err
 }
 
 func toEntity(er estimateModel, itemRows []estimateItemModel) (*domain.Estimate, error) {
