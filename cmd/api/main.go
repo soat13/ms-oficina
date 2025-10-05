@@ -1,37 +1,21 @@
 package main
 
 import (
-	"context"
-	"database/sql"
 	"log"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	estimaterListeners "github.com/soat13/fase-1-oficina/internal/estimate/application/listeners"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-
-	// pkg
-	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-
 	// estimate
 	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
 	estimateInfraDB "github.com/soat13/fase-1-oficina/internal/estimate/infra/db"
 	estimateInfraHttp "github.com/soat13/fase-1-oficina/internal/estimate/infra/http"
 
-	// services
-	serviceApp "github.com/soat13/fase-1-oficina/internal/service/application"
-	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/db"
 	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
-	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/http"
-
 	// customer
 	customerApp "github.com/soat13/fase-1-oficina/internal/customer/application"
 	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
@@ -48,46 +32,33 @@ import (
 	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
 
-	// shared
-	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 )
 
 func main() {
 	loadEnv()
 
-	db := newDB()
-	defer db.bunDB.Close()
+	container := bootstrap.BuildDefault()
+	defer container.Close()
 
 	eventBus := eventbus.NewInMemoryBus()
 
 	// -----------------------------------------------------------------------------
 	// HTTP server setup
 	// -----------------------------------------------------------------------------
-	errorResolver := errorHelper.NewErrorResolver()
+	fiberApp := container.FiberApp
 
-	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
-	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidJSON)
-	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
-	errorResolver.RegisterHTTPNotFoundError(sharedRepairOrder.ErrRepairOrderNotFound)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidDocument)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidPhoneNumber)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidEmail)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrPasswordTooShort)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrPasswordTooLong)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidPasswordHash)
-
-	fiberApp := newApp()
 	serviceDocs.Register(fiberApp)
-	errorHandler := fiberHelper.NewErrorHandler(errorResolver)
+
+	errorHandler := container.FiberErrorHandler
 
 	// -----------------------------------------------------------------------------
 	// Estimate wiring
 	// -----------------------------------------------------------------------------
-	repairOrderReader := estimateInfraDB.NewRepairOrderReader(db.bunDB)
-	productCatalogReader := estimateInfraDB.NewProductCatalogReader(db.bunDB)
-	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(db.bunDB)
-	estimateRepository := estimateInfraDB.NewBunRepository(db.bunDB)
+	repairOrderReader := estimateInfraDB.NewRepairOrderReader(container.DB)
+	productCatalogReader := estimateInfraDB.NewProductCatalogReader(container.DB)
+	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(container.DB)
+	estimateRepository := estimateInfraDB.NewBunRepository(container.DB)
 
 	createEstimate := estimateApp.NewCreateEstimate(
 		repairOrderReader,
@@ -108,22 +79,9 @@ func main() {
 	)
 
 	// -----------------------------------------------------------------------------
-	// Services wiring
-	// -----------------------------------------------------------------------------
-	serviceRepository := serviceDB.NewBunRepository(db.bunDB)
-	createService := serviceApp.NewCreateService(serviceRepository)
-	updateService := serviceApp.NewUpdateService(serviceRepository)
-	deleteService := serviceApp.NewDeleteService(serviceRepository)
-	getService := serviceApp.NewGetService(serviceRepository)
-	listService := serviceApp.NewListServices(serviceRepository)
-
-	serviceHttpHandler := serviceHTTP.NewHandler(createService, updateService, deleteService, getService, listService)
-	serviceHTTP.Register(fiberApp, serviceHttpHandler)
-
-	// -----------------------------------------------------------------------------
 	// Customer wiring
 	// -----------------------------------------------------------------------------
-	customerRepo := customerDB.NewBunCustomerRepository(db.bunDB)
+	customerRepo := customerDB.NewBunCustomerRepository(container.DB)
 	createCus := customerApp.NewCreateCustomer(customerRepo)
 	updateCus := customerApp.NewUpdateCustomer(customerRepo)
 	deleteCus := customerApp.NewDeleteCustomer(customerRepo)
@@ -133,7 +91,7 @@ func main() {
 	// -----------------------------------------------------------------------------
 	// Repairorder wiring
 	// -----------------------------------------------------------------------------
-	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(db.bunDB)
+	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
 	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
 	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
 	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
@@ -154,7 +112,7 @@ func main() {
 	// -----------------------------------------------------------------------------
 	// User wiring
 	// -----------------------------------------------------------------------------
-	userRepo := userDB.NewBunUserRepository(db.bunDB)
+	userRepo := userDB.NewBunUserRepository(container.DB)
 	createUser := userApp.NewCreateUser(userRepo)
 	updateUser := userApp.NewUpdateUser(userRepo)
 	deleteUser := userApp.NewDeleteUser(userRepo)
@@ -177,35 +135,4 @@ func loadEnv() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️  .env não encontrado, usando variáveis de ambiente do sistema")
 	}
-}
-
-type DB struct {
-	SQL   *sql.DB
-	bunDB *bun.DB
-}
-
-func newDB() *DB {
-	dsn := os.Getenv("PG_DSN")
-	if dsn == "" {
-		panic("env PG_DSN not found")
-	}
-
-	sqlDB, err := sql.Open("pgx", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := sqlDB.PingContext(context.Background()); err != nil {
-		log.Fatal(err)
-	}
-
-	bunDB := bun.NewDB(sqlDB, pgdialect.New())
-	return &DB{SQL: sqlDB, bunDB: bunDB}
-}
-
-func newApp() *fiber.App {
-	app := fiber.New()
-	app.Use(logger.New())
-	// TODO: adicionar middleware de JWT e aplicar no grupo /admin/*
-	return app
 }

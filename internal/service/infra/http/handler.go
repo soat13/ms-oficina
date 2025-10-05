@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 
@@ -22,17 +23,28 @@ type Handler struct {
 	get           *app.GetService
 	list          *app.ListServices
 	bodyValidator *validator.Validate
+	errorHandler  *fiberHelper.ErrorHandler
 	now           func() time.Time
 }
 
-func NewHandler(create *app.CreateService, update *app.UpdateService, del *app.DeleteService, get *app.GetService, list *app.ListServices) *Handler {
+func NewHandler(
+	create *app.CreateService,
+	update *app.UpdateService,
+	del *app.DeleteService,
+	get *app.GetService,
+	list *app.ListServices,
+	errorHandler *fiberHelper.ErrorHandler,
+) *Handler {
+	bodyValidator := validator.New(validator.WithRequiredStructEnabled())
+
 	return &Handler{
 		create:        create,
 		update:        update,
 		del:           del,
 		get:           get,
 		list:          list,
-		bodyValidator: validator.New(validator.WithRequiredStructEnabled()),
+		bodyValidator: bodyValidator,
+		errorHandler:  errorHandler,
 		now:           time.Now,
 	}
 }
@@ -72,8 +84,9 @@ type getJSON struct {
 
 func (h *Handler) Create(c *fiber.Ctx) error {
 	var body createBody
+
 	if err := c.BodyParser(&body); err != nil {
-		return writeError(c, fiber.StatusBadRequest, "INVALID_JSON", "invalid JSON body")
+		return h.errorHandler.Handle(c, sharedErrors.ErrInvalidJSON)
 	}
 
 	if err := h.bodyValidator.Struct(body); err != nil {

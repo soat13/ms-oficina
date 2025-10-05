@@ -11,10 +11,24 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
 	"github.com/stretchr/testify/require"
 
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
 )
+
+// -----------------------------------------------------------------------------
+// Setup
+// -----------------------------------------------------------------------------
+
+func ensureSetup(t *testing.T) *testsupport.SetupConfig {
+	t.Helper()
+
+	return testsupport.SetupHTTP(t, func(app *fiber.App, container *bootstrap.Container) {
+		service.SetupDefault(container)
+	})
+}
 
 // -----------------------------------------------------------------------------
 // DTOs
@@ -49,11 +63,11 @@ type getResp struct {
 // -----------------------------------------------------------------------------
 
 func TestAdminServiceListOrderByName(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	brakeCheckID, alignID := givenServicesOutOfOrder(t)
+	brakeCheckID, alignID := givenServicesOutOfOrder(t, *setup.Container)
 
-	response := listServices(t, 50, 0)
+	response := listServices(t, setup.FiberApp, 50, 0)
 	var body listResp
 	decodeJSON(t, response, &body)
 
@@ -68,28 +82,28 @@ func TestAdminServiceListOrderByName(t *testing.T) {
 }
 
 func TestAdminServiceUpdateNotFound(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
 	unknown := uuid.New()
 	validName := "Valid Name"
 
-	resp := putUpdateService(t, unknown, updateBody{Name: &validName})
+	resp := putUpdateService(t, setup.FiberApp, unknown, updateBody{Name: &validName})
 	require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
 func TestAdminServiceCreateOK(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
 	payload := createBody{
 		Name:  "Alignment and Balance",
 		Price: 12000,
 	}
-	resp := postCreateService(t, payload)
+	resp := postCreateService(t, setup.FiberApp, payload)
 	require.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
 	var count int
 	require.NoError(t,
-		env.db.NewRaw(
+		setup.Container.DB.NewRaw(
 			`SELECT COUNT(*) FROM services WHERE name = ? AND price = ?`,
 			payload.Name, payload.Price,
 		).Scan(context.Background(), &count),
@@ -98,28 +112,28 @@ func TestAdminServiceCreateOK(t *testing.T) {
 }
 
 func TestAdminServiceCreateInvalidBody(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
 	payload := createBody{Name: "", Price: 0}
-	resp := postCreateService(t, payload)
+	resp := postCreateService(t, setup.FiberApp, payload)
 	require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 }
 
 func TestAdminServiceACreateDuplicateName(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	_ = testsupport.ThereIsAService(t, env.db, uuid.Nil, "Oil Change", 15000)
+	_ = testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Oil Change", 15000)
 
 	payload := createBody{Name: "Oil Change", Price: 20000}
-	resp := postCreateService(t, payload)
+	resp := postCreateService(t, setup.FiberApp, payload)
 	require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 }
 
 func TestAdminServiceGetByIDOK(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Rotation", 8000)
-	resp := getService(t, sid)
+	sid := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Rotation", 8000)
+	resp := getService(t, setup.FiberApp, sid)
 	require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 	var body getResp
@@ -130,21 +144,21 @@ func TestAdminServiceGetByIDOK(t *testing.T) {
 }
 
 func TestAdminServiceGetByIDNotFound(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	resp := getService(t, uuid.New())
+	resp := getService(t, setup.FiberApp, uuid.New())
 	require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
 func TestAdminServiceUpdateOK(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Tire Rotation", 7000)
+	sid := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Tire Rotation", 7000)
 
 	newName := "Tire Rotation PRO"
 	newPrice := int64(9000)
 
-	resp := putUpdateService(t, sid, updateBody{
+	resp := putUpdateService(t, setup.FiberApp, sid, updateBody{
 		Name:  &newName,
 		Price: &newPrice,
 	})
@@ -155,7 +169,7 @@ func TestAdminServiceUpdateOK(t *testing.T) {
 		Price int64
 	}
 	require.NoError(t,
-		env.db.NewRaw(`SELECT name, price FROM services WHERE id = ?`, sid).
+		setup.Container.DB.NewRaw(`SELECT name, price FROM services WHERE id = ?`, sid).
 			Scan(context.Background(), &got),
 	)
 	require.Equal(t, newName, got.Name)
@@ -163,25 +177,25 @@ func TestAdminServiceUpdateOK(t *testing.T) {
 }
 
 func TestAdminServiceUpdateInvalidBody(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Check A", 5000)
+	sid := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Check A", 5000)
 
 	neg := int64(-10)
-	resp := putUpdateService(t, sid, updateBody{Price: &neg})
+	resp := putUpdateService(t, setup.FiberApp, sid, updateBody{Price: &neg})
 	require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 }
 
 func TestAdminServiceDeleteOK(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
-	sid := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Temp", 1000)
-	resp := deleteService(t, sid)
+	sid := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Temp", 1000)
+	resp := deleteService(t, setup.FiberApp, sid)
 	require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
 	var count int
 	require.NoError(t,
-		env.db.NewRaw(`SELECT COUNT(*) FROM services WHERE id = ?`, sid).
+		setup.Container.DB.NewRaw(`SELECT COUNT(*) FROM services WHERE id = ?`, sid).
 			Scan(context.Background(), &count),
 	)
 	require.Equal(t, 0, count)
@@ -191,10 +205,10 @@ func TestAdminServiceDeleteOK(t *testing.T) {
 // Helpers
 // -----------------------------------------------------------------------------
 
-func givenServicesOutOfOrder(t *testing.T) (uuid.UUID, uuid.UUID) {
+func givenServicesOutOfOrder(t *testing.T, container bootstrap.Container) (uuid.UUID, uuid.UUID) {
 	t.Helper()
-	brakeCheck := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Brake Check", 5000)
-	align := testsupport.ThereIsAService(t, env.db, uuid.Nil, "Alignment", 12000)
+	brakeCheck := testsupport.ThereIsAService(t, container.DB, uuid.Nil, "Brake Check", 5000)
+	align := testsupport.ThereIsAService(t, container.DB, uuid.Nil, "Alignment", 12000)
 	return brakeCheck, align
 }
 
@@ -207,25 +221,25 @@ func indexOfByID(items []serviceJSON, ID uuid.UUID) int {
 	return -1
 }
 
-func postCreateService(t *testing.T, body createBody) *http.Response {
+func postCreateService(t *testing.T, fiberApp *fiber.App, body createBody) *http.Response {
 	t.Helper()
 	bs, _ := json.Marshal(body)
 	req := httptest.NewRequest("POST", "/admin/services/", bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := env.app.Test(req, -1)
+	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func getService(t *testing.T, id uuid.UUID) *http.Response {
+func getService(t *testing.T, fiberApp *fiber.App, id uuid.UUID) *http.Response {
 	t.Helper()
 	req := httptest.NewRequest("GET", "/admin/services/"+id.String(), nil)
-	resp, err := env.app.Test(req, -1)
+	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func listServices(t *testing.T, limit, offset int) *http.Response {
+func listServices(t *testing.T, fiberApp *fiber.App, limit, offset int) *http.Response {
 	t.Helper()
 	url := "/admin/services/"
 	query := ""
@@ -242,25 +256,25 @@ func listServices(t *testing.T, limit, offset int) *http.Response {
 		url += "?" + query
 	}
 	req := httptest.NewRequest("GET", url, nil)
-	response, err := env.app.Test(req, -1)
+	response, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return response
 }
 
-func putUpdateService(t *testing.T, id uuid.UUID, body updateBody) *http.Response {
+func putUpdateService(t *testing.T, fiberApp *fiber.App, id uuid.UUID, body updateBody) *http.Response {
 	t.Helper()
 	bs, _ := json.Marshal(body)
 	req := httptest.NewRequest("PUT", "/admin/services/"+id.String(), bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := env.app.Test(req, -1)
+	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func deleteService(t *testing.T, id uuid.UUID) *http.Response {
+func deleteService(t *testing.T, fiberApp *fiber.App, id uuid.UUID) *http.Response {
 	t.Helper()
 	req := httptest.NewRequest("DELETE", "/admin/services/"+id.String(), nil)
-	resp, err := env.app.Test(req, -1)
+	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
