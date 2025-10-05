@@ -104,3 +104,13 @@ func (e *Estimate) MoveToAwaitingStock() error {
 	e.Touch()
 	return nil
 }
+
+func (e *Estimate) Approve() error {
+	if e.Status != StatusAwaitingStock {
+		return errors.ErrInvalidStatusTransaction
+	}
+
+	e.Status = StatusApproved
+	e.Touch()
+	return nil
+}

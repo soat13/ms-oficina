@@ -11,5 +11,6 @@ type (
 	Repository interface {
 		GetByID(ctx context.Context, id uuid.UUID) (*domain.Estimate, error)
 		Save(ctx context.Context, estimate *domain.Estimate) error
+		SaveIfAwaitingStock(ctx context.Context, estimate *domain.Estimate) error
 	}
 )

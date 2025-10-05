@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
-	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
+	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 )
 
 type (
@@ -51,7 +51,7 @@ func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
 }
 
 func (a *Approve) publishEvent(ctx context.Context, estimate domain.Estimate) error {
-	event := estimateEvent.ApprovedByCustomer{
+	event := estimateEvent.StockReduceRequested{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,

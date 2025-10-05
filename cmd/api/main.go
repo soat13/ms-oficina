@@ -10,6 +10,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	estimaterListeners "github.com/soat13/fase-1-oficina/internal/estimate/application/listeners"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
+	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -43,7 +46,6 @@ import (
 	// shared
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
-	"github.com/soat13/fase-1-oficina/internal/shared/events/estimate"
 )
 
 func main() {
@@ -75,7 +77,7 @@ func main() {
 	repairOrderReader := estimateInfraDB.NewRepairOrderReader(db.bunDB)
 	productCatalogReader := estimateInfraDB.NewProductCatalogReader(db.bunDB)
 	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(db.bunDB)
-	estimateRepository := estimateInfraDB.NewBunEstimateRepository(db.bunDB)
+	estimateRepository := estimateInfraDB.NewBunRepository(db.bunDB)
 
 	createEstimate := estimateApp.NewCreateEstimate(
 		repairOrderReader,
@@ -89,6 +91,11 @@ func main() {
 
 	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approveEstimate)
 	estimateInfraHttp.Register(fiberApp, estimateHttpHandler)
+
+	eventBus.Subscribe(
+		productEvent.StockReduceConfirmed{}.Topic(),
+		estimaterListeners.OnStockReduceConfirmed(estimateRepository, eventBus),
+	)
 
 	// -----------------------------------------------------------------------------
 	// Services wiring
@@ -126,8 +133,7 @@ func main() {
 
 	// Event listeners
 	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
-	eventBus.Subscribe(estimate.ApprovedByCustomer{}.Topic(), listeners.OnEstimateApprovedByCustomer(repairOrderRepository))
-	// todo: add approvedByCustomer product subscriber to reduce stock
+	eventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
 
 	// -----------------------------------------------------------------------------
 	// Customers wiring
