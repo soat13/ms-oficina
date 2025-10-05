@@ -1,14 +1,18 @@
 package application
 
-import "context"
+import (
+	"context"
+
+	"github.com/soat13/fase-1-oficina/pkg/maps"
+	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
+)
 
 type ListInput struct {
-	Limit  int
-	Offset int
+	Pager pagination.Pagination
 }
 
 type ListOutput struct {
-	Services []ServiceView `json:"services"`
+	Services []ServiceView
 }
 
 type ListServices struct {
@@ -19,26 +23,13 @@ func NewListServices(repo Repository) *ListServices {
 	return &ListServices{repo: repo}
 }
 
-func (uc *ListServices) Execute(ctx context.Context, in ListInput) (*ListOutput, error) {
-	limit, offset := limitAndOffset(in)
-	items, err := uc.repo.List(ctx, limit, offset)
+func (uc *ListServices) Execute(ctx context.Context, input ListInput) (*ListOutput, error) {
+	items, err := uc.repo.List(ctx, input.Pager)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]ServiceView, 0, len(items))
-	for _, s := range items {
-		out = append(out, toView(s))
-	}
-	return &ListOutput{Services: out}, nil
-}
 
-func limitAndOffset(input ListInput) (int, int) {
-	if input.Limit <= 0 {
-		input.Limit = 50
-	}
-	if input.Offset < 0 {
-		input.Offset = 0
-	}
-
-	return input.Limit, input.Offset
+	return &ListOutput{
+		Services: maps.Map(items, toView),
+	}, nil
 }

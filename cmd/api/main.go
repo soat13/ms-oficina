@@ -93,7 +93,7 @@ func main() {
 	// -----------------------------------------------------------------------------
 	// Services wiring
 	// -----------------------------------------------------------------------------
-	serviceRepository := serviceDB.NewBunServiceRepository(db.bunDB)
+	serviceRepository := serviceDB.NewBunRepository(db.bunDB)
 	createService := serviceApp.NewCreateService(serviceRepository)
 	updateService := serviceApp.NewUpdateService(serviceRepository)
 	deleteService := serviceApp.NewDeleteService(serviceRepository)

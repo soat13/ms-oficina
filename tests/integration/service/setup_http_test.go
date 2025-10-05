@@ -24,7 +24,7 @@ func setupHTTP(t *testing.T) *httpTestApp {
 
 	tdb := testsupport.NewTestDB(t)
 
-	repo := serviceDB.NewBunServiceRepository(tdb.DB)
+	repo := serviceDB.NewBunRepository(tdb.DB)
 	createUC := serviceApp.NewCreateService(repo)
 	updateUC := serviceApp.NewUpdateService(repo)
 	deleteUC := serviceApp.NewDeleteService(repo)
