@@ -119,7 +119,7 @@ func NewTestDB(t *testing.T) *TestDB {
 		fmt.Printf("[testdb] db=%s dsn=%s\n", dbName, dsn)
 	}
 
-	migrationsDir := getenvDefault("MIGRATIONS_DIR", "migrations")
+	migrationsDir := getenvDefault("MIGRATIONS_DIR", "scripts/db/migrations")
 	migrationsTable := getenvDefault("MIGRATIONS_TABLE", "migrations")
 	schemaPath := filepath.Join(root, migrationsDir)
 	if _, err := os.Stat(schemaPath); err != nil {
@@ -132,7 +132,7 @@ func NewTestDB(t *testing.T) *TestDB {
 		fmt.Printf("[testdb] applied schema migrations: %d\n", n)
 	}
 
-	testSeedersDir := getenvDefault("TEST_SEEDERS_DIR", "migrations/test_seeders")
+	testSeedersDir := getenvDefault("TEST_SEEDERS_DIR", "scripts/db/test_seeders")
 	seedsTable := getenvDefault("SEEDS_TABLE", "seeds_migrations")
 	seedsPath := filepath.Join(root, testSeedersDir)
 	if st, err := os.Stat(seedsPath); err == nil && st.IsDir() {
