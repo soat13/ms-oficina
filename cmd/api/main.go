@@ -7,15 +7,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	estimaterListeners "github.com/soat13/fase-1-oficina/internal/estimate/application/listeners"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
-	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
-	// estimate
-	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
-	estimateInfraDB "github.com/soat13/fase-1-oficina/internal/estimate/infra/db"
-	estimateInfraHttp "github.com/soat13/fase-1-oficina/internal/estimate/infra/http"
-
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
 	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
+
 	// customer
 	customerApp "github.com/soat13/fase-1-oficina/internal/customer/application"
 	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
@@ -25,14 +20,6 @@ import (
 	userApp "github.com/soat13/fase-1-oficina/internal/user/application"
 	userDB "github.com/soat13/fase-1-oficina/internal/user/infra/db"
 	userHTTP "github.com/soat13/fase-1-oficina/internal/user/infra/http"
-
-	// repair order listeners
-	repairOrderApp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application/listeners"
-	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
-	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
-
-	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 )
 
 func main() {
@@ -41,42 +28,14 @@ func main() {
 	container := bootstrap.BuildDefault()
 	defer container.Close()
 
-	eventBus := eventbus.NewInMemoryBus()
-
 	// -----------------------------------------------------------------------------
 	// HTTP server setup
 	// -----------------------------------------------------------------------------
 	fiberApp := container.FiberApp
 
 	serviceDocs.Register(fiberApp)
-
-	errorHandler := container.FiberErrorHandler
-
-	// -----------------------------------------------------------------------------
-	// Estimate wiring
-	// -----------------------------------------------------------------------------
-	repairOrderReader := estimateInfraDB.NewRepairOrderReader(container.DB)
-	productCatalogReader := estimateInfraDB.NewProductCatalogReader(container.DB)
-	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(container.DB)
-	estimateRepository := estimateInfraDB.NewBunRepository(container.DB)
-
-	createEstimate := estimateApp.NewCreateEstimate(
-		repairOrderReader,
-		productCatalogReader,
-		serviceCatalogReader,
-		estimateRepository,
-		eventBus,
-	)
-
-	approveEstimate := estimateApp.NewApproveEstimate(estimateRepository, eventBus)
-
-	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approveEstimate)
-	estimateInfraHttp.Register(fiberApp, estimateHttpHandler)
-
-	eventBus.Subscribe(
-		productEvent.StockReduceConfirmed{}.Topic(),
-		estimaterListeners.OnStockReduceConfirmed(estimateRepository, eventBus),
-	)
+	estimate.SetupDefault(container)
+	repairorder.SetupDefault(container)
 
 	// -----------------------------------------------------------------------------
 	// Customer wiring
@@ -89,24 +48,9 @@ func main() {
 	listCus := customerApp.NewListCustomers(customerRepo)
 
 	// -----------------------------------------------------------------------------
-	// Repairorder wiring
-	// -----------------------------------------------------------------------------
-	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
-	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
-	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
-	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
-
-	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(startExecution, finishExecution, releaseVehicle, errorHandler)
-	repairOrderHTTP.Register(fiberApp, repairOrderHTTPHandler)
-
-	// Event listeners
-	eventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
-	eventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
-
-	// -----------------------------------------------------------------------------
 	// Customers wiring
 	// -----------------------------------------------------------------------------
-	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus, errorHandler)
+	customerHandler := customerHTTP.NewHandler(createCus, updateCus, deleteCus, getCus, listCus, container.FiberErrorHandler)
 	customerHTTP.Register(fiberApp, customerHandler)
 
 	// -----------------------------------------------------------------------------
@@ -119,7 +63,7 @@ func main() {
 	getUser := userApp.NewGetUser(userRepo)
 	listUser := userApp.NewListUsers(userRepo)
 
-	userHandler := userHTTP.NewHandler(createUser, updateUser, deleteUser, getUser, listUser, errorHandler)
+	userHandler := userHTTP.NewHandler(createUser, updateUser, deleteUser, getUser, listUser, container.FiberErrorHandler)
 	userHTTP.Register(fiberApp, userHandler)
 
 	// -----------------------------------------------------------------------------

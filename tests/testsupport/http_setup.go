@@ -22,7 +22,7 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New())
 
-	container := bootstrap.Build(testDB.DB, fiberApp, fiberHelper.NewErrorHandler(nil))
+	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil)
 
 	register(fiberApp, container)
 
