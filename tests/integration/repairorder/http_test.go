@@ -10,95 +10,105 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	repairorderShared "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
 )
 
+func ensureSetup(t *testing.T) *testsupport.SetupConfig {
+	t.Helper()
+
+	return testsupport.SetupHTTP(t, func(app *fiber.App, container *bootstrap.Container) {
+		repairorder.SetupDefault(container)
+	})
+}
+
 func TestRepairOrderReleaseVehicle(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := testsupport.ThereIsAFinishedRepairOrder(t, env.db)
+		repairOrderID := testsupport.ThereIsAFinishedRepairOrder(t, setup.Container.DB)
 
-		resp := postReleaseVehicle(t, repairOrderID)
+		resp := postReleaseVehicle(t, setup.Container, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, repairOrderID, repairorder.StatusReleased)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusReleased)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postStartExecution(t, uuid.New())
+		resp := postStartExecution(t, setup.Container, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
 
 func TestRepairOrderFinishExecution(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := testsupport.ThereIsARepairOrderInExecution(t, env.db)
+		repairOrderID := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
 
-		resp := postFinishExecution(t, repairOrderID)
+		resp := postFinishExecution(t, setup.Container, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, repairOrderID, repairorder.StatusFinished)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusFinished)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postStartExecution(t, uuid.New())
+		resp := postStartExecution(t, setup.Container, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
 
 func TestRepairOrderStartExecution(t *testing.T) {
-	ensureSetup(t)
+	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, env.db)
+		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
 
-		resp := postStartExecution(t, repairOrderID)
+		resp := postStartExecution(t, setup.Container, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, repairOrderID, repairorder.StatusInExecution)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusInExecution)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postStartExecution(t, uuid.New())
+		resp := postStartExecution(t, setup.Container, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
 
-func expectRepairOrderStatus(t *testing.T, repairOrderID uuid.UUID, expected repairorder.Status) {
+func expectRepairOrderStatus(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID, expected repairorderShared.Status) {
 	t.Helper()
 	ctx := context.Background()
 
 	var status string
 	require.NoError(t,
-		env.db.NewRaw(`SELECT status FROM repair_orders WHERE id = ?`, repairOrderID).Scan(ctx, &status),
+		container.DB.NewRaw(`SELECT status FROM repair_orders WHERE id = ?`, repairOrderID).Scan(ctx, &status),
 	)
 
 	assert.Equal(t, string(expected), status)
 }
 
-func postStartExecution(t *testing.T, repairOrderID uuid.UUID) *http.Response {
+func postStartExecution(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
 	id := UuidAsString(t, repairOrderID)
-	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/start-execution", nil)
+	return DoJSON(t, container.FiberApp, "POST", "/admin/repair-orders/"+id+"/start-execution", nil)
 }
 
-func postFinishExecution(t *testing.T, repairOrderID uuid.UUID) *http.Response {
+func postFinishExecution(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
 	id := UuidAsString(t, repairOrderID)
-	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/finish-execution", nil)
+	return DoJSON(t, container.FiberApp, "POST", "/admin/repair-orders/"+id+"/finish-execution", nil)
 }
 
-func postReleaseVehicle(t *testing.T, repairOrderID uuid.UUID) *http.Response {
+func postReleaseVehicle(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
 	id := UuidAsString(t, repairOrderID)
-	return DoJSON(t, env.app, "POST", "/admin/repair-orders/"+id+"/release-vehicle", nil)
+	return DoJSON(t, container.FiberApp, "POST", "/admin/repair-orders/"+id+"/release-vehicle", nil)
 }
 
 func DoJSON(t *testing.T, app *fiber.App, method, path string, payload any) *http.Response {
