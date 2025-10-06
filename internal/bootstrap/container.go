@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -19,13 +20,19 @@ type Container struct {
 	DB                *bun.DB
 	FiberApp          *fiber.App
 	FiberErrorHandler *fiberHelper.ErrorHandler
+	EventBus          eventbus.Bus
 }
 
 func BuildDefault() *Container {
-	return Build(nil, nil, nil)
+	return Build(nil, nil, nil, nil)
 }
 
-func Build(bunDB *bun.DB, fiberApp *fiber.App, fiberErrorHandler *fiberHelper.ErrorHandler) *Container {
+func Build(
+	bunDB *bun.DB,
+	fiberApp *fiber.App,
+	fiberErrorHandler *fiberHelper.ErrorHandler,
+	EventBus eventbus.Bus,
+) *Container {
 
 	if fiberApp == nil {
 		fiberApp = newApp()
@@ -39,10 +46,15 @@ func Build(bunDB *bun.DB, fiberApp *fiber.App, fiberErrorHandler *fiberHelper.Er
 		bunDB = bun.NewDB(newSQL(), pgdialect.New())
 	}
 
+	if EventBus == nil {
+		EventBus = eventbus.NewInMemoryBus()
+	}
+
 	return &Container{
 		DB:                bunDB,
 		FiberApp:          fiberApp,
 		FiberErrorHandler: fiberErrorHandler,
+		EventBus:          EventBus,
 	}
 }
 

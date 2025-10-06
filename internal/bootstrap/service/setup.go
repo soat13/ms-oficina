@@ -32,5 +32,6 @@ func Setup(container *bootstrap.Container, repository serviceApp.Repository) {
 		listService,
 		container.FiberErrorHandler,
 	)
+
 	serviceHTTP.Register(container.FiberApp, serviceHttpHandler)
 }
