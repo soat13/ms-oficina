@@ -4,26 +4,82 @@ info:
   version: 1.0.0
   description: |
     API da Oficina (Fase 1).
-    
+
     Esta especificação documenta os endpoints HTTP atuais, seguindo as camadas e decisões de DDD do projeto.
-    
+
     Observações:
     - O grupo de rotas de serviços é exposto sob `/admin/services`.
     - A criação de orçamento (estimate) é feita a partir de uma ordem de serviço específica.
+    - As rotas que exigem autenticação JWT estão identificadas com o requisito de segurança `bearerAuth`. Cadastre o token através do botão **Authorize** usando `Bearer <token>` após obter um `access_token` em `/auth/login`.
 servers:
   - url: http://localhost:8080
     description: Ambiente local (PORT=8080)
 tags:
+  - name: Auth
+    description: Fluxo de autenticação e emissão de JWT
   - name: Services
     description: Catálogo de serviços (admin)
   - name: Estimates
     description: Orçamentos gerados a partir de ordens de serviço
+  - name: Repair Orders
+    description: Transição de status das ordens de reparo (admin)
 paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Autenticar usuário
+      description: Retorna um token JWT válido para acessar as rotas protegidas (`/admin/**`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: admin@example.com
+              password: password123
+      responses:
+        '200':
+          description: Autenticação realizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                token_type: Bearer
+                expires_in: 3600
+                expires_at: 2024-12-31T12:00:00Z
+                user:
+                  id: d290f1ee-6c54-4b01-90e6-d701748f0851
+                  name: Admin User
+                  email: admin@example.com
+                  roles: [manager, attendant]
+        '400':
+          description: JSON inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_JSON
+                message: invalid JSON body
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_CREDENTIALS
+                message: invalid credentials
   /admin/services:
     get:
       tags: [Services]
       summary: Listar serviços
       description: Lista serviços com paginação simples por `limit` e `offset`.
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: limit
@@ -59,6 +115,8 @@ paths:
     post:
       tags: [Services]
       summary: Criar serviço
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -122,6 +180,8 @@ paths:
     get:
       tags: [Services]
       summary: Obter serviço por ID
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -172,6 +232,8 @@ paths:
     put:
       tags: [Services]
       summary: Atualizar serviço
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -240,6 +302,8 @@ paths:
     delete:
       tags: [Services]
       summary: Remover serviço
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -277,10 +341,12 @@ paths:
               example:
                 code: INTERNAL_ERROR
                 message: internal error
-  /repair-orders/{id}/estimate:
+  /admin/repair-orders/{id}/estimate:
     post:
       tags: [Estimates]
       summary: Criar orçamento a partir de ordem de serviço
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -352,6 +418,12 @@ paths:
                 code: INTERNAL_ERROR
                 message: internal error
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Forneça o token no formato `Bearer <token>`.
   schemas:
     Error:
       type: object
@@ -363,6 +435,68 @@ components:
           type: string
           example: invalid JSON body
       required: [code, message]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required: [email, password]
+      example:
+        email: admin@example.com
+        password: password123
+    AuthenticatedUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+      required: [id, name, email, roles]
+      example:
+        id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        name: Admin User
+        email: admin@example.com
+        roles: [manager]
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          format: int64
+          description: Tempo em segundos até a expiração
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/AuthenticatedUser'
+      required: [access_token, token_type, expires_in, expires_at, user]
+      example:
+        access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type: Bearer
+        expires_in: 3600
+        expires_at: 2024-12-31T12:00:00Z
+        user:
+          id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          name: Admin User
+          email: admin@example.com
+          roles: [manager, attendant]
     Service:
       type: object
       properties:
@@ -509,4 +643,219 @@ components:
           RepairOrderID: "123e4567-e89b-12d3-a456-426614174000"
           Total:
             Cents: 33000
-
+  /admin/estimates/{id}/approve:
+    post:
+      tags: [Estimates]
+      summary: Aprovar orçamento
+      description: Transiciona o orçamento para aguardando baixa de estoque e atualiza o status da ordem de reparo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID do orçamento a ser aprovado
+      responses:
+        '200':
+          description: Orçamento aprovado
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Orçamento não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: ESTIMATE_NOT_FOUND
+                message: estimate not found
+        '422':
+          description: Estado inválido para aprovação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ESTIMATE_STATE
+                message: estimate cannot be approved in current state
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/repair-orders/{id}/start-execution:
+    post:
+      tags: [Repair Orders]
+      summary: Iniciar execução da ordem de reparo
+      description: Move a ordem de reparo do estado aprovado para em execução.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '204':
+          description: Execução iniciada com sucesso
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+        '422':
+          description: Estado da ordem não permite iniciar execução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_REPAIR_ORDER_STATUS
+                message: invalid repair order status
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/repair-orders/{id}/finish-execution:
+    post:
+      tags: [Repair Orders]
+      summary: Finalizar execução da ordem de reparo
+      description: Move a ordem de reparo de em execução para finalizada.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '204':
+          description: Execução finalizada
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+        '422':
+          description: Estado da ordem não permite finalizar execução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_REPAIR_ORDER_STATUS
+                message: invalid repair order status
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/repair-orders/{id}/release-vehicle:
+    post:
+      tags: [Repair Orders]
+      summary: Liberar veículo ao cliente
+      description: Atualiza a ordem de reparo finalizada para liberada.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '204':
+          description: Veículo liberado
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+        '422':
+          description: Estado da ordem não permite liberar veículo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_REPAIR_ORDER_STATUS
+                message: invalid repair order status
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
