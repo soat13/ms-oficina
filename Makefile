@@ -1,5 +1,5 @@
-.PHONY: install up down run test mod vendor tidy fmt lint sh \
-        migrate-up migrate-down migrate-status seed-up
+.PHONY: install up down run test test-coverage mod vendor tidy fmt lint sh \
+        migrate-up migrate-down migrate-status seed-up sonar sonar-analysis
 
 # Infra
 up:
@@ -21,6 +21,8 @@ run:
 # QA
 test:
 	docker compose exec app-dev go test ./...
+test-coverage:
+	docker compose exec app-dev go test -coverpkg=./internal/...,./pkg/... -coverprofile=coverage.out ./...
 mod:
 	docker compose exec app-dev go mod tidy
 vendor:
@@ -81,3 +83,21 @@ mock: mockgen-install
 		  -source=internal/shared/eventbus/bus.go \
 		  -destination=internal/shared/eventbus/mocks/bus_mock.go \
 		  -package=mocks'
+
+# -------------------------------
+# SonarQube Analysis
+# -------------------------------
+SONAR_TOKEN ?= sqp_99e63549a1cd754cafb31b7d906aa31e95347e1d
+
+sonar:
+	make test-coverage
+	sonar-scanner \
+		-D"sonar.projectKey=oficina" \
+		-D"sonar.projectName=Fase 1 - Oficina" \
+		-D"sonar.sources=." \
+		-D"sonar.exclusions=**/vendor/**,**/mocks/**,**/*_test.go,**/tests/**,**/scripts/**,**/docs/**,.env*,**/*.md,**/cmd/**" \
+		-D"sonar.tests=." \
+		-D"sonar.test.inclusions=**/*_test.go" \
+		-D"sonar.go.coverage.reportPaths=coverage.out" \
+		-D"sonar.host.url=http://localhost:9000" \
+		-D"sonar.token=$(SONAR_TOKEN)"
