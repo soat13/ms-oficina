@@ -74,6 +74,20 @@ func (repo *BunUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 	return toDomain(&model), nil
 }
 
+func (repo *BunUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var model userModel
+	err := repo.db.NewSelect().
+		Model(&model).
+		Where("email = ?", email).
+		Scan(ctx)
+
+	if err := bun_helper.IgnoreNoRows(err); err != nil {
+		return nil, err
+	}
+
+	return toDomain(&model), nil
+}
+
 func (repo *BunUserRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.User, error) {
 	var rows []userModel
 	if err := repo.db.NewSelect().

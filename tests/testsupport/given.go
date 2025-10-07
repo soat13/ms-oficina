@@ -7,14 +7,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lib/pq"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
-
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
+
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
+	passwordVO "github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
 )
 
 var (
@@ -84,7 +85,6 @@ func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, 
 		id = uuid.New()
 	}
 
-	// Normalize document to save only digits in database
 	doc, err := document.New(documentStr)
 	require.NoError(t, err, "invalid document in test")
 	normalizedDoc := doc.Value
@@ -150,7 +150,6 @@ func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, pho
 		id = uuid.New()
 	}
 
-	// Normalize document to save only digits in database
 	doc, err := document.New(documentStr)
 	require.NoError(t, err, "invalid document in test")
 	normalizedDoc := doc.Value
@@ -167,8 +166,9 @@ func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, pho
 
 func hashPassword(t *testing.T, password string) string {
 	t.Helper()
-	hash := "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy" // "password123" hashed
-	return hash
+	vo, err := passwordVO.New(password)
+	require.NoError(t, err, "invalid password in test")
+	return vo.Hash
 }
 
 func insertService(ctx context.Context, db *bun.DB, id uuid.UUID, name string, cents int64) error {

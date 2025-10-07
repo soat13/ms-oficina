@@ -31,6 +31,18 @@ Observações:
 - A UI usa assets do CDN (swagger-ui-dist). O arquivo do esquema fica embarcado no binário.
 - As rotas documentadas correspondem às implementadas em `internal/service/infra/http` e `internal/estimate/infra/http`.
  
+## Autenticação JWT
+
+A aplicação possui um fluxo de autenticação baseado em JSON Web Tokens para proteger as rotas administrativas (`/admin/**`). Os principais pontos são:
+
+- **Login** — `POST /auth/login` recebe `email` e `password`, valida o usuário através do repositório em `internal/user/infra/db` (hash BCrypt) e retorna um JSON com `access_token`, `token_type` (`Bearer`), `expires_in`, `expires_at` e um resumo do usuário.
+- **Geração/validação** — `internal/auth/infra/jwt` implementa `TokenService` usando HS256. As claims incluem `uid`, `email` e `roles`, com emissor `oficina-api` e expiração padrão de 1 hora.
+- **Middleware** — `internal/auth/infra/http/middleware.go` valida o cabeçalho `Authorization: Bearer <token>` e anexa as claims ao contexto Fiber para uso posterior. Falhas retornam `401 Unauthorized` via o `ErrorHandler` compartilhado.
+- **Bootstrap** — `internal/bootstrap/auth/setup.go` lê `JWT_SECRET` (obrigatório) e `JWT_EXPIRATION` (opcional, ex.: `90m`), registra o endpoint de login e instala o middleware antes das rotas `/admin`.
+- **Testes** — helpers em `tests/testsupport/auth.go` autenticam usuários reais durante os testes de integração, garantindo que as rotas protegidas só sejam acessadas com tokens válidos.
+
+Toda a funcionalidade segue o padrão modular existente (`internal/auth/{domain,application,infra}`) e reutiliza a entidade `user` como fonte dos dados de acesso.
+ 
 
 ## Sem Make (comandos equivalentes)
 - Subir os serviços:
