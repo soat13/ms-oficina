@@ -20,14 +20,6 @@ rodar migrações, executar a API e rodar testes.
 Por padrão a aplicação escuta na porta `8080` dentro do container e está
 exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 
-## TODO
-
- - CRUD: product (Pisani)
- - CRUD: customer (Lucas)
- - CRUD: vehicles (Marcos)
- - Autenticação JWT
-  - Verificar nome da tabela com a linguagem oblíqua
-
 ## Swagger / OpenAPI
 
 Após subir a API, acesse a documentação:
@@ -80,17 +72,46 @@ rotas HTTP para criar ordens de reparo; utilize inserções no banco ou os teste
 de integração como referência.
 
 ## Testes
-- Rodar todos os testes:
-  - `make test`
 
-Os testes de integração sobem um banco isolado por teste, aplicam migrações e
-seeds de teste automaticamente.
+### Executar Testes
+- Rodar todos os testes:
+  ```bash
+  make test
+  ```
+
+- Rodar testes com coverage completo:
+  ```bash
+  make test-coverage
+  ```
+  Este comando:
+  - Executa todos os testes (unitários e de integração)
+  - Calcula coverage de **todos** os pacotes em `internal/` e `pkg/`
+  - Gera o arquivo `coverage.out`
+  - Os testes de integração contam para o coverage dos use cases
+
+### SonarQube
+Para executar análise de código e enviar coverage para o SonarQube:
+
+```bash
+make sonar
+```
+
+Este comando:
+- Executa todos os testes com coverage completo
+- Gera o relatório de coverage (`coverage.out`)
+- Envia a análise para o SonarQube (http://localhost:9000)
+
+**Observações:**
+- Os testes de integração sobem um banco isolado por teste e aplicam migrações automaticamente
+- O coverage inclui código testado pelos testes de integração em `tests/integration/`
+- O SonarQube deve estar rodando localmente na porta 9000
 
 ## Comandos úteis
 - `make migrate-status` — status das migrações
 - `make migrate-down` — desfaz a última migração
 - `make fmt` — formata o código
 - `make lint` — `go vet`
+- `make mock` — gera mocks para testes
 - `make sh` — shell no container `app-dev`
 
 ## Estrutura principal
