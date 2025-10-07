@@ -12,12 +12,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
-	"github.com/stretchr/testify/require"
-	"github.com/uptrace/bun"
-
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
+	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	"github.com/stretchr/testify/require"
+	"github.com/uptrace/bun"
 )
 
 // -----------------------------------------------------------------------------
@@ -76,14 +76,14 @@ func TestCreateUser(t *testing.T) {
 		setup := ensureSetup(t)
 
 		payload := createBody{
-			Name:        "Admin User",
+			Name:        "Attendant User",
 			Document:    "11144477735",
-			Email:       "admin@example.com",
+			Email:       "attendant@example.com",
 			PhoneNumber: "11987654321",
 			Password:    "password123",
 			Roles:       []string{"attendant"},
 		}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
 		assertUserCreated(t, setup.Container.DB, payload)
@@ -100,7 +100,7 @@ func TestCreateUser(t *testing.T) {
 			Password:    "password123",
 			Roles:       []string{"manager", "attendant"},
 		}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
 		assertUserCreated(t, setup.Container.DB, payload)
@@ -110,7 +110,7 @@ func TestCreateUser(t *testing.T) {
 		setup := ensureSetup(t)
 
 		payload := createBody{Name: "", Document: "", Email: "", PhoneNumber: "", Password: "", Roles: []string{}}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
 
@@ -125,7 +125,7 @@ func TestCreateUser(t *testing.T) {
 			Password:    "password123",
 			Roles:       []string{},
 		}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
 
@@ -140,41 +140,41 @@ func TestCreateUser(t *testing.T) {
 			Password:    "password123",
 			Roles:       []string{"invalid_role"},
 		}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
 
 	t.Run("DuplicateEmail", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		_ = testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Existing User", "11144477735", "11987654321", "existing@example.com", "password123", []string{"attendant"})
+		_ = testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Existing User", "45352381030", "11987654321", "existing@example.com", "password123", []string{"attendant"})
 
 		payload := createBody{
 			Name:        "Another User",
-			Document:    "98765432100",
+			Document:    "57432248036",
 			Email:       "existing@example.com",
 			PhoneNumber: "11987654325",
 			Password:    "anotherpass",
 			Roles:       []string{"manager"},
 		}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
 
 	t.Run("DuplicateDocument", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		_ = testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Existing User", "11144477735", "11987654321", "existing@example.com", "password123", []string{"attendant"})
+		_ = testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Existing User", "97533111095", "11987654321", "existing2@example.com", "password123", []string{"attendant"})
 
 		payload := createBody{
 			Name:        "Another User",
-			Document:    "11144477735",
+			Document:    "97533111095",
 			Email:       "another@example.com",
 			PhoneNumber: "11987654326",
 			Password:    "anotherpass",
 			Roles:       []string{"manager"},
 		}
-		resp := postCreateUser(t, setup.FiberApp, payload)
+		resp := postCreateUser(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
 }
@@ -184,7 +184,7 @@ func TestGetUser(t *testing.T) {
 		setup := ensureSetup(t)
 
 		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "John Mechanic", "85891302071", "11987654321", "user@example.com", "password123", []string{"mechanic"})
-		resp := getUser(t, setup.FiberApp, uid)
+		resp := getUser(t, setup.Container.FiberApp, setup.AuthToken, uid)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		var body userJSON
@@ -199,7 +199,7 @@ func TestGetUser(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		resp := getUser(t, setup.FiberApp, uuid.New())
+		resp := getUser(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
@@ -213,14 +213,14 @@ func TestUpdateUser(t *testing.T) {
 		newName := "New Name"
 		newEmail := "newemail@example.com"
 		newPhone := "11999999999"
-		resp := updateUser(t, setup.FiberApp, uid, updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uid, updateBody{
 			Name:        &newName,
 			Email:       &newEmail,
 			PhoneNumber: &newPhone,
 		})
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
-		getResp := getUser(t, setup.FiberApp, uid)
+		getResp := getUser(t, setup.Container.FiberApp, setup.AuthToken, uid)
 		var body userJSON
 		err := json.NewDecoder(getResp.Body).Decode(&body)
 		require.NoError(t, err)
@@ -235,7 +235,7 @@ func TestUpdateUser(t *testing.T) {
 		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Password Test", "52998224725", "11987654321", "pwdtest@example.com", "oldpassword", []string{"attendant"})
 
 		newPassword := "newpassword123"
-		resp := updateUser(t, setup.FiberApp, uid, updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uid, updateBody{
 			Password: &newPassword,
 		})
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
@@ -245,7 +245,7 @@ func TestUpdateUser(t *testing.T) {
 		setup := ensureSetup(t)
 
 		newName := "New Name"
-		resp := updateUser(t, setup.FiberApp, uuid.New(), updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uuid.New(), updateBody{
 			Name: &newName,
 		})
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
@@ -256,7 +256,7 @@ func TestUpdateUser(t *testing.T) {
 
 		uid := uuid.New()
 		invalidEmail := "not-an-email"
-		resp := updateUser(t, setup.FiberApp, uid, updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uid, updateBody{
 			Email: &invalidEmail,
 		})
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
@@ -265,15 +265,15 @@ func TestUpdateUser(t *testing.T) {
 	t.Run("UpdateRoles", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Role Test", "11144477735", "11987654321", "roletest@example.com", "password123", []string{"attendant"})
+		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Role Test", "70853760071", "11987654321", "roletest@example.com", "password123", []string{"attendant"})
 
 		newRoles := []string{"manager", "mechanic"}
-		resp := updateUser(t, setup.FiberApp, uid, updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uid, updateBody{
 			Roles: &newRoles,
 		})
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
-		getResp := getUser(t, setup.FiberApp, uid)
+		getResp := getUser(t, setup.Container.FiberApp, setup.AuthToken, uid)
 		var body userJSON
 		err := json.NewDecoder(getResp.Body).Decode(&body)
 		require.NoError(t, err)
@@ -288,7 +288,7 @@ func TestUpdateUser(t *testing.T) {
 		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Test User", "52998224725", "11987654321", "emptytest@example.com", "password123", []string{"attendant"})
 
 		emptyRoles := []string{}
-		resp := updateUser(t, setup.FiberApp, uid, updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uid, updateBody{
 			Roles: &emptyRoles,
 		})
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
@@ -300,7 +300,7 @@ func TestUpdateUser(t *testing.T) {
 		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "Invalid Test", "02383727075", "11987654321", "invalidtest@example.com", "password123", []string{"attendant"})
 
 		invalidRoles := []string{"invalid_role"}
-		resp := updateUser(t, setup.FiberApp, uid, updateBody{
+		resp := updateUser(t, setup.Container.FiberApp, setup.AuthToken, uid, updateBody{
 			Roles: &invalidRoles,
 		})
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
@@ -312,17 +312,17 @@ func TestDeleteUser(t *testing.T) {
 		setup := ensureSetup(t)
 
 		uid := testsupport.ThereIsAUser(t, setup.Container.DB, uuid.Nil, "To Delete", "02383727075", "11987654321", "todelete@example.com", "password123", []string{"attendant"})
-		resp := deleteUser(t, setup.FiberApp, uid)
+		resp := deleteUser(t, setup.Container.FiberApp, setup.AuthToken, uid)
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
-		getResp := getUser(t, setup.FiberApp, uid)
+		getResp := getUser(t, setup.Container.FiberApp, setup.AuthToken, uid)
 		require.Equal(t, fiber.StatusNotFound, getResp.StatusCode)
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		resp := deleteUser(t, setup.FiberApp, uuid.New())
+		resp := deleteUser(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 	})
 }
@@ -333,7 +333,7 @@ func TestListUsers(t *testing.T) {
 
 		bob, alice := givenUsers(t, setup.Container.DB)
 
-		resp := listUsers(t, setup.FiberApp, 10, 0)
+		resp := listUsers(t, setup.Container.FiberApp, setup.AuthToken, 10, 0)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		var body listResp
@@ -361,7 +361,7 @@ func TestListUsers(t *testing.T) {
 
 		givenUsers(t, setup.Container.DB)
 
-		resp := listUsers(t, setup.FiberApp, 1, 0)
+		resp := listUsers(t, setup.Container.FiberApp, setup.AuthToken, 1, 0)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		var body listResp
@@ -377,7 +377,7 @@ func TestListUsers(t *testing.T) {
 
 func givenUsers(t *testing.T, db *bun.DB) (bob, alice uuid.UUID) {
 	t.Helper()
-	bob = testsupport.ThereIsAUser(t, db, uuid.Nil, "Bob Manager", "11144477735", "11987654321", "bob@example.com", "password123", []string{"manager"})
+	bob = testsupport.ThereIsAUser(t, db, uuid.Nil, "Bob Manager", "56134255076", "11987654321", "bob@example.com", "password123", []string{"manager"})
 	alice = testsupport.ThereIsAUser(t, db, uuid.Nil, "Alice Mechanic", "98765432100", "11987654322", "alice@example.com", "password123", []string{"mechanic"})
 	return bob, alice
 }
@@ -403,56 +403,53 @@ func assertUserCreated(t *testing.T, db *bun.DB, payload createBody) {
 	require.Equal(t, len(payload.Roles), len(roles))
 }
 
-func postCreateUser(t *testing.T, app *fiber.App, body createBody) *http.Response {
+func postCreateUser(t *testing.T, app *fiber.App, token string, body createBody) *http.Response {
 	t.Helper()
-
-	jsonBody, err := json.Marshal(body)
-	require.NoError(t, err)
-
-	req := httptest.NewRequest("POST", "/admin/users/", bytes.NewReader(jsonBody))
+	bs, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/admin/users/", bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
-
+	testauth.AddAuthHeader(req, token)
 	resp, err := app.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func getUser(t *testing.T, app *fiber.App, id uuid.UUID) *http.Response {
+func getUser(t *testing.T, app *fiber.App, token string, id uuid.UUID) *http.Response {
 	t.Helper()
 
 	req := httptest.NewRequest("GET", "/admin/users/"+id.String(), nil)
+	testauth.AddAuthHeader(req, token)
 	resp, err := app.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func updateUser(t *testing.T, app *fiber.App, id uuid.UUID, body updateBody) *http.Response {
+func updateUser(t *testing.T, app *fiber.App, token string, id uuid.UUID, body updateBody) *http.Response {
 	t.Helper()
-
-	jsonBody, err := json.Marshal(body)
-	require.NoError(t, err)
-
-	req := httptest.NewRequest("PATCH", "/admin/users/"+id.String(), bytes.NewReader(jsonBody))
+	bs, _ := json.Marshal(body)
+	req := httptest.NewRequest("PATCH", "/admin/users/"+id.String(), bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
-
+	testauth.AddAuthHeader(req, token)
 	resp, err := app.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func deleteUser(t *testing.T, app *fiber.App, id uuid.UUID) *http.Response {
+func deleteUser(t *testing.T, app *fiber.App, token string, id uuid.UUID) *http.Response {
 	t.Helper()
 
 	req := httptest.NewRequest("DELETE", "/admin/users/"+id.String(), nil)
+	testauth.AddAuthHeader(req, token)
 	resp, err := app.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func listUsers(t *testing.T, app *fiber.App, limit, offset int) *http.Response {
+func listUsers(t *testing.T, app *fiber.App, token string, limit, offset int) *http.Response {
 	t.Helper()
 
 	req := httptest.NewRequest("GET", "/admin/users/?limit="+strconv.Itoa(limit)+"&offset="+strconv.Itoa(offset), nil)
+	testauth.AddAuthHeader(req, token)
 	resp, err := app.Test(req, -1)
 	require.NoError(t, err)
 	return resp

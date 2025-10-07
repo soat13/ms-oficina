@@ -17,6 +17,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/customer"
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
+	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
 )
 
 // -----------------------------------------------------------------------------
@@ -75,7 +76,7 @@ func TestCreateCustomer(t *testing.T) {
 			PhoneNumber: "11987654321",
 			Email:       "ana@example.com",
 		}
-		resp := postCreateCustomer(t, setup.FiberApp, payload)
+		resp := postCreateCustomer(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
 		assertCustomerCreated(t, setup.Container.DB, payload)
@@ -85,7 +86,7 @@ func TestCreateCustomer(t *testing.T) {
 		setup := ensureSetup(t)
 
 		payload := createBody{Name: "", PhoneNumber: "", Document: "", Email: ""}
-		resp := postCreateCustomer(t, setup.FiberApp, payload)
+		resp := postCreateCustomer(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
 
@@ -100,7 +101,7 @@ func TestCreateCustomer(t *testing.T) {
 			Document:    "11144477735",
 			Email:       "maria@example.com",
 		}
-		resp := postCreateCustomer(t, setup.FiberApp, payload)
+		resp := postCreateCustomer(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
 
@@ -115,7 +116,7 @@ func TestCreateCustomer(t *testing.T) {
 			Document:    "111.444.777-35",
 			Email:       "maria@example.com",
 		}
-		resp := postCreateCustomer(t, setup.FiberApp, payload)
+		resp := postCreateCustomer(t, setup.Container.FiberApp, setup.AuthToken, payload)
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
 }
@@ -125,7 +126,7 @@ func TestGetCustomer(t *testing.T) {
 		setup := ensureSetup(t)
 
 		cid := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Carlos Santos", "98765432100", "CPF", "11987654323", "carlos@example.com")
-		resp := getCustomer(t, setup.FiberApp, cid)
+		resp := getCustomer(t, setup.Container.FiberApp, setup.AuthToken, cid)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		var body customerJSON
@@ -139,7 +140,7 @@ func TestGetCustomer(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		resp := getCustomer(t, setup.FiberApp, uuid.New())
+		resp := getCustomer(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
@@ -154,7 +155,7 @@ func TestUpdateCustomer(t *testing.T) {
 		newPhoneNumber := "81989017776"
 		newEmail := "pedro2@example.com"
 
-		resp := putUpdateCustomer(t, setup.FiberApp, cid, updateBody{
+		resp := putUpdateCustomer(t, setup.Container.FiberApp, setup.AuthToken, cid, updateBody{
 			Name:        &newName,
 			PhoneNumber: &newPhoneNumber,
 			Email:       &newEmail,
@@ -181,7 +182,7 @@ func TestUpdateCustomer(t *testing.T) {
 		unknown := uuid.New()
 		validName := "Valid Name"
 
-		resp := putUpdateCustomer(t, setup.FiberApp, unknown, updateBody{Name: &validName})
+		resp := putUpdateCustomer(t, setup.Container.FiberApp, setup.AuthToken, unknown, updateBody{Name: &validName})
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 
@@ -191,7 +192,7 @@ func TestUpdateCustomer(t *testing.T) {
 		cid := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Test Customer", "52998224725", "CPF", "11987654326", "test@example.com")
 
 		emptyName := ""
-		resp := putUpdateCustomer(t, setup.FiberApp, cid, updateBody{Name: &emptyName})
+		resp := putUpdateCustomer(t, setup.Container.FiberApp, setup.AuthToken, cid, updateBody{Name: &emptyName})
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 	})
 }
@@ -201,7 +202,7 @@ func TestDeleteCustomer(t *testing.T) {
 		setup := ensureSetup(t)
 
 		cid := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Temp Customer", "02383727075", "CPF", "81989017713", "temp@example.com")
-		resp := deleteCustomer(t, setup.FiberApp, cid)
+		resp := deleteCustomer(t, setup.Container.FiberApp, setup.AuthToken, cid)
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
 		var count int
@@ -215,7 +216,7 @@ func TestDeleteCustomer(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		resp := deleteCustomer(t, setup.FiberApp, uuid.New())
+		resp := deleteCustomer(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 	})
 }
@@ -226,7 +227,7 @@ func TestListCustomers(t *testing.T) {
 
 		mariaID, joaoID := givenCustomersOutOfOrder(t, setup.Container.DB)
 
-		response := listCustomers(t, setup.FiberApp, 2, 0)
+		response := listCustomers(t, setup.Container.FiberApp, setup.AuthToken, 2, 0)
 		var body listResp
 		decodeJSON(t, response, &body)
 
@@ -273,25 +274,27 @@ func indexOfByID(items []customerJSON, ID uuid.UUID) int {
 	return -1
 }
 
-func postCreateCustomer(t *testing.T, fiberApp *fiber.App, body createBody) *http.Response {
+func postCreateCustomer(t *testing.T, fiberApp *fiber.App, token string, body createBody) *http.Response {
 	t.Helper()
 	bs, _ := json.Marshal(body)
 	req := httptest.NewRequest("POST", "/admin/customers/", bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func getCustomer(t *testing.T, fiberApp *fiber.App, id uuid.UUID) *http.Response {
+func getCustomer(t *testing.T, fiberApp *fiber.App, token string, id uuid.UUID) *http.Response {
 	t.Helper()
 	req := httptest.NewRequest("GET", "/admin/customers/"+id.String(), nil)
+	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func listCustomers(t *testing.T, fiberApp *fiber.App, limit, offset int) *http.Response {
+func listCustomers(t *testing.T, fiberApp *fiber.App, token string, limit, offset int) *http.Response {
 	t.Helper()
 	url := "/admin/customers/"
 	query := ""
@@ -308,24 +311,27 @@ func listCustomers(t *testing.T, fiberApp *fiber.App, limit, offset int) *http.R
 		url += "?" + query
 	}
 	req := httptest.NewRequest("GET", url, nil)
+	testauth.AddAuthHeader(req, token)
 	response, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return response
 }
 
-func putUpdateCustomer(t *testing.T, fiberApp *fiber.App, id uuid.UUID, body updateBody) *http.Response {
+func putUpdateCustomer(t *testing.T, fiberApp *fiber.App, token string, id uuid.UUID, body updateBody) *http.Response {
 	t.Helper()
 	bs, _ := json.Marshal(body)
 	req := httptest.NewRequest("PATCH", "/admin/customers/"+id.String(), bytes.NewReader(bs))
 	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
 }
 
-func deleteCustomer(t *testing.T, fiberApp *fiber.App, id uuid.UUID) *http.Response {
+func deleteCustomer(t *testing.T, fiberApp *fiber.App, token string, id uuid.UUID) *http.Response {
 	t.Helper()
 	req := httptest.NewRequest("DELETE", "/admin/customers/"+id.String(), nil)
+	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp

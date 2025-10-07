@@ -7,6 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
+	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/customer"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
@@ -25,6 +26,7 @@ func main() {
 	// -----------------------------------------------------------------------------
 	fiberApp := container.FiberApp
 
+	authBootstrap.SetupDefault(container)
 	serviceDocs.Register(fiberApp)
 	estimate.SetupDefault(container)
 	repairorder.SetupDefault(container)

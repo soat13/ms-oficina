@@ -2,6 +2,7 @@ package error
 
 const (
 	HTTPStatusBadRequest    = "400"
+	HTTPStatusUnauthorized  = "401"
 	HTTPStatusConflict      = "409"
 	HTTPStatusNotFound      = "404"
 	HTTPStatusUnprocessable = "422"
@@ -31,6 +32,10 @@ func (e *Resolver) RegisterError(err error, privateCode string) {
 
 func (e *Resolver) RegisterHTTPBadRequestError(err error) {
 	e.RegisterError(err, HTTPStatusBadRequest)
+}
+
+func (e *Resolver) RegisterHTTPUnauthorizedError(err error) {
+	e.RegisterError(err, HTTPStatusUnauthorized)
 }
 
 func (e *Resolver) RegisterHTTPConflictError(err error) {
