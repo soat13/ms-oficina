@@ -75,11 +75,7 @@ type serviceJSON struct {
 }
 
 type listJSON struct {
-	Services []serviceJSON `json:"services"`
-}
-
-type getJSON struct {
-	Service serviceJSON `json:"service"`
+	Data []serviceJSON `json:"data"`
 }
 
 func (h *Handler) Create(c *fiber.Ctx) error {
@@ -97,18 +93,14 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 		return writeError(c, fiber.StatusUnprocessableEntity, "INVALID_BODY", "invalid name or price")
 	}
 
-	pr, err := money.New(body.Price)
+	price, err := money.New(body.Price)
 	if err != nil {
 		return writeError(c, fiber.StatusUnprocessableEntity, "INVALID_BODY", "invalid service price")
 	}
 
-	_, err = h.create.Execute(c.Context(), app.CreateInput{
-		Name:  body.Name,
-		Price: pr,
-		Now:   h.now(),
-	})
+	input := app.CreateInput{Name: body.Name, Price: price, Now: h.now()}
 
-	if err != nil {
+	if _, err := h.create.Execute(c.Context(), input); err != nil {
 		return h.handleError(c, err)
 	}
 
@@ -131,16 +123,13 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 		return writeError(c, fiber.StatusUnprocessableEntity, "INVALID_BODY", "invalid service price")
 	}
 
-	out, err := h.update.Execute(c.Context(), app.UpdateInput{
-		ID:    id,
-		Name:  body.Name,
-		Price: pricePtr,
-		Now:   h.now(),
-	})
-	if err != nil {
+	input := app.UpdateInput{ID: id, Name: body.Name, Price: pricePtr, Now: h.now()}
+
+	if _, err = h.update.Execute(c.Context(), input); err != nil {
 		return h.handleError(c, err)
 	}
-	return h.json(c, fiber.StatusOK, getJSON{Service: toJSON(out.Service)})
+
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 func (h *Handler) Delete(c *fiber.Ctx) error {
@@ -163,7 +152,7 @@ func (h *Handler) GetByID(c *fiber.Ctx) error {
 	if err != nil {
 		return h.handleError(c, err)
 	}
-	return h.json(c, fiber.StatusOK, getJSON{Service: toJSON(out.Service)})
+	return h.json(c, fiber.StatusOK, toJSON(out.Service))
 }
 
 func (h *Handler) List(c *fiber.Ctx) error {
@@ -175,7 +164,7 @@ func (h *Handler) List(c *fiber.Ctx) error {
 	}
 
 	response := listJSON{
-		Services: maps.Map(out.Services, toJSON),
+		Data: maps.Map(out.Services, toJSON),
 	}
 
 	return h.json(c, fiber.StatusOK, response)
