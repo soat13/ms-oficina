@@ -125,7 +125,9 @@ func TestGetCustomer(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		cid := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Carlos Santos", "98765432100", "CPF", "11987654323", "carlos@example.com")
+		doc := testsupport.GenerateDocument()
+
+		cid := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Carlos Santos", doc.Value, doc.Type(), "11987654323", "carlos@example.com")
 		resp := getCustomer(t, setup.Container.FiberApp, setup.AuthToken, cid)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
@@ -134,7 +136,7 @@ func TestGetCustomer(t *testing.T) {
 		require.Equal(t, cid, body.ID)
 		require.Equal(t, "Carlos Santos", body.Name)
 		require.Equal(t, "11987654323", body.PhoneNumber)
-		require.Equal(t, "98765432100", body.Document)
+		require.Equal(t, doc.Value, body.Document)
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
@@ -227,7 +229,7 @@ func TestListCustomers(t *testing.T) {
 
 		mariaID, joaoID := givenCustomersOutOfOrder(t, setup.Container.DB)
 
-		response := listCustomers(t, setup.Container.FiberApp, setup.AuthToken, 2, 0)
+		response := listCustomers(t, setup.Container.FiberApp, setup.AuthToken, 5, 0)
 		var body listResp
 		decodeJSON(t, response, &body)
 
@@ -260,8 +262,12 @@ func assertCustomerCreated(t *testing.T, db *bun.DB, payload createBody) {
 
 func givenCustomersOutOfOrder(t *testing.T, db *bun.DB) (uuid.UUID, uuid.UUID) {
 	t.Helper()
-	maria := testsupport.ThereIsACustomerWithDocument(t, db, uuid.Nil, "Maria Santos", "11144477735", "CPF", "11987654328", "maria@example.com")
-	joao := testsupport.ThereIsACustomerWithDocument(t, db, uuid.Nil, "João Silva", "52998224725", "CPF", "11987654329", "joao@example.com")
+
+	document1 := testsupport.GenerateDocument()
+	document2 := testsupport.GenerateDocument()
+
+	maria := testsupport.ThereIsACustomerWithDocument(t, db, uuid.Nil, "Maria Santos", document1.Value, document1.Type(), "11987654328", "maria@example.com")
+	joao := testsupport.ThereIsACustomerWithDocument(t, db, uuid.Nil, "João Silva", document2.Value, document2.Type(), "11987654329", "joao@example.com")
 	return maria, joao
 }
 
