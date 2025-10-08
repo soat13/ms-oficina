@@ -19,6 +19,8 @@ tags:
     description: Fluxo de autenticação e emissão de JWT
   - name: Services
     description: Catálogo de serviços (admin)
+  - name: Products
+    description: Catálogo de produtos (admin)
   - name: Estimates
     description: Orçamentos gerados a partir de ordens de serviço
   - name: Repair Orders
@@ -167,6 +169,256 @@ paths:
               example:
                 code: SERVICE_ALREADY_EXISTS
                 message: service with this name already exists
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/products:
+    get:
+      tags: [Products]
+      summary: Listar produtos
+      description: Lista produtos com paginação simples por `limit` e `offset`.
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+          description: Número máximo de itens retornados.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Deslocamento para paginação.
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductsResponse'
+              example:
+                products:
+                  - id: "7fdcb813-62ad-4d6d-80f5-750a6c31a808"
+                    name: "Óleo Sintético 5W30"
+                    price: 9500
+                    stock: 25
+                  - id: "0d8a4e57-c26f-4d67-910f-9a1fab5b52c4"
+                    name: "Filtro de Óleo"
+                    price: 4500
+                    stock: 12
+    post:
+      tags: [Products]
+      summary: Criar produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+            example:
+              name: "Filtro de Cabine"
+              price: 3800
+              stock: 8
+      responses:
+        '201':
+          description: Produto criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              example:
+                product:
+                  id: "51f5e7da-b1cf-4bf6-8ec1-6a26dd4043ed"
+                  name: "Filtro de Cabine"
+                  price: 3800
+                  stock: 8
+        '400':
+          description: JSON inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_JSON
+                message: invalid JSON body
+        '422':
+          description: Validação de corpo inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_BODY
+                message: "name: must be at least 3 characters"
+        '409':
+          description: Produto já existe (nome duplicado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PRODUCT_ALREADY_EXISTS
+                message: product.duplicate
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/products/{id}:
+    get:
+      tags: [Products]
+      summary: Obter produto por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              example:
+                product:
+                  id: "51f5e7da-b1cf-4bf6-8ec1-6a26dd4043ed"
+                  name: "Filtro de Cabine"
+                  price: 3800
+                  stock: 8
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PRODUCT_NOT_FOUND
+                message: product.not_found
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+    put:
+      tags: [Products]
+      summary: Atualizar produto
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+            example:
+              name: "Óleo Sintético Premium"
+              price: 11000
+              stock: 30
+      responses:
+        '200':
+          description: Produto atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              example:
+                product:
+                  id: "7fdcb813-62ad-4d6d-80f5-750a6c31a808"
+                  name: "Óleo Sintético Premium"
+                  price: 11000
+                  stock: 30
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: PRODUCT_NOT_FOUND
+                message: product.not_found
+        '422':
+          description: Validação de corpo inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_BODY
+                message: "price: must be greater than 0"
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+    delete:
+      tags: [Products]
+      summary: Remover produto
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Produto removido
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
         '500':
           description: Erro interno
           content:

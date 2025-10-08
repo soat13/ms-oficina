@@ -20,6 +20,13 @@ rodar migrações, executar a API e rodar testes.
 Por padrão a aplicação escuta na porta `8080` dentro do container e está
 exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 
+## TODO
+
+ - CRUD: customer (Lucas)
+ - CRUD: vehicles (Marcos)
+  - Autenticação JWT
+  - Verificar nome da tabela com a linguagem oblíqua
+
 ## Swagger / OpenAPI
 
 Após subir a API, acesse a documentação:
@@ -29,7 +36,7 @@ Após subir a API, acesse a documentação:
 
 Observações:
 - A UI usa assets do CDN (swagger-ui-dist). O arquivo do esquema fica embarcado no binário.
-- As rotas documentadas correspondem às implementadas em `internal/service/infra/http` e `internal/estimate/infra/http`.
+- As rotas documentadas correspondem às implementadas em `internal/service/infra/http`, `internal/product/infra/http` e `internal/estimate/infra/http`.
  
 ## Autenticação JWT
 
@@ -57,9 +64,10 @@ Toda a funcionalidade segue o padrão modular existente (`internal/auth/{domain,
 - `PG_DSN`: string de conexão do Postgres (definida no `.env` e no compose)
 - `PORT`: porta interna da API (default 8080 dentro do container)
 
-## Endpoints úteis (Admin Services)
+## Endpoints úteis (Admin Services & Products)
 Base URL (host): `http://localhost`
 
+### Services
 - Criar serviço:
   - `POST /admin/services/`
   - Body JSON:
@@ -77,6 +85,20 @@ Base URL (host): `http://localhost`
 
 - Deletar serviço:
   - `DELETE /admin/services/{id}`
+
+### Products
+- Criar produto:
+  - `POST /admin/products/`
+  - Body JSON: `{ "name": "Filtro de Cabine", "price": 3800, "stock": 8 }`
+- Listar produtos:
+  - `GET /admin/products/?limit=50&offset=0`
+- Buscar por ID:
+  - `GET /admin/products/{id}`
+- Atualizar produto:
+  - `PUT /admin/products/{id}`
+  - Body JSON (parcial): `{ "stock": 10 }`
+- Deletar produto:
+  - `DELETE /admin/products/{id}`
 
 Observação: o endpoint de orçamento (`POST /repair-orders/{id}/estimate`) requer
 uma ordem de reparo e catálogos válidos no banco. O repositório ainda não expõe
