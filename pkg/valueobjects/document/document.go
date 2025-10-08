@@ -33,7 +33,7 @@ func New(v string) (Document, error) {
 	return document, nil
 }
 
-func (d Document) TypeString() string {
+func (d Document) Type() string {
 	return string(d.DocumentType)
 }
 

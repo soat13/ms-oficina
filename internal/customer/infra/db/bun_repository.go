@@ -103,7 +103,7 @@ func toModel(c *domain.Customer) *customerModel {
 		ID:           c.ID,
 		Name:         c.Name,
 		Document:     c.Document.Value,
-		DocumentType: c.Document.TypeString(),
+		DocumentType: c.Document.Type(),
 		Email:        c.Email.String(),
 		PhoneNumber:  c.PhoneNumber.String(),
 		CreatedAt:    c.CreatedAt,

@@ -53,7 +53,7 @@ func ThereIsARepairOrderWithStatus(t *testing.T, db *bun.DB, status repairorder.
 	tag := strings.ToUpper(strings.ReplaceAll(uuid.New().String(), "-", ""))[:8]
 	name := "Customer " + tag
 	plate := "T" + tag[:6]
-	doc := generateDocumentNumber()
+	doc := GenerateDocument()
 	email := faker.Email()
 	phoneNumber := "11987654321"
 
@@ -74,7 +74,7 @@ func ThereIsACustomerWithID(t *testing.T, db *bun.DB, id uuid.UUID, name string,
 		INSERT INTO customers (id, name, document, document_type, phone_number, email)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, doc.Value, doc.TypeString(), phoneNumber, email).Exec(context.Background())
+	`, id, name, doc.Value, doc.Type(), phoneNumber, email).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }
@@ -94,6 +94,23 @@ func ThereIsACustomerWithDocument(t *testing.T, db *bun.DB, id uuid.UUID, name, 
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
 	`, id, name, normalizedDoc, documentType, phoneNumber, email).Exec(context.Background())
+	require.NoError(t, err, "falha ao inserir customer")
+	return id
+}
+
+func ThereIsACustomer(t *testing.T, db *bun.DB, id uuid.UUID, name, phoneNumber, email string) uuid.UUID {
+	t.Helper()
+	if id == uuid.Nil {
+		id = uuid.New()
+	}
+
+	doc := GenerateDocument()
+
+	_, err := db.NewRaw(`
+		INSERT INTO customers (id, name, document, document_type, phone_number, email)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT (id) DO NOTHING
+	`, id, name, doc.Value, doc.Type(), phoneNumber, email).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir customer")
 	return id
 }
@@ -159,7 +176,7 @@ func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, pho
 		INSERT INTO users (id, name, document, document_type, email, phone_number, password, roles)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT (document) DO NOTHING
-	`, id, name, normalizedDoc, doc.TypeString(), email, phoneNumber, hashedPassword, pq.Array(roles)).Exec(context.Background())
+	`, id, name, normalizedDoc, doc.Type(), email, phoneNumber, hashedPassword, pq.Array(roles)).Exec(context.Background())
 	require.NoError(t, err, "failed to insert user")
 	return id
 }
@@ -190,7 +207,7 @@ func insertProduct(ctx context.Context, db *bun.DB, id uuid.UUID, name string, p
 	return err
 }
 
-func generateDocumentNumber() document.Document {
+func GenerateDocument() document.Document {
 	var documentValue string
 
 	if rand.Intn(2) == 0 {

@@ -94,7 +94,7 @@ func toJSON(v app.UserView) userJSON {
 		ID:           v.ID,
 		Name:         v.Name,
 		Document:     v.Document.Value,
-		DocumentType: v.Document.TypeString(),
+		DocumentType: v.Document.Type(),
 		Email:        v.Email.String(),
 		PhoneNumber:  v.PhoneNumber.String(),
 		Roles:        v.Roles.Strings(),

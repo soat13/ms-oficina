@@ -88,7 +88,7 @@ func toJSON(v app.CustomerView) customerJSON {
 		ID:           v.ID,
 		Name:         v.Name,
 		Document:     v.Document.Value,
-		DocumentType: v.Document.TypeString(),
+		DocumentType: v.Document.Type(),
 		PhoneNumber:  v.PhoneNumber.String(),
 		Email:        v.Email.String(),
 	}

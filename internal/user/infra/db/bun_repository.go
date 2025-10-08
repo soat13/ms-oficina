@@ -122,7 +122,7 @@ func toModel(u *domain.User) *userModel {
 		ID:           u.ID,
 		Name:         u.Name,
 		Document:     u.Document.Value,
-		DocumentType: u.Document.TypeString(),
+		DocumentType: u.Document.Type(),
 		Email:        u.Email.String(),
 		PhoneNumber:  u.PhoneNumber.String(),
 		Password:     u.Password.Hash,

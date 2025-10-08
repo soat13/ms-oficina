@@ -13,6 +13,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/product"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
 	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 )
 
@@ -34,6 +35,7 @@ func main() {
 	product.SetupDefault(container)
 	customer.SetupDefault(container)
 	user.SetupDefault(container)
+	vehicle.SetupDefault(container)
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start
