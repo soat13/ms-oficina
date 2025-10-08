@@ -51,11 +51,7 @@ type serviceJSON struct {
 }
 
 type listResp struct {
-	Services []serviceJSON `json:"services"`
-}
-
-type getResp struct {
-	Service serviceJSON `json:"service"`
+	Data []serviceJSON `json:"data"`
 }
 
 // -----------------------------------------------------------------------------
@@ -73,8 +69,8 @@ func TestAdminServiceListOrderByName(t *testing.T) {
 
 	require.Equal(t, fiber.StatusOK, response.StatusCode)
 
-	brakeIdx := indexOfByID(body.Services, brakeCheckID)
-	alignIdx := indexOfByID(body.Services, alignID)
+	brakeIdx := indexOfByID(body.Data, brakeCheckID)
+	alignIdx := indexOfByID(body.Data, alignID)
 
 	require.NotEqual(t, -1, brakeIdx, "Brake Check should be in the list")
 	require.NotEqual(t, -1, alignIdx, "Alignment should be in the list")
@@ -136,11 +132,11 @@ func TestAdminServiceGetByIDOK(t *testing.T) {
 	resp := getService(t, setup.FiberApp, sid)
 	require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-	var body getResp
+	var body serviceJSON
 	decodeJSON(t, resp, &body)
-	require.Equal(t, sid, body.Service.ID)
-	require.Equal(t, "Rotation", body.Service.Name)
-	require.Equal(t, int64(8000), body.Service.Price)
+	require.Equal(t, sid, body.ID)
+	require.Equal(t, "Rotation", body.Name)
+	require.Equal(t, int64(8000), body.Price)
 }
 
 func TestAdminServiceGetByIDNotFound(t *testing.T) {
@@ -155,14 +151,15 @@ func TestAdminServiceUpdateOK(t *testing.T) {
 
 	sid := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Tire Rotation", 7000)
 
-	newName := "Tire Rotation PRO"
-	newPrice := int64(9000)
+	expectedName := "Tire Rotation PRO"
+	expectedPrice := int64(9000)
 
 	resp := putUpdateService(t, setup.FiberApp, sid, updateBody{
-		Name:  &newName,
-		Price: &newPrice,
+		Name:  &expectedName,
+		Price: &expectedPrice,
 	})
-	require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+	require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
 	var got struct {
 		Name  string
@@ -172,8 +169,8 @@ func TestAdminServiceUpdateOK(t *testing.T) {
 		setup.Container.DB.NewRaw(`SELECT name, price FROM services WHERE id = ?`, sid).
 			Scan(context.Background(), &got),
 	)
-	require.Equal(t, newName, got.Name)
-	require.Equal(t, newPrice, got.Price)
+	require.Equal(t, expectedName, got.Name)
+	require.Equal(t, expectedPrice, got.Price)
 }
 
 func TestAdminServiceUpdateInvalidBody(t *testing.T) {
