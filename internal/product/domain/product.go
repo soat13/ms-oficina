@@ -54,9 +54,6 @@ func (p *Product) Rename(newName string) error {
 }
 
 func (p *Product) ChangePrice(price money.Money) error {
-	if price.Cents <= 0 {
-		return ErrInvalidProductPrice
-	}
 	p.Price = price
 	p.Touch()
 	return nil
