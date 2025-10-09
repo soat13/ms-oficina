@@ -26,21 +26,21 @@ type productModel struct {
 	UpdatedAt time.Time `bun:",nullzero,default:now()"`
 }
 
-type BunRepository struct {
+type BunProductRepository struct {
 	db *bun.DB
 }
 
-func NewBunRepository(db *bun.DB) app.Repository {
-	return &BunRepository{db: db}
+func NewBunProductRepository(db *bun.DB) app.ProductRepository {
+	return &BunProductRepository{db: db}
 }
 
-func (r *BunRepository) Create(ctx context.Context, product *domain.Product) error {
+func (r *BunProductRepository) Create(ctx context.Context, product *domain.Product) error {
 	model := toModel(product)
 	_, err := r.db.NewInsert().Model(model).Exec(ctx)
 	return err
 }
 
-func (r *BunRepository) Update(ctx context.Context, product *domain.Product) error {
+func (r *BunProductRepository) Update(ctx context.Context, product *domain.Product) error {
 	model := toModel(product)
 	_, err := r.db.NewUpdate().
 		Model(model).
@@ -50,14 +50,14 @@ func (r *BunRepository) Update(ctx context.Context, product *domain.Product) err
 	return err
 }
 
-func (r *BunRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *BunProductRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model(&productModel{ID: id}).WherePK().Exec(ctx)
 	return err
 }
 
-func (r *BunRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
-	var model productModel
-	err := r.db.NewSelect().Model(&model).Where("id = ?", id).Scan(ctx)
+func (r *BunProductRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
+	model := productModel{ID: id}
+	err := r.db.NewSelect().Model(&model).WherePK().Scan(ctx)
 
 	if err := bun_helper.IgnoreNoRows(err); err != nil {
 		return nil, err
@@ -66,10 +66,10 @@ func (r *BunRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Prod
 	return toDomain(&model), nil
 }
 
-func (r *BunRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error) {
-	var models []productModel
+func (r *BunProductRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error) {
+	var rows []productModel
 	if err := r.db.NewSelect().
-		Model(&models).
+		Model(&rows).
 		Order("name ASC").
 		Limit(pager.Limit).
 		Offset(pager.Offset).
@@ -77,10 +77,10 @@ func (r *BunRepository) List(ctx context.Context, pager pagination.Pagination) (
 		return nil, err
 	}
 
-	return maps.MapPtr(models, toDomain), nil
+	return maps.MapPtr(rows, toDomain), nil
 }
 
-func (r *BunRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
+func (r *BunProductRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
 	return r.db.NewSelect().
 		Model((*productModel)(nil)).
 		Where("LOWER(name) = LOWER(?)", name).
@@ -105,7 +105,7 @@ func toDomain(model *productModel) *domain.Product {
 
 	price, _ := money.New(model.Price)
 
-	product, err := domain.NewProduct(model.ID, model.Name, price, model.Stock, model.CreatedAt, model.UpdatedAt)
+	product, err := domain.NewProduct(model.ID, model.Name, price, model.Stock)
 	if err != nil {
 		return nil
 	}

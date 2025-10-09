@@ -20,13 +20,6 @@ rodar migrações, executar a API e rodar testes.
 Por padrão a aplicação escuta na porta `8080` dentro do container e está
 exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 
-## TODO
-
- - CRUD: customer (Lucas)
- - CRUD: vehicles (Marcos)
-  - Autenticação JWT
-  - Verificar nome da tabela com a linguagem oblíqua
-
 ## Swagger / OpenAPI
 
 Após subir a API, acesse a documentação:

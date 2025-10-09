@@ -3,6 +3,6 @@ package application
 import "errors"
 
 var (
-	ErrDuplicateProduct = errors.New("product.duplicate")
-	ErrProductNotFound  = errors.New("product.not_found")
+	ErrProductNotFound  = errors.New("product not found")
+	ErrDuplicateProduct = errors.New("product with this name already exists")
 )

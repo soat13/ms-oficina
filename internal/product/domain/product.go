@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/money"
+	uuidPkg "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
 )
 
 type Product struct {
@@ -17,36 +19,37 @@ type Product struct {
 	entity.Timestamps
 }
 
-func NewProduct(id uuid.UUID, name string, price money.Money, stock int, createdAt, updatedAt time.Time) (*Product, error) {
+func NewProduct(id uuid.UUID, name string, price money.Money, stock int) (*Product, error) {
+	name = strings.TrimSpace(name)
+	if len(name) < 3 {
+		return nil, ErrInvalidProductName
+	}
+	if price.Cents <= 0 {
+		return nil, ErrInvalidProductPrice
+	}
+	if stock < 0 {
+		return nil, ErrInvalidProductStock
+	}
+
+	now := time.Now()
 	product := &Product{
-		ID:    idOrNew(id),
-		Name:  strings.TrimSpace(name),
-		Price: price,
-		Stock: stock,
-	}
-
-	if err := product.validate(); err != nil {
-		return nil, err
-	}
-
-	if !createdAt.IsZero() {
-		product.CreatedAt = createdAt
-	}
-
-	if !updatedAt.IsZero() {
-		product.UpdatedAt = updatedAt
+		ID:         uuidPkg.IDOrNew(id),
+		Name:       name,
+		Price:      price,
+		Stock:      stock,
+		Timestamps: entity.NewTimestamps(now, now),
 	}
 
 	return product, nil
 }
 
-func (p *Product) Rename(newName string, now time.Time) error {
+func (p *Product) Rename(newName string) error {
 	newName = strings.TrimSpace(newName)
 	if len(newName) < 3 {
 		return ErrInvalidProductName
 	}
 	p.Name = newName
-	p.UpdatedAt = now
+	p.Touch()
 	return nil
 }
 
@@ -59,31 +62,11 @@ func (p *Product) ChangePrice(price money.Money) error {
 	return nil
 }
 
-func (p *Product) UpdateStock(stock int, now time.Time) error {
+func (p *Product) UpdateStock(stock int) error {
 	if stock < 0 {
 		return ErrInvalidProductStock
 	}
 	p.Stock = stock
-	p.UpdatedAt = now
+	p.Touch()
 	return nil
-}
-
-func (p *Product) validate() error {
-	if len(p.Name) < 3 {
-		return ErrInvalidProductName
-	}
-	if p.Price.Cents <= 0 {
-		return ErrInvalidProductPrice
-	}
-	if p.Stock < 0 {
-		return ErrInvalidProductStock
-	}
-	return nil
-}
-
-func idOrNew(id uuid.UUID) uuid.UUID {
-	if id == uuid.Nil {
-		return uuid.New()
-	}
-	return id
 }

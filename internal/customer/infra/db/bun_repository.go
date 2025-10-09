@@ -125,6 +125,5 @@ func toDomain(model *customerModel) *domain.Customer {
 		return nil
 	}
 
-	customer.UpdatedAt = model.UpdatedAt
 	return customer
 }

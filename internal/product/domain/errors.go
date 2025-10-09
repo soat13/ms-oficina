@@ -3,7 +3,7 @@ package domain
 import "errors"
 
 var (
-	ErrInvalidProductName  = errors.New("product.invalid_name")
-	ErrInvalidProductPrice = errors.New("product.invalid_price")
-	ErrInvalidProductStock = errors.New("product.invalid_stock")
+	ErrInvalidProductName  = errors.New("invalid product name")
+	ErrInvalidProductPrice = errors.New("invalid product price")
+	ErrInvalidProductStock = errors.New("invalid product stock")
 )
