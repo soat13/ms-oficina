@@ -74,7 +74,7 @@ func TestApprove(t *testing.T) {
 		require.Equal(t, fiber.StatusOK, postApproveEstimate(t, setup, estimateID).StatusCode)
 		resp := postApproveEstimate(t, setup, estimateID)
 
-		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
 }
 
@@ -103,6 +103,36 @@ func TestCreateFromRepairOrder(t *testing.T) {
 		repairOrderID := ThereIsARepairOrderReceived(t, setup.Container)
 
 		resp := postCreateEstimate(t, setup, repairOrderID)
+
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
+		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
+	})
+
+	t.Run("No products and no services", func(t *testing.T) {
+		repairOrderID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
+
+		body := estimateBody{
+			Products: []estimateLine{},
+			Services: []estimateLine{},
+		}
+
+		resp := postCreateEstimateWithBody(t, repairOrderID, setup.Container, body)
+
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
+	})
+
+	t.Run("Quantities equals to zero", func(t *testing.T) {
+		repairOrderID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
+
+		body := estimateBody{
+			Products: []estimateLine{
+				{ID: testsupport.OilFilterID, Quantity: 0},
+			},
+			Services: nil,
+		}
+
+		resp := postCreateEstimateWithBody(t, repairOrderID, setup.Container, body)
 
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
@@ -246,4 +276,17 @@ func DoJSON(t *testing.T, app *fiber.App, token, method, path string, payload an
 
 	t.Cleanup(func() { _ = resp.Body.Close() })
 	return resp
+}
+
+func postCreateEstimateWithBody(t *testing.T, repairOrderID uuid.UUID, container *bootstrap.Container, body estimateBody) *http.Response {
+	t.Helper()
+
+	var id string
+	if repairOrderID == uuid.Nil {
+		id = "invalid"
+	} else {
+		id = repairOrderID.String()
+	}
+
+	return DoJSON(t, container.FiberApp, "POST", "/admin/repair-orders/"+id+"/estimate", body)
 }
