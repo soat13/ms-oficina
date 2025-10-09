@@ -1,8 +1,10 @@
 package fiber
 
 import (
+	"errors"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
@@ -25,6 +27,14 @@ func NewErrorHandler(errorResolver *errorHelper.Resolver) *ErrorHandler {
 }
 
 func (e *ErrorHandler) Handle(ctx *fiber.Ctx, err error) error {
+
+	var validationErrors validator.ValidationErrors
+	if errors.As(err, &validationErrors) {
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"code":    "INVALID_BODY",
+			"message": err.Error(),
+		})
+	}
 
 	if errorInfo, success := e.ErrorResolver.Resolve(err); success {
 		return ctx.Status(StatusCodeFromErrorInfo(errorInfo.PrivateCode)).JSON(jsonFromErrorInfo(errorInfo))

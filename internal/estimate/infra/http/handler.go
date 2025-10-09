@@ -1,13 +1,13 @@
 package http
 
 import (
-	"errors"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
+	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 
 	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
 )
@@ -17,6 +17,7 @@ type (
 		createUseCase  *app.Create
 		approveUseCase *app.Approve
 		validate       *validator.Validate
+		errorHandler   *fiberHelper.ErrorHandler
 	}
 
 	linePayload struct {
@@ -30,11 +31,7 @@ type (
 	}
 )
 
-var (
-	ErrInvalidItemID = errors.New("invalid item id")
-)
-
-func NewHandler(createUseCase *app.Create, approveUseCase *app.Approve) *Handler {
+func NewHandler(createUseCase *app.Create, approveUseCase *app.Approve, errorHandler *fiberHelper.ErrorHandler) *Handler {
 	bodyValidator := validator.New()
 	bodyValidator.RegisterStructValidation(func(structLevel validator.StructLevel) {
 		body := structLevel.Current().Interface().(createEstimateBody)
@@ -43,10 +40,13 @@ func NewHandler(createUseCase *app.Create, approveUseCase *app.Approve) *Handler
 		}
 	}, createEstimateBody{})
 
+	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrEstimateNotFound)
+
 	return &Handler{
 		approveUseCase: approveUseCase,
 		createUseCase:  createUseCase,
 		validate:       bodyValidator,
+		errorHandler:   errorHandler,
 	}
 }
 
@@ -58,15 +58,24 @@ func Register(app *fiber.App, h *Handler) {
 
 func (h *Handler) create(ctx *fiber.Ctx) error {
 
-	inputDTO, err := h.getCreateItems(ctx)
-
+	repairOrderID, err := fiberHelper.GetUuidParam(ctx, "id")
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 
-	_, err = h.createUseCase.Execute(ctx.Context(), inputDTO)
+	body, err := h.getBody(ctx)
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	inputDTO, err := h.getCreateInput(repairOrderID, *body)
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	_, err = h.createUseCase.Execute(ctx.Context(), *inputDTO)
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	return ctx.SendStatus(fiber.StatusCreated)
@@ -74,76 +83,51 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 
 func (h *Handler) approve(ctx *fiber.Ctx) error {
 
-	id, err := h.getIDParam(ctx)
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	err = h.approveUseCase.Execute(ctx.Context(), app.ApproveInput{ID: id})
 	if err != nil {
-		return h.handleError(ctx, err)
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	return ctx.SendStatus(fiber.StatusOK)
 }
 
-func (h *Handler) getIDParam(c *fiber.Ctx) (uuid.UUID, error) {
-	idStr := c.Params("id")
-	repairOrder, err := uuid.Parse(idStr)
+func (h *Handler) getBody(ctx *fiber.Ctx) (*createEstimateBody, error) {
+	var body createEstimateBody
+	err := ctx.BodyParser(&body)
+
 	if err != nil {
-		return uuid.Nil, ErrInvalidRepairOrderID
+		return nil, err
 	}
-	return repairOrder, nil
+
+	err = h.validate.Struct(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &body, err
 }
 
-func (h *Handler) getCreateItems(ctx *fiber.Ctx) (app.CreateInput, error) {
-	inputDTO := app.CreateInput{}
-
-	repairOrderID, err := h.getIDParam(ctx)
-	if err != nil {
-		return inputDTO, err
-	}
-
-	var body createEstimateBody
-	if err := ctx.BodyParser(&body); err != nil {
-		return inputDTO, err
-	}
-
+func (h *Handler) getCreateInput(repairOrderID uuid.UUID, body createEstimateBody) (*app.CreateInput, error) {
 	productQty, err := parseItemQuantities(body.Products)
 	if err != nil {
-		return inputDTO, err
+		return nil, err
 	}
 	serviceQty, err := parseItemQuantities(body.Services)
 	if err != nil {
-		return inputDTO, err
+		return nil, err
 	}
 
-	inputDTO.RepairOrderID = repairOrderID
-	inputDTO.Now = time.Now()
-	inputDTO.Products = productQty
-	inputDTO.Services = serviceQty
-
-	return inputDTO, err
-}
-
-func (h *Handler) handleError(ctx *fiber.Ctx, err error) error {
-	if info, ok := errorMap[err]; ok {
-		return ctx.Status(info.Status).JSON(fiber.Map{
-			"code":    info.Code,
-			"message": err.Error(),
-		})
-	}
-
-	log.Error().
-		Err(err).
-		Str("path", ctx.Path()).
-		Str("method", ctx.Method()).
-		Msg("unexpected error on request")
-
-	return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"code":    "INTERNAL_ERROR",
-		"message": "internal error",
-	})
+	return &app.CreateInput{
+		RepairOrderID: repairOrderID,
+		Now:           time.Now(),
+		Products:      productQty,
+		Services:      serviceQty,
+	}, nil
 }
 
 func parseItemQuantities(raw []linePayload) (map[uuid.UUID]int, error) {
@@ -151,7 +135,7 @@ func parseItemQuantities(raw []linePayload) (map[uuid.UUID]int, error) {
 	for _, it := range raw {
 		id, err := uuid.Parse(it.ID)
 		if err != nil {
-			return nil, ErrInvalidItemID
+			return nil, sharedErrors.ErrInvalidID
 		}
 
 		out[id] = it.Quantity

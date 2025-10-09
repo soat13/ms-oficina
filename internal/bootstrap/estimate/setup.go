@@ -30,7 +30,7 @@ func Setup(container *bootstrap.Container) {
 
 	approveEstimate := estimateApp.NewApproveEstimate(estimateRepository, container.EventBus)
 
-	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approveEstimate)
+	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approveEstimate, container.FiberErrorHandler)
 	estimateInfraHttp.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(

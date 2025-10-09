@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
+	sharederrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
@@ -63,7 +64,7 @@ func NewCreateEstimate(
 }
 
 func (c *Create) Execute(ctx context.Context, input CreateInput) (*CreateEstimateOutput, error) {
-	repairOrder, err := c.validRepairOrderOrError(ctx, input.RepairOrderID)
+	repairOrder, err := c.getRepairOrder(ctx, input.RepairOrderID)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +143,7 @@ func (c *Create) addItemsToEstimate(
 	return nil
 }
 
-func (c *Create) validRepairOrderOrError(ctx context.Context, repairID uuid.UUID) (*RepairOrderView, error) {
+func (c *Create) getRepairOrder(ctx context.Context, repairID uuid.UUID) (*RepairOrderView, error) {
 	repairOrder, err := c.repairOrderReader.GetByID(ctx, repairID)
 	if err != nil {
 		return nil, err
@@ -153,7 +154,7 @@ func (c *Create) validRepairOrderOrError(ctx context.Context, repairID uuid.UUID
 	}
 
 	if repairOrder.Status != repairorder.StatusInDiagnostics {
-		return nil, ErrInvalidRepairOrderStatus
+		return nil, sharederrors.ErrInvalidStatusTransaction
 	}
 
 	return repairOrder, nil
