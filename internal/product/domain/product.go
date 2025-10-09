@@ -31,14 +31,14 @@ func NewProduct(id uuid.UUID, name string, price money.Money, stock int) (*Produ
 		return nil, ErrInvalidProductStock
 	}
 
-	now := time.Now()
 	product := &Product{
-		ID:         uuidPkg.IDOrNew(id),
-		Name:       name,
-		Price:      price,
-		Stock:      stock,
-		Timestamps: entity.NewTimestamps(now, now),
+		ID:    uuidPkg.IDOrNew(id),
+		Name:  name,
+		Price: price,
+		Stock: stock,
 	}
+	now := time.Now()
+	product.Timestamps = entity.NewTimestamps(now, now)
 
 	return product, nil
 }

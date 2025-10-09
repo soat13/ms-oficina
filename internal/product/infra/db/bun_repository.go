@@ -10,6 +10,7 @@ import (
 	app "github.com/soat13/fase-1-oficina/internal/product/application"
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
@@ -110,5 +111,6 @@ func toDomain(model *productModel) *domain.Product {
 		return nil
 	}
 
+	product.Timestamps = entity.NewTimestamps(model.CreatedAt, model.UpdatedAt)
 	return product
 }
