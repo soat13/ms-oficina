@@ -7,19 +7,21 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
-type ListInput struct {
-	Pager pagination.Pagination
-}
+type (
+	ListInput struct {
+		Pager pagination.Pagination
+	}
 
-type ListOutput struct {
-	Products []ProductView
-}
+	ListOutput struct {
+		Products []ProductView
+	}
 
-type ListProducts struct {
-	repo Repository
-}
+	ListProducts struct {
+		repo ProductRepository
+	}
+)
 
-func NewListProducts(repo Repository) *ListProducts {
+func NewListProducts(repo ProductRepository) *ListProducts {
 	return &ListProducts{repo: repo}
 }
 

@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -10,42 +9,35 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
 
-type CreateInput struct {
-	Name  string
-	Price money.Money
-	Stock int
-	Now   time.Time
-}
+type (
+	CreateInput struct {
+		Name  string
+		Price money.Money
+		Stock int
+	}
 
-type CreateOutput struct {
-	Product ProductView
-}
+	CreateProduct struct {
+		repo ProductRepository
+	}
+)
 
-type CreateProduct struct {
-	repo Repository
-}
-
-func NewCreateProduct(repo Repository) *CreateProduct {
+func NewCreateProduct(repo ProductRepository) *CreateProduct {
 	return &CreateProduct{repo: repo}
 }
 
-func (uc *CreateProduct) Execute(ctx context.Context, in CreateInput) (*CreateOutput, error) {
+func (uc *CreateProduct) Execute(ctx context.Context, in CreateInput) error {
 	exists, err := uc.repo.ExistsByName(ctx, in.Name)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if exists {
-		return nil, ErrDuplicateProduct
+		return ErrDuplicateProduct
 	}
 
-	product, err := domain.NewProduct(uuid.Nil, in.Name, in.Price, in.Stock, in.Now, in.Now)
+	product, err := domain.NewProduct(uuid.Nil, in.Name, in.Price, in.Stock)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if err := uc.repo.Create(ctx, product); err != nil {
-		return nil, err
-	}
-
-	return &CreateOutput{Product: toView(product)}, nil
+	return uc.repo.Create(ctx, product)
 }

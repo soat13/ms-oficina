@@ -6,19 +6,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type GetInput struct {
-	ID uuid.UUID
-}
+type (
+	GetInput struct {
+		ID uuid.UUID
+	}
 
-type GetOutput struct {
-	Product ProductView
-}
+	GetOutput struct {
+		Product ProductView
+	}
 
-type GetProduct struct {
-	repo Repository
-}
+	GetProduct struct {
+		repo ProductRepository
+	}
+)
 
-func NewGetProduct(repo Repository) *GetProduct {
+func NewGetProduct(repo ProductRepository) *GetProduct {
 	return &GetProduct{repo: repo}
 }
 
