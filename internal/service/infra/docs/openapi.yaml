@@ -183,6 +183,8 @@ paths:
       tags: [Products]
       summary: Listar produtos
       description: Lista produtos com paginação simples por `limit` e `offset`.
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: limit
@@ -218,6 +220,8 @@ paths:
     post:
       tags: [Products]
       summary: Criar produto
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -281,6 +285,8 @@ paths:
     get:
       tags: [Products]
       summary: Obter produto por ID
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -328,9 +334,11 @@ paths:
               example:
                 code: INTERNAL_ERROR
                 message: internal error
-    put:
+    patch:
       tags: [Products]
       summary: Atualizar produto
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -400,6 +408,8 @@ paths:
     delete:
       tags: [Products]
       summary: Remover produto
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
