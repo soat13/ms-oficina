@@ -148,5 +148,6 @@ func toDomain(model *userModel) *domain.User {
 		return nil
 	}
 
+	user.UpdatedAt = model.UpdatedAt
 	return user
 }
