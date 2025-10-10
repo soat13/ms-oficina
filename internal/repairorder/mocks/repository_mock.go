@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
 	domain "github.com/soat13/fase-1-oficina/internal/repairorder/domain"
+	pagination "github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
 // MockRepository is a mock of Repository interface.
@@ -49,6 +50,21 @@ func (m *MockRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.Rep
 func (mr *MockRepositoryMockRecorder) GetById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockRepository)(nil).GetById), ctx, id)
+}
+
+// List mocks base method.
+func (m *MockRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, pager)
+	ret0, _ := ret[0].([]*domain.RepairOrder)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockRepositoryMockRecorder) List(ctx, pager interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepository)(nil).List), ctx, pager)
 }
 
 // Save mocks base method.

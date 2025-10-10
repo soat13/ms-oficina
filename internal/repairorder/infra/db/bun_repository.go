@@ -10,8 +10,9 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-
 	"github.com/soat13/fase-1-oficina/pkg/entity"
+	"github.com/soat13/fase-1-oficina/pkg/maps"
+	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 )
@@ -46,14 +47,37 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*
 		return nil, err
 	}
 
+	if model.ID == uuid.Nil {
+		return nil, nil
+	}
+
 	return r.toEntityOrNil(&model), nil
 }
 
-func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
+func (r *BunRepairOrderRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error) {
+	var models []repairOrderModel
 
-	if m.ID == uuid.Nil {
-		return nil
+	query := r.db.NewSelect().
+		Model(&models).
+		Order("created_at DESC")
+
+	if pager.Limit > 0 {
+		query = query.Limit(pager.Limit)
 	}
+	if pager.Offset > 0 {
+		query = query.Offset(pager.Offset)
+	}
+
+	if err := query.Scan(ctx); err != nil {
+		return nil, err
+	}
+
+	return maps.Map(models, func(m repairOrderModel) *domain.RepairOrder {
+		return r.toEntityOrNil(&m)
+	}), nil
+}
+
+func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
 
 	return &domain.RepairOrder{
 		ID:         m.ID,

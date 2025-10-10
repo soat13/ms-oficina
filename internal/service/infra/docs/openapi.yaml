@@ -679,6 +679,258 @@ paths:
               example:
                 code: INTERNAL_ERROR
                 message: internal error
+  /admin/repair-orders:
+    get:
+      tags: [Repair Orders]
+      summary: Listar ordens de reparo
+      description: Lista ordens de reparo com paginação simples por `limit` e `offset`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+          description: Número máximo de itens retornados.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Deslocamento para paginação.
+      responses:
+        '200':
+          description: Lista de ordens de reparo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairOrdersResponse'
+              example:
+                data:
+                  - id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
+                    customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
+                    vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
+                    status: "approved"
+                    created_at: "2025-10-09T12:00:00Z"
+                    updated_at: "2025-10-09T12:00:00Z"
+                  - id: "2c4a1f56-76b3-4d88-8c2f-5b7e9d1f0c3a"
+                    customer_id: "2e72f0ed-2b32-4a07-a6f8-b21c8df6e2d1"
+                    vehicle_id: "893ab8bb-4f84-487c-9f3f-1f63d5e4b85e"
+                    status: "in_execution"
+                    created_at: "2025-10-10T09:15:00Z"
+                    updated_at: "2025-10-10T09:45:00Z"
+  /admin/repair-orders/{id}:
+    get:
+      tags: [Repair Orders]
+      summary: Consultar ordem de reparo
+      description: Recupera uma ordem de reparo pelo identificador.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '200':
+          description: Ordem de reparo encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairOrderResponse'
+              example:
+                id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
+                customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
+                vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
+                status: "approved"
+                created_at: "2025-10-09T12:00:00Z"
+                updated_at: "2025-10-09T12:00:00Z"
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+  /admin/repair-orders/{id}/start-execution:
+    post:
+      tags: [Repair Orders]
+      summary: Iniciar execução da ordem de reparo
+      description: Move a ordem de reparo do estado aprovado para em execução.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '204':
+          description: Execução iniciada com sucesso
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+        '422':
+          description: Estado da ordem não permite iniciar execução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_REPAIR_ORDER_STATUS
+                message: invalid repair order status
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/repair-orders/{id}/finish-execution:
+    post:
+      tags: [Repair Orders]
+      summary: Finalizar execução da ordem de reparo
+      description: Move a ordem de reparo de em execução para finalizada.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '204':
+          description: Execução finalizada
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+        '422':
+          description: Estado da ordem não permite finalizar execução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_REPAIR_ORDER_STATUS
+                message: invalid repair order status
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
+  /admin/repair-orders/{id}/release-vehicle:
+    post:
+      tags: [Repair Orders]
+      summary: Liberar veículo ao cliente
+      description: Atualiza a ordem de reparo finalizada para liberada.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID da ordem de reparo
+      responses:
+        '204':
+          description: Veículo liberado
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_ID
+                message: invalid id
+        '404':
+          description: Ordem de reparo não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: REPAIR_ORDER_NOT_FOUND
+                message: repair order not found
+        '422':
+          description: Estado da ordem não permite liberar veículo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_REPAIR_ORDER_STATUS
+                message: invalid repair order status
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INTERNAL_ERROR
+                message: internal error
 components:
   securitySchemes:
     bearerAuth:
@@ -845,6 +1097,65 @@ components:
             name: "Troca de Óleo"
             price_cents: 9000
             currency: "BRL"
+    RepairOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          description: Status atual da ordem de reparo.
+          enum: [received, in_diagnostics, awaiting_approval, approved, in_execution, finished, released]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, customer_id, vehicle_id, status, created_at, updated_at]
+    RepairOrderResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RepairOrder'
+      required: [data]
+      example:
+        data:
+          id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
+          customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
+          vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
+          status: "approved"
+          created_at: "2025-10-09T12:00:00Z"
+          updated_at: "2025-10-09T12:00:00Z"
+    RepairOrdersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RepairOrder'
+      required: [data]
+      example:
+        data:
+          - id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
+            customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
+            vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
+            status: "approved"
+            created_at: "2025-10-09T12:00:00Z"
+            updated_at: "2025-10-09T12:00:00Z"
+          - id: "2c4a1f56-76b3-4d88-8c2f-5b7e9d1f0c3a"
+            customer_id: "2e72f0ed-2b32-4a07-a6f8-b21c8df6e2d1"
+            vehicle_id: "893ab8bb-4f84-487c-9f3f-1f63d5e4b85e"
+            status: "in_execution"
+            created_at: "2025-10-10T09:15:00Z"
+            updated_at: "2025-10-10T09:45:00Z"
     LinePayload:
       type: object
       properties:
@@ -950,168 +1261,6 @@ components:
               example:
                 code: INVALID_ESTIMATE_STATE
                 message: estimate cannot be approved in current state
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-  /admin/repair-orders/{id}/start-execution:
-    post:
-      tags: [Repair Orders]
-      summary: Iniciar execução da ordem de reparo
-      description: Move a ordem de reparo do estado aprovado para em execução.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
-      responses:
-        '204':
-          description: Execução iniciada com sucesso
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '404':
-          description: Ordem de reparo não encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
-        '422':
-          description: Estado da ordem não permite iniciar execução
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-  /admin/repair-orders/{id}/finish-execution:
-    post:
-      tags: [Repair Orders]
-      summary: Finalizar execução da ordem de reparo
-      description: Move a ordem de reparo de em execução para finalizada.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
-      responses:
-        '204':
-          description: Execução finalizada
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '404':
-          description: Ordem de reparo não encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
-        '422':
-          description: Estado da ordem não permite finalizar execução
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-  /admin/repair-orders/{id}/release-vehicle:
-    post:
-      tags: [Repair Orders]
-      summary: Liberar veículo ao cliente
-      description: Atualiza a ordem de reparo finalizada para liberada.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
-      responses:
-        '204':
-          description: Veículo liberado
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '404':
-          description: Ordem de reparo não encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
-        '422':
-          description: Estado da ordem não permite liberar veículo
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
         '500':
           description: Erro interno
           content:
