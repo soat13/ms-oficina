@@ -158,7 +158,7 @@ func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, pho
 	_, err = db.NewRaw(`
 		INSERT INTO users (id, name, document, document_type, email, phone_number, password, roles)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT (id) DO NOTHING
+		ON CONFLICT (document) DO NOTHING
 	`, id, name, normalizedDoc, doc.TypeString(), email, phoneNumber, hashedPassword, pq.Array(roles)).Exec(context.Background())
 	require.NoError(t, err, "failed to insert user")
 	return id

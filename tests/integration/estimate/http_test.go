@@ -21,15 +21,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type estimateLine struct {
-	ID       uuid.UUID `json:"id"`
-	Quantity int       `json:"quantity"`
-}
-
-type estimateBody struct {
-	Products []estimateLine `json:"products"`
-	Services []estimateLine `json:"services"`
-}
+// -----------------------------------------------------------------------------
+// Setup
+// -----------------------------------------------------------------------------
 
 func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 	t.Helper()
@@ -40,16 +34,34 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 	})
 }
 
+// -----------------------------------------------------------------------------
+// DTOs
+// -----------------------------------------------------------------------------
+
+type estimateLine struct {
+	ID       uuid.UUID `json:"id"`
+	Quantity int       `json:"quantity"`
+}
+
+type estimateBody struct {
+	Products []estimateLine `json:"products"`
+	Services []estimateLine `json:"services"`
+}
+
+// -----------------------------------------------------------------------------
+// Tests
+// -----------------------------------------------------------------------------
+
 func TestApprove(t *testing.T) {
 	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
-		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup, repairOrderID).StatusCode)
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
 
 		estimateID := getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
 
-		resp := postApproveEstimate(t, setup, estimateID)
+		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID)
 
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 		expectEstimateStatus(t, setup.Container, repairOrderID, domain.StatusAwaitingStock)
@@ -57,22 +69,22 @@ func TestApprove(t *testing.T) {
 	})
 
 	t.Run("Invalid ID", func(t *testing.T) {
-		resp := postApproveEstimateRaw(t, setup, "invalid")
+		resp := postApproveEstimateRaw(t, setup.Container.FiberApp, setup.AuthToken, "invalid")
 		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postApproveEstimate(t, setup, uuid.New())
+		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 
 	t.Run("Twice Should Fail", func(t *testing.T) {
-		roID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
-		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup, roID).StatusCode)
+		roID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, roID).StatusCode)
 		estimateID := getEstimateIDByRepairOrder(t, setup.Container, roID)
 
-		require.Equal(t, fiber.StatusOK, postApproveEstimate(t, setup, estimateID).StatusCode)
-		resp := postApproveEstimate(t, setup, estimateID)
+		require.Equal(t, fiber.StatusOK, postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID).StatusCode)
+		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID)
 
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
@@ -82,9 +94,9 @@ func TestCreateFromRepairOrder(t *testing.T) {
 	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
 
-		resp := postCreateEstimate(t, setup, repairOrderID)
+		resp := postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, repairOrderID, 2)
@@ -93,37 +105,37 @@ func TestCreateFromRepairOrder(t *testing.T) {
 	})
 
 	t.Run("Invalid ID", func(t *testing.T) {
-		resp := postCreateEstimate(t, setup, uuid.Nil)
+		resp := postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, uuid.Nil)
 
 		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, uuid.Nil, 0)
 	})
 
 	t.Run("Invalid Status", func(t *testing.T) {
-		repairOrderID := ThereIsARepairOrderReceived(t, setup.Container)
+		repairOrderID := testsupport.ThereIsAReceivedRepairOrder(t, setup.Container.DB)
 
-		resp := postCreateEstimate(t, setup, repairOrderID)
+		resp := postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
 	})
 
 	t.Run("No products and no services", func(t *testing.T) {
-		repairOrderID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
 
 		body := estimateBody{
 			Products: []estimateLine{},
 			Services: []estimateLine{},
 		}
 
-		resp := postCreateEstimateWithBody(t, repairOrderID, setup.Container, body)
+		resp := postCreateEstimateWithBody(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, body)
 
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
 	})
 
 	t.Run("Quantities equals to zero", func(t *testing.T) {
-		repairOrderID := ThereIsARepairOrderInDiagnostics(t, setup.Container)
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
 
 		body := estimateBody{
 			Products: []estimateLine{
@@ -132,27 +144,16 @@ func TestCreateFromRepairOrder(t *testing.T) {
 			Services: nil,
 		}
 
-		resp := postCreateEstimateWithBody(t, repairOrderID, setup.Container, body)
+		resp := postCreateEstimateWithBody(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, body)
 
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
 	})
 }
 
-func postCreateEstimate(t *testing.T, setup *testsupport.SetupConfig, repairOrderID uuid.UUID) *http.Response {
-	t.Helper()
-
-	payload := buildEstimatePayload(1, 1)
-
-	var id string
-	if repairOrderID == uuid.Nil {
-		id = "invalid"
-	} else {
-		id = repairOrderID.String()
-	}
-
-	return DoJSON(t, setup.Container.FiberApp, setup.AuthToken, "POST", "/admin/repair-orders/"+id+"/estimate", payload)
-}
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
 
 func buildEstimatePayload(productQty, serviceQty int) estimateBody {
 	return estimateBody{
@@ -163,16 +164,6 @@ func buildEstimatePayload(productQty, serviceQty int) estimateBody {
 			{ID: testsupport.EngineOilChangeID, Quantity: serviceQty},
 		},
 	}
-}
-
-func ThereIsARepairOrderInDiagnostics(t *testing.T, container *bootstrap.Container) uuid.UUID {
-	t.Helper()
-	return testsupport.ThereIsARepairOrderInDiagnostics(t, container.DB)
-}
-
-func ThereIsARepairOrderReceived(t *testing.T, container *bootstrap.Container) uuid.UUID {
-	t.Helper()
-	return testsupport.ThereIsAReceivedRepairOrder(t, container.DB)
 }
 
 func expectEstimateItemCount(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID, expected int) {
@@ -224,16 +215,6 @@ func expectRepairOrderStatus(t *testing.T, container *bootstrap.Container, repai
 	assert.Equal(t, string(expected), status)
 }
 
-func postApproveEstimate(t *testing.T, setup *testsupport.SetupConfig, estimateID uuid.UUID) *http.Response {
-	t.Helper()
-	return DoJSON(t, setup.Container.FiberApp, setup.AuthToken, "POST", "/admin/estimates/"+estimateID.String()+"/approve", nil)
-}
-
-func postApproveEstimateRaw(t *testing.T, setup *testsupport.SetupConfig, id string) *http.Response {
-	t.Helper()
-	return DoJSON(t, setup.Container.FiberApp, setup.AuthToken, "POST", "/admin/estimates/"+id+"/approve", nil)
-}
-
 func getEstimateIDByRepairOrder(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID) uuid.UUID {
 	t.Helper()
 	ctx := context.Background()
@@ -251,34 +232,27 @@ func getEstimateIDByRepairOrder(t *testing.T, container *bootstrap.Container, re
 	return estimateID
 }
 
-func DoJSON(t *testing.T, app *fiber.App, token, method, path string, payload any) *http.Response {
+func postCreateEstimate(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
+	payload := buildEstimatePayload(1, 1)
 
-	var bodyReader *bytes.Reader
-	if payload != nil {
-		b, err := json.Marshal(payload)
-		require.NoError(t, err, "marshal payload")
-		bodyReader = bytes.NewReader(b)
+	var id string
+	if repairOrderID == uuid.Nil {
+		id = "invalid"
 	} else {
-		bodyReader = bytes.NewReader(nil)
+		id = repairOrderID.String()
 	}
 
-	req := httptest.NewRequest(method, path, bodyReader)
-	if payload != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	if token != "" {
-		testauth.AddAuthHeader(req, token)
-	}
-
-	resp, err := app.Test(req, -1)
-	require.NoError(t, err, "fiber app.Test")
-
-	t.Cleanup(func() { _ = resp.Body.Close() })
+	bs, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+id+"/estimate", bytes.NewReader(bs))
+	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
 	return resp
 }
 
-func postCreateEstimateWithBody(t *testing.T, repairOrderID uuid.UUID, container *bootstrap.Container, body estimateBody) *http.Response {
+func postCreateEstimateWithBody(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID, body estimateBody) *http.Response {
 	t.Helper()
 
 	var id string
@@ -288,5 +262,29 @@ func postCreateEstimateWithBody(t *testing.T, repairOrderID uuid.UUID, container
 		id = repairOrderID.String()
 	}
 
-	return DoJSON(t, container.FiberApp, "POST", "/admin/repair-orders/"+id+"/estimate", body)
+	bs, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+id+"/estimate", bytes.NewReader(bs))
+	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func postApproveEstimate(t *testing.T, fiberApp *fiber.App, token string, estimateID uuid.UUID) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("POST", "/admin/estimates/"+estimateID.String()+"/approve", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func postApproveEstimateRaw(t *testing.T, fiberApp *fiber.App, token string, id string) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("POST", "/admin/estimates/"+id+"/approve", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
 }

@@ -1,9 +1,7 @@
 package repairorder
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// -----------------------------------------------------------------------------
+// Setup
+// -----------------------------------------------------------------------------
+
 func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 	t.Helper()
 
@@ -27,20 +29,24 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 	})
 }
 
-func TestRepairOrderReleaseVehicle(t *testing.T) {
+// -----------------------------------------------------------------------------
+// Tests
+// -----------------------------------------------------------------------------
+
+func TestRepairOrderStartExecution(t *testing.T) {
 	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := testsupport.ThereIsAFinishedRepairOrder(t, setup.Container.DB)
+		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
 
-		resp := postReleaseVehicle(t, setup, repairOrderID)
+		resp := postStartExecution(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusReleased)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusInExecution)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postStartExecution(t, setup, uuid.New())
+		resp := postStartExecution(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
@@ -51,35 +57,39 @@ func TestRepairOrderFinishExecution(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		repairOrderID := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
 
-		resp := postFinishExecution(t, setup, repairOrderID)
+		resp := postFinishExecution(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusFinished)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postStartExecution(t, setup, uuid.New())
+		resp := postFinishExecution(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
 
-func TestRepairOrderStartExecution(t *testing.T) {
+func TestRepairOrderReleaseVehicle(t *testing.T) {
 	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+		repairOrderID := testsupport.ThereIsAFinishedRepairOrder(t, setup.Container.DB)
 
-		resp := postStartExecution(t, setup, repairOrderID)
+		resp := postReleaseVehicle(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusInExecution)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusReleased)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
-		resp := postStartExecution(t, setup, uuid.New())
+		resp := postReleaseVehicle(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 	})
 }
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
 
 func expectRepairOrderStatus(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID, expected repairorderShared.Status) {
 	t.Helper()
@@ -93,56 +103,29 @@ func expectRepairOrderStatus(t *testing.T, container *bootstrap.Container, repai
 	assert.Equal(t, string(expected), status)
 }
 
-func postStartExecution(t *testing.T, setup *testsupport.SetupConfig, repairOrderID uuid.UUID) *http.Response {
+func postStartExecution(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
-	id := UuidAsString(t, repairOrderID)
-	return DoJSON(t, setup.Container.FiberApp, setup.AuthToken, "POST", "/admin/repair-orders/"+id+"/start-execution", nil)
-}
-
-func postFinishExecution(t *testing.T, setup *testsupport.SetupConfig, repairOrderID uuid.UUID) *http.Response {
-	t.Helper()
-	id := UuidAsString(t, repairOrderID)
-	return DoJSON(t, setup.Container.FiberApp, setup.AuthToken, "POST", "/admin/repair-orders/"+id+"/finish-execution", nil)
-}
-
-func postReleaseVehicle(t *testing.T, setup *testsupport.SetupConfig, repairOrderID uuid.UUID) *http.Response {
-	t.Helper()
-	id := UuidAsString(t, repairOrderID)
-	return DoJSON(t, setup.Container.FiberApp, setup.AuthToken, "POST", "/admin/repair-orders/"+id+"/release-vehicle", nil)
-}
-
-func DoJSON(t *testing.T, app *fiber.App, token, method, path string, payload any) *http.Response {
-	t.Helper()
-
-	var bodyReader *bytes.Reader
-	if payload != nil {
-		b, err := json.Marshal(payload)
-		require.NoError(t, err, "marshal payload")
-		bodyReader = bytes.NewReader(b)
-	} else {
-		bodyReader = bytes.NewReader(nil)
-	}
-
-	req := httptest.NewRequest(method, path, bodyReader)
-	if payload != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	if token != "" {
-		testauth.AddAuthHeader(req, token)
-	}
-
-	resp, err := app.Test(req, -1)
-	require.NoError(t, err, "fiber app.Test")
-
-	t.Cleanup(func() { _ = resp.Body.Close() })
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/start-execution", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
 	return resp
 }
 
-func UuidAsString(t *testing.T, id uuid.UUID) string {
+func postFinishExecution(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
 	t.Helper()
-	if id == uuid.Nil {
-		return "invalid"
-	}
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/finish-execution", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
 
-	return id.String()
+func postReleaseVehicle(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/release-vehicle", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
 }
