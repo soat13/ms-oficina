@@ -15,13 +15,22 @@ func SetupDefault(container *bootstrap.Container) {
 
 func Setup(container *bootstrap.Container) {
 	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
+	listRepairOrders := repairOrderApp.NewListRepairOrders(repairOrderRepository)
+	getRepairOrder := repairOrderApp.NewGetRepairOrder(repairOrderRepository)
 	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
 	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
 	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
 
-	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(startExecution, finishExecution, releaseVehicle, container.FiberErrorHandler)
+	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(
+		listRepairOrders,
+		getRepairOrder,
+		startExecution,
+		finishExecution,
+		releaseVehicle,
+		container.FiberErrorHandler,
+	)
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)
-	
+
 	container.EventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
 	container.EventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
 }
