@@ -10,10 +10,18 @@ import (
 )
 
 type (
+	VehicleReader interface {
+		Exists(ctx context.Context, id uuid.UUID) (bool, error)
+	}
+
+	CustomerReader interface {
+		Exists(ctx context.Context, id uuid.UUID) (bool, error)
+	}
+
 	Repository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error)
 		List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error)
-		Save(ctx context.Context, repairOrder *domain.RepairOrder) error
+		Create(ctx context.Context, repairOrder *domain.RepairOrder) error
 		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error

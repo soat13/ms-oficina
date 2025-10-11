@@ -37,6 +37,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockRepository) Create(ctx context.Context, repairOrder *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, repairOrder)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockRepositoryMockRecorder) Create(ctx, repairOrder interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepository)(nil).Create), ctx, repairOrder)
+}
+
 // GetById mocks base method.
 func (m *MockRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
 	m.ctrl.T.Helper()
@@ -65,20 +79,6 @@ func (m *MockRepository) List(ctx context.Context, pager pagination.Pagination) 
 func (mr *MockRepositoryMockRecorder) List(ctx, pager interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepository)(nil).List), ctx, pager)
-}
-
-// Save mocks base method.
-func (m *MockRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", ctx, repairOrder)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Save indicates an expected call of Save.
-func (mr *MockRepositoryMockRecorder) Save(ctx, repairOrder interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockRepository)(nil).Save), ctx, repairOrder)
 }
 
 // SaveIfApproved mocks base method.

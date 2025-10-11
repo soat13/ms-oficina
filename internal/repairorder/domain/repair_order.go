@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	uuidHelper "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
@@ -16,23 +17,32 @@ type (
 		CustomerID uuid.UUID
 		VehicleID  uuid.UUID
 		Status     repairorder.Status
-		entity.Timestamps
+		*entity.Timestamps
 	}
 )
 
-func NewRepairOrder(customerID, vehicleID uuid.UUID) (*RepairOrder, error) {
+func NewRepairOrder(id uuid.UUID, customerID, vehicleID uuid.UUID, status *repairorder.Status, createdAt, updatedAt *time.Time) (*RepairOrder, error) {
+	defaultStatus := repairorder.StatusReceived
+
 	if customerID == uuid.Nil || vehicleID == uuid.Nil {
 		return nil, ErrCustomerOrVehicleIDInvalid
 	}
 
-	now := time.Now()
+	var timestamp entity.Timestamps
+	if createdAt != nil && updatedAt != nil {
+		timestamp = entity.NewTimestamps(*createdAt, *updatedAt)
+	}
+
+	if status == nil {
+		status = &defaultStatus
+	}
 
 	return &RepairOrder{
-		ID:         uuid.New(),
+		ID:         uuidHelper.IDOrNew(id),
 		CustomerID: customerID,
 		VehicleID:  vehicleID,
-		Status:     repairorder.StatusReceived,
-		Timestamps: entity.NewTimestamps(now, now),
+		Status:     *status,
+		Timestamps: &timestamp,
 	}, nil
 }
 func (r *RepairOrder) FinishExecution() error {
@@ -61,6 +71,5 @@ func (r *RepairOrder) moveStatus(statusFrom, statusTo repairorder.Status) error 
 	}
 
 	r.Status = statusTo
-	r.Touch()
 	return nil
 }
