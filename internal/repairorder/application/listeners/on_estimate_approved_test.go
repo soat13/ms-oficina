@@ -100,7 +100,6 @@ func TestOnEstimateApproved_InvalidJSON(t *testing.T) {
 
 	handler := listeners.OnEstimateApproved(repository)
 
-	payload := []byte(`{"repair_order_id":"not-a-uuid"}`)
-	err := handler(context.Background(), "estimate.approved", payload)
+	err := handler(context.Background(), "estimate.approved", []byte(`not-a-json`))
 	require.Error(t, err)
 }

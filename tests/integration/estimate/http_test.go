@@ -176,7 +176,7 @@ func expectEstimateItemCount(t *testing.T, container *bootstrap.Container, repai
 			SELECT COUNT(*)
 			FROM estimate_items ei
 			JOIN estimates e ON e.id = ei.estimate_id
-			WHERE e.repair_id = ?
+			WHERE e.repair_order_id = ?
 		`, repairOrderID).Scan(ctx, &count),
 	)
 	assert.Equal(t, expected, count)
@@ -191,7 +191,7 @@ func expectEstimateStatus(t *testing.T, container *bootstrap.Container, repairOr
 		container.DB.NewRaw(`
 			SELECT e.status
 			FROM estimates e
-			JOIN repair_orders ro ON ro.id = e.repair_id
+			JOIN repair_orders ro ON ro.id = e.repair_order_id
 			WHERE ro.id = ?
 		`, repairOrderID).Scan(ctx, &status),
 	)
@@ -224,7 +224,7 @@ func getEstimateIDByRepairOrder(t *testing.T, container *bootstrap.Container, re
 		container.DB.NewRaw(`
 			SELECT e.id
 			FROM estimates e
-			WHERE e.repair_id = ?
+			WHERE e.repair_order_id = ?
 			LIMIT 1
 		`, repairOrderID).Scan(ctx, &estimateID),
 	)

@@ -51,6 +51,20 @@ func (r *BunProductRepository) Update(ctx context.Context, product *domain.Produ
 	return err
 }
 
+func (r *BunProductRepository) UpdateBatch(ctx context.Context, products []*domain.Product) error {
+	if len(products) == 0 {
+		return nil
+	}
+
+	models := maps.Map(products, toModel)
+	_, err := r.db.NewUpdate().
+		Model(&models).
+		Column("name", "price", "stock", "updated_at").
+		Bulk().
+		Exec(ctx)
+	return err
+}
+
 func (r *BunProductRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model(&productModel{ID: id}).WherePK().Exec(ctx)
 	return err
@@ -65,6 +79,24 @@ func (r *BunProductRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 	}
 
 	return toDomain(&model), nil
+}
+
+func (r *BunProductRepository) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error) {
+	if len(ids) == 0 {
+		return []*domain.Product{}, nil
+	}
+
+	var models []productModel
+	err := r.db.NewSelect().
+		Model(&models).
+		Where("id IN (?)", bun.In(ids)).
+		Scan(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return maps.MapPtr(models, toDomain), nil
 }
 
 func (r *BunProductRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error) {
