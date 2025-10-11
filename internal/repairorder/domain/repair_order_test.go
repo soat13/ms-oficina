@@ -11,46 +11,32 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 )
 
-func newRepairOrder() RepairOrder {
-	repairOrder, _ := NewRepairOrder(uuid.New(), uuid.New())
-	return *repairOrder
-}
-
 func TestNewRepairOrder(t *testing.T) {
 	t.Run("should initialize with correct values", func(t *testing.T) {
-		repairOrder, err := NewRepairOrder(uuid.New(), uuid.New())
+		repairOrder, err := NewRepairOrder(uuid.Nil, uuid.New(), uuid.New(), nil, nil, nil)
 		require.NoError(t, err)
 		require.NotNil(t, repairOrder)
 
 		assert.Equal(t, repairorder.StatusReceived, repairOrder.Status)
-		assert.NotZero(t, repairOrder.CreatedAt)
-		assert.NotZero(t, repairOrder.UpdatedAt)
+		assert.Zero(t, repairOrder.CreatedAt)
+		assert.Zero(t, repairOrder.UpdatedAt)
 		assert.Equal(t, repairOrder.CreatedAt, repairOrder.UpdatedAt)
 	})
 
 	t.Run("should initialize with invalid customer", func(t *testing.T) {
-		repairOrder, err := NewRepairOrder(uuid.Nil, uuid.New())
+		repairOrder, err := NewRepairOrder(uuid.Nil, uuid.Nil, uuid.New(), nil, nil, nil)
 		assert.Error(t, err)
 		assert.Nil(t, repairOrder)
 	})
 
 	t.Run("should initialize with invalid vehicle", func(t *testing.T) {
-		repairOrder, err := NewRepairOrder(uuid.New(), uuid.Nil)
+		repairOrder, err := NewRepairOrder(uuid.Nil, uuid.New(), uuid.Nil, nil, nil, nil)
 		assert.Error(t, err)
 		assert.Nil(t, repairOrder)
 	})
 }
 
-func TestRepairOrder_touch(t *testing.T) {
-	repairOrder := newRepairOrder()
-	originalUpdatedAt := repairOrder.UpdatedAt
-
-	repairOrder.Timestamps.Touch()
-
-	assert.True(t, repairOrder.UpdatedAt.After(originalUpdatedAt))
-}
-
-func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
+func TestRepairOrderStatusTransitionsTable(t *testing.T) {
 	type actionFn func(ro *RepairOrder) error
 
 	moveToAwaiting := func(ro *RepairOrder) error { return ro.MoveToAwaitingApproval() }
@@ -127,7 +113,6 @@ func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
 			if tc.wantErr == nil {
 				require.NoError(t, err)
 				assert.Equal(t, tc.wantStatus, ro.Status)
-				assert.True(t, ro.UpdatedAt.After(beforeUpdated))
 			} else {
 				require.Error(t, err)
 				assert.ErrorIs(t, err, tc.wantErr)
@@ -141,7 +126,7 @@ func TestRepairOrder_StatusTransitions_Table(t *testing.T) {
 
 func newRO(t *testing.T) *RepairOrder {
 	t.Helper()
-	ro, err := NewRepairOrder(uuid.New(), uuid.New())
+	ro, err := NewRepairOrder(uuid.Nil, uuid.New(), uuid.New(), nil, nil, nil)
 	require.NoError(t, err)
 	require.NotNil(t, ro)
 	return ro

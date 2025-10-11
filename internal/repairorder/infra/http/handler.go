@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 )
@@ -19,6 +18,7 @@ type (
 		startExecUseCase       *application.StartExecution
 		finishExecutionUseCase *application.FinishExecution
 		ReleaseVehicleUseCase  *application.ReleaseVehicle
+		CreateUseCase          *application.Create
 		errorHandler           *fiberHelper.ErrorHandler
 	}
 )
@@ -29,14 +29,19 @@ func NewHandler(
 	startExecUseCase *application.StartExecution,
 	finishExecutionUseCase *application.FinishExecution,
 	ReleaseVehicleUseCase *application.ReleaseVehicle,
+	CreateUseCase *application.Create,
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
+
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
+
 	return &Handler{
 		listUseCase:            listUseCase,
 		getUseCase:             getUseCase,
 		startExecUseCase:       startExecUseCase,
 		finishExecutionUseCase: finishExecutionUseCase,
 		ReleaseVehicleUseCase:  ReleaseVehicleUseCase,
+		CreateUseCase:          CreateUseCase,
 		errorHandler:           errorHandler,
 	}
 }
@@ -44,6 +49,7 @@ func NewHandler(
 func Register(app *fiber.App, h *Handler) {
 	group := app.Group("admin")
 	group.Get("repair-orders", h.list)
+	group.Post("repair-orders", h.create)
 	group.Get("repair-orders/:id", h.getByID)
 	group.Post("repair-orders/:id/start-execution", h.startExecution)
 	group.Post("repair-orders/:id/finish-execution", h.finishExecution)
@@ -68,6 +74,28 @@ func toJSON(view application.RepairOrderView) repairOrderJSON {
 		CreatedAt:  view.CreatedAt,
 		UpdatedAt:  view.UpdatedAt,
 	}
+}
+
+func (h *Handler) create(ctx *fiber.Ctx) error {
+	var req struct {
+		CustomerID uuid.UUID `json:"customer_id"`
+		VehicleID  uuid.UUID `json:"vehicle_id"`
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	input := application.CreateInput{
+		CustomerID: req.CustomerID,
+		VehicleID:  req.VehicleID,
+	}
+
+	if err := h.CreateUseCase.Execute(ctx.Context(), input); err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	return ctx.SendStatus(fiber.StatusCreated)
 }
 
 func (h *Handler) list(ctx *fiber.Ctx) error {

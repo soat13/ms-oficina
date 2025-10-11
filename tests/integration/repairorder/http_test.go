@@ -1,7 +1,9 @@
 package repairorder
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,6 +34,36 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
+
+func TestRepairOrderCreate(t *testing.T) {
+	setup := ensureSetup(t)
+
+	customerID := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "João Silva", "11144477735", "CPF", "11987654321", "joao@example.com")
+	vehicleID := testsupport.ThereIsAVehicle(t, setup.Container.DB, uuid.Nil, customerID, "ABB1234", "Toyota", "Corolla", 2020)
+
+	t.Run("Success", func(t *testing.T) {
+		resp := postCreateRepairOrder(t, setup.Container.FiberApp, setup.AuthToken, customerID, vehicleID)
+
+		require.Equal(t, fiber.StatusCreated, resp.StatusCode)
+		expectRepairOrderExists(t, setup.Container, customerID, vehicleID)
+	})
+
+	t.Run("VehicleNotFound", func(t *testing.T) {
+		unknownVehicleID := uuid.New()
+
+		resp := postCreateRepairOrder(t, setup.Container.FiberApp, setup.AuthToken, customerID, unknownVehicleID)
+
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("CustomerNotFound", func(t *testing.T) {
+		unknownCustomerID := uuid.New()
+
+		resp := postCreateRepairOrder(t, setup.Container.FiberApp, setup.AuthToken, unknownCustomerID, vehicleID)
+
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+}
 
 func TestRepairOrderStartExecution(t *testing.T) {
 	setup := ensureSetup(t)
@@ -128,4 +160,37 @@ func postReleaseVehicle(t *testing.T, fiberApp *fiber.App, token string, repairO
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
+}
+
+func postCreateRepairOrder(t *testing.T, app *fiber.App, token string, customerID, vehicleID uuid.UUID) *http.Response {
+	t.Helper()
+
+	body := map[string]any{
+		"customer_id": customerID,
+		"vehicle_id":  vehicleID,
+	}
+	b, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/admin/repair-orders", bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
+
+	resp, err := app.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func expectRepairOrderExists(t *testing.T, container *bootstrap.Container, customerID, vehicleID uuid.UUID) {
+	t.Helper()
+	ctx := context.Background()
+
+	var count int
+	require.NoError(t,
+		container.DB.
+			NewRaw(`SELECT COUNT(1) FROM repair_orders WHERE customer_id = ? AND vehicle_id = ?`, customerID, vehicleID).
+			Scan(ctx, &count),
+	)
+
+	require.Equal(t, 1, count, "repair order should be created for the given customer and vehicle")
 }

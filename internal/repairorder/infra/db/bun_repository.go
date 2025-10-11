@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	"github.com/uptrace/bun"
 
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
@@ -21,10 +21,6 @@ type BunRepairOrderRepository struct {
 	db *bun.DB
 }
 
-func NewBunRepairOrderRepository(db *bun.DB) application.Repository {
-	return &BunRepairOrderRepository{db: db}
-}
-
 type repairOrderModel struct {
 	bun.BaseModel `bun:"table:repair_orders"`
 
@@ -32,8 +28,28 @@ type repairOrderModel struct {
 	CustomerID uuid.UUID          `bun:"customer_id"`
 	VehicleID  uuid.UUID          `bun:"vehicle_id"`
 	Status     repairorder.Status `bun:"status"`
-	CreatedAt  time.Time          `bun:"created_at"`
-	UpdatedAt  time.Time          `bun:"updated_at"`
+	CreatedAt  time.Time          `bun:"created_at,notnull,default:current_timestamp"`
+	UpdatedAt  time.Time          `bun:"updated_at,notnull,default:current_timestamp"`
+}
+
+var _ bun.BeforeAppendModelHook = (*repairOrderModel)(nil)
+
+func (m *repairOrderModel) BeforeAppendModel(ctx context.Context, q bun.Query) error {
+	switch q.(type) {
+	case *bun.InsertQuery:
+		if m.CreatedAt.IsZero() {
+			now := time.Now()
+			m.CreatedAt = now
+			m.UpdatedAt = now
+		}
+	case *bun.UpdateQuery:
+		m.UpdatedAt = time.Now()
+	}
+	return nil
+}
+
+func NewBunRepairOrderRepository(db *bun.DB) application.Repository {
+	return &BunRepairOrderRepository{db: db}
 }
 
 func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
@@ -79,19 +95,18 @@ func (r *BunRepairOrderRepository) List(ctx context.Context, pager pagination.Pa
 
 func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
 
+	timestamps := entity.NewTimestamps(m.CreatedAt, m.UpdatedAt)
+
 	return &domain.RepairOrder{
 		ID:         m.ID,
 		CustomerID: m.CustomerID,
 		VehicleID:  m.VehicleID,
 		Status:     m.Status,
-		Timestamps: entity.Timestamps{
-			CreatedAt: m.CreatedAt,
-			UpdatedAt: m.UpdatedAt,
-		},
+		Timestamps: &timestamps,
 	}
 }
 
-func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain.RepairOrder) error {
+func (r *BunRepairOrderRepository) Create(ctx context.Context, repairOrder *domain.RepairOrder) error {
 	m := repairOrderModel{
 		ID:         repairOrder.ID,
 		CustomerID: repairOrder.CustomerID,
@@ -107,7 +122,6 @@ func (r *BunRepairOrderRepository) Save(ctx context.Context, repairOrder *domain
 		Set("customer_id = EXCLUDED.customer_id").
 		Set("vehicle_id = EXCLUDED.vehicle_id").
 		Set("status = EXCLUDED.status").
-		Set("updated_at = EXCLUDED.updated_at").
 		Exec(ctx)
 
 	return err
@@ -139,10 +153,19 @@ func (r *BunRepairOrderRepository) saveIfStatus(
 	status repairorder.Status,
 ) error {
 	_, err := r.db.NewUpdate().
-		Model(ro).
-		Where("id = ?", ro.ID).
+		Model(toModel(ro)).
+		WherePK().
 		Where("status = ?", status).
 		Exec(ctx)
 
 	return err
+}
+
+func toModel(ro *domain.RepairOrder) *repairOrderModel {
+	return &repairOrderModel{
+		ID:         ro.ID,
+		CustomerID: ro.CustomerID,
+		VehicleID:  ro.VehicleID,
+		Status:     ro.Status,
+	}
 }

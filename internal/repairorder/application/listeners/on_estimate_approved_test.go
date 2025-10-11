@@ -19,7 +19,7 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 )
 
-func TestOnEstimateApproved_OK(t *testing.T) {
+func TestOnEstimateApprovedOK(t *testing.T) {
 	t.Parallel()
 
 	ctrl := gomock.NewController(t)
@@ -29,11 +29,12 @@ func TestOnEstimateApproved_OK(t *testing.T) {
 
 	repairOrderID := uuid.New()
 	now := time.Now()
+	timestamps := entity.NewTimestamps(now, now)
 
 	repairOrder := &domain.RepairOrder{
 		ID:         repairOrderID,
 		Status:     repairorder.StatusAwaitingApproval,
-		Timestamps: entity.NewTimestamps(now, now),
+		Timestamps: &timestamps,
 	}
 
 	repository.EXPECT().
