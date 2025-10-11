@@ -43,25 +43,25 @@ func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
 		return err
 	}
 
-	if err := a.publishEvent(ctx, *estimate); err != nil {
-		return err
-	}
-
-	return nil
+	return a.publishEvent(ctx, *estimate)
 }
 
 func (a *Approve) publishEvent(ctx context.Context, estimate domain.Estimate) error {
+	products := make(map[uuid.UUID]int, 0)
+	for _, item := range estimate.Items() {
+		if item.Type == domain.ProductItemType {
+			products[item.ID] = item.Quantity
+		}
+	}
+
 	event := estimateEvent.StockReduceRequested{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
+		Products:      products,
 	}
 
 	b, _ := json.Marshal(event)
-	if err := a.eventBus.Publish(ctx, event.Topic(), b); err != nil {
-		return err
-	}
-
-	return nil
+	return a.eventBus.Publish(ctx, event.Topic(), b)
 }

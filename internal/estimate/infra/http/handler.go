@@ -57,7 +57,6 @@ func Register(app *fiber.App, h *Handler) {
 }
 
 func (h *Handler) create(ctx *fiber.Ctx) error {
-
 	repairOrderID, err := fiberHelper.GetUuidParam(ctx, "id")
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
@@ -73,7 +72,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	_, err = h.createUseCase.Execute(ctx.Context(), *inputDTO)
+	err = h.createUseCase.Execute(ctx.Context(), *inputDTO)
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -123,8 +122,8 @@ func (h *Handler) getCreateInput(repairOrderID uuid.UUID, body createEstimateBod
 	}
 
 	return &app.CreateInput{
-		RepairOrderID: repairOrderID,
 		Now:           time.Now(),
+		RepairOrderID: repairOrderID,
 		Products:      productQty,
 		Services:      serviceQty,
 	}, nil

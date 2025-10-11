@@ -25,10 +25,11 @@ type Approved struct {
 func (Approved) Topic() string { return "estimate.approved" }
 
 type StockReduceRequested struct {
-	EventID       uuid.UUID `json:"event_id"`
-	OccurredAt    time.Time `json:"occurred_at"`
-	EstimateID    uuid.UUID `json:"estimate_id"`
-	RepairOrderID uuid.UUID `json:"repair_order_id"`
+	EventID       uuid.UUID         `json:"event_id"`
+	OccurredAt    time.Time         `json:"occurred_at"`
+	EstimateID    uuid.UUID         `json:"estimate_id"`
+	RepairOrderID uuid.UUID         `json:"repair_order_id"`
+	Products      map[uuid.UUID]int `json:"products"`
 }
 
 func (StockReduceRequested) Topic() string { return "estimate.stock.reduce.requested" }

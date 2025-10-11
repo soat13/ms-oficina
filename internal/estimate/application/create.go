@@ -23,9 +23,9 @@ type (
 
 	CreateInput struct {
 		RepairOrderID uuid.UUID
-		Now           time.Time
 		Products      map[uuid.UUID]int
 		Services      map[uuid.UUID]int
+		Now           time.Time
 	}
 
 	EstimateView struct {
@@ -63,30 +63,26 @@ func NewCreateEstimate(
 	}
 }
 
-func (c *Create) Execute(ctx context.Context, input CreateInput) (*CreateEstimateOutput, error) {
+func (c *Create) Execute(ctx context.Context, input CreateInput) error {
 	repairOrder, err := c.getRepairOrder(ctx, input.RepairOrderID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	estimate, err := domain.NewEstimate(repairOrder.ID, input.Now, input.Now)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := c.addItemsFromRepairOrder(ctx, estimate, input); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := c.estimateRepository.Save(ctx, estimate); err != nil {
-		return nil, err
+		return err
 	}
 
-	_ = c.publishEvent(ctx, *estimate)
-
-	return &CreateEstimateOutput{
-		Estimate: toEstimateView(estimate),
-	}, nil
+	return c.publishEvent(ctx, *estimate)
 }
 
 func (c *Create) publishEvent(ctx context.Context, estimate domain.Estimate) error {
@@ -98,11 +94,7 @@ func (c *Create) publishEvent(ctx context.Context, estimate domain.Estimate) err
 	}
 
 	b, _ := json.Marshal(event)
-	if err := c.eventbus.Publish(ctx, event.Topic(), b); err != nil {
-		return err
-	}
-
-	return nil
+	return c.eventbus.Publish(ctx, event.Topic(), b)
 }
 
 func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input CreateInput) error {
@@ -158,12 +150,4 @@ func (c *Create) getRepairOrder(ctx context.Context, repairID uuid.UUID) (*Repai
 	}
 
 	return repairOrder, nil
-}
-
-func toEstimateView(estimate *domain.Estimate) EstimateView {
-	return EstimateView{
-		ID:            estimate.ID,
-		RepairOrderID: estimate.RepairOrderID,
-		Total:         estimate.Total(),
-	}
 }

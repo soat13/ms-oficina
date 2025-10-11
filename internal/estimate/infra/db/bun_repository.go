@@ -16,11 +16,11 @@ type (
 	estimateModel struct {
 		bun.BaseModel `bun:"table:estimates"`
 
-		ID        uuid.UUID `bun:"id,pk,type:uuid"`
-		RepairID  uuid.UUID `bun:"repair_id,type:uuid,notnull"`
-		Status    string    `bun:"status,notnull"`
-		CreatedAt time.Time `bun:"created_at,nullzero,default:now()"`
-		UpdatedAt time.Time `bun:"updated_at,nullzero,default:now()"`
+		ID            uuid.UUID `bun:"id,pk,type:uuid"`
+		RepairOrderID uuid.UUID `bun:"repair_order_id,type:uuid,notnull"`
+		Status        string    `bun:"status,notnull"`
+		CreatedAt     time.Time `bun:"created_at,nullzero,default:now()"`
+		UpdatedAt     time.Time `bun:"updated_at,nullzero,default:now()"`
 	}
 
 	estimateItemModel struct {
@@ -75,10 +75,10 @@ func (r *BunRepository) Save(ctx context.Context, estimate *domain.Estimate) err
 	defer func() { _ = tx.Rollback() }()
 
 	estimateModel := estimateModel{
-		ID:        estimate.ID,
-		RepairID:  estimate.RepairOrderID,
-		Status:    string(estimate.Status),
-		UpdatedAt: time.Now(),
+		ID:            estimate.ID,
+		RepairOrderID: estimate.RepairOrderID,
+		Status:        string(estimate.Status),
+		UpdatedAt:     time.Now(),
 	}
 
 	if _, err := tx.NewInsert().
@@ -140,7 +140,7 @@ func (r *BunRepository) SaveIfAwaitingStock(ctx context.Context, estimate *domai
 }
 
 func toEntity(er estimateModel, itemRows []estimateItemModel) (*domain.Estimate, error) {
-	estimate, err := domain.NewEstimate(er.RepairID, er.CreatedAt, er.UpdatedAt)
+	estimate, err := domain.NewEstimate(er.RepairOrderID, er.CreatedAt, er.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

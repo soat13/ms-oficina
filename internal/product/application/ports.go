@@ -29,8 +29,10 @@ func toView(p *domain.Product) ProductView {
 type ProductRepository interface {
 	Create(ctx context.Context, product *domain.Product) error
 	Update(ctx context.Context, product *domain.Product) error
+	UpdateBatch(ctx context.Context, products []*domain.Product) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error)
+	GetByIDs(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error)
 	List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error)
 	ExistsByName(ctx context.Context, name string) (bool, error)
 }
