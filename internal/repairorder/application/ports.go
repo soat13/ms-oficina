@@ -22,6 +22,7 @@ type (
 		GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error)
 		List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error)
 		Create(ctx context.Context, repairOrder *domain.RepairOrder) error
+		SaveCancellation(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error

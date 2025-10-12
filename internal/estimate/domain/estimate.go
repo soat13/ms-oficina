@@ -39,6 +39,7 @@ const (
 	StatusAwaitingStock    Status = "awaiting_stock"
 	StatusApproved         Status = "approved"
 	StatusRejected         Status = "rejected"
+	StatusCanceled         Status = "Canceled"
 )
 
 func NewEstimate(repairID uuid.UUID, CratedAt, UpdatedAt time.Time) (*Estimate, error) {
@@ -113,4 +114,14 @@ func (e *Estimate) Approve() error {
 	e.Status = StatusApproved
 	e.Touch()
 	return nil
+}
+
+func (e *Estimate) Cancel() error {
+	e.Status = StatusCanceled
+	e.Touch()
+	return nil
+}
+
+func (e *Estimate) IsCanceled() bool {
+	return e.Status == StatusCanceled
 }

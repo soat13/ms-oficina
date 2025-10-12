@@ -10,4 +10,5 @@ const (
 	StatusInExecution      Status = "in_execution"
 	StatusFinished         Status = "finished"
 	StatusReleased         Status = "released"
+	StatusCanceled         Status = "canceled"
 )

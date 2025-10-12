@@ -46,6 +46,20 @@ func NewRepairOrder(id uuid.UUID, customerID, vehicleID uuid.UUID, status *repai
 		Timestamps: &timestamp,
 	}, nil
 }
+
+func (r *RepairOrder) Cancel() error {
+	if r.Status == repairorder.StatusReleased {
+		return errors.ErrInvalidStatusTransaction
+	}
+
+	r.Status = repairorder.StatusCanceled
+	return nil
+}
+
+func (r *RepairOrder) IsCancelled() bool {
+	return r.Status == repairorder.StatusCanceled
+}
+
 func (r *RepairOrder) FinishExecution() error {
 	r.calculateExecutionTime()
 	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)

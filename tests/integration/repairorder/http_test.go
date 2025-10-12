@@ -35,6 +35,45 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 // Tests
 // -----------------------------------------------------------------------------
 
+func TestRepairOrderCancel(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+
+		resp := postCancel(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
+
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusCanceled)
+	})
+
+	t.Run("Idempotent - cancel twice returns 204", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+
+		resp1 := postCancel(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		require.Equal(t, fiber.StatusNoContent, resp1.StatusCode)
+
+		resp2 := postCancel(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		require.Equal(t, fiber.StatusNoContent, resp2.StatusCode)
+
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusCanceled)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		resp := postCancel(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Cannot cancel when released", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusReleased)
+
+		resp := postCancel(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
+
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusReleased)
+	})
+}
+
 func TestRepairOrderCreate(t *testing.T) {
 	setup := ensureSetup(t)
 
@@ -321,4 +360,13 @@ func cleanFinishedRepairOrders(t *testing.T, container *bootstrap.Container) {
 		WHERE status = ?
 	`, repairorderShared.StatusFinished).Exec(ctx)
 	require.NoError(t, err)
+}
+
+func postCancel(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/cancel", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
 }
