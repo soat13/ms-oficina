@@ -10,6 +10,7 @@ import (
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 
@@ -159,6 +160,26 @@ func ThereIsARepairOrder(t *testing.T, db *bun.DB, id, customerID, vehicleID uui
 	`, id, customerID, vehicleID, status).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir repair_order")
 	return id
+}
+
+func ThereIsAnEstimateForRepairOrder(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID) uuid.UUID {
+	t.Helper()
+	ctx := context.Background()
+
+	estimateID := uuid.New()
+	_, err := container.DB.NewRaw(`
+		INSERT INTO estimates (id, repair_order_id, status)
+		VALUES (?, ?, ?)
+	`, estimateID, repairOrderID, "awaiting_approval").Exec(ctx)
+	require.NoError(t, err, "falha ao inserir estimate para o RO")
+
+	_, err = container.DB.NewRaw(`
+		INSERT INTO estimate_items (id, estimate_id, item_id, item_name, item_type, price, quantity)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`, uuid.New(), estimateID, uuid.New(), "Oil Filter", "product", 1000, 1).Exec(ctx)
+	require.NoError(t, err, "falha ao inserir estimate_item")
+
+	return estimateID
 }
 
 func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, phoneNumber, email, password string, roles []string) uuid.UUID {

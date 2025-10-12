@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/application"
+	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/uptrace/bun"
 
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
@@ -53,7 +54,7 @@ func (r *BunRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Esti
 		Where("id = ?", id).
 		Limit(1).
 		Scan(ctx); err != nil {
-		return nil, err
+		return nil, bun_helper.IgnoreNoRows(err)
 	}
 
 	var itemRows []estimateItemModel
@@ -61,7 +62,28 @@ func (r *BunRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Esti
 		Model(&itemRows).
 		Where("estimate_id = ?", model.ID).
 		Scan(ctx); err != nil {
-		return nil, err
+		return nil, bun_helper.IgnoreNoRows(err)
+	}
+
+	return toEntity(model, itemRows)
+}
+
+func (r *BunRepository) GetByRepairOrderID(ctx context.Context, repairOrderID uuid.UUID) (*domain.Estimate, error) {
+	var model estimateModel
+	if err := r.db.NewSelect().
+		Model(&model).
+		Where("repair_order_id = ?", repairOrderID).
+		Limit(1).
+		Scan(ctx); err != nil {
+		return nil, bun_helper.IgnoreNoRows(err)
+	}
+
+	var itemRows []estimateItemModel
+	if err := r.db.NewSelect().
+		Model(&itemRows).
+		Where("estimate_id = ?", model.ID).
+		Scan(ctx); err != nil {
+		return nil, bun_helper.IgnoreNoRows(err)
 	}
 
 	return toEntity(model, itemRows)

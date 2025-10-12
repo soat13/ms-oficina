@@ -11,7 +11,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
+	estimatDomain "github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	repairorderShared "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
@@ -28,6 +30,7 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 
 	return testsupport.SetupHTTP(t, func(app *fiber.App, container *bootstrap.Container) {
 		repairorder.SetupDefault(container)
+		estimate.SetupDefault(container)
 	})
 }
 
@@ -71,6 +74,17 @@ func TestRepairOrderCancel(t *testing.T) {
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 
 		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusReleased)
+	})
+
+	t.Run("Canceling RO also cancels its Estimate", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
+
+		resp := postCancel(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
+
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusCanceled)
+		expectEstimateStatusByRO(t, setup.Container, repairOrderID, estimatDomain.StatusCanceled)
 	})
 }
 
@@ -369,4 +383,22 @@ func postCancel(t *testing.T, fiberApp *fiber.App, token string, repairOrderID u
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
 	return resp
+}
+
+func expectEstimateStatusByRO(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID, expected estimatDomain.Status) {
+	t.Helper()
+	ctx := context.Background()
+
+	var status string
+	require.NoError(t,
+		container.DB.NewRaw(`
+			SELECT status
+			FROM estimates
+			WHERE repair_order_id = ?
+			ORDER BY created_at DESC
+			LIMIT 1
+		`, repairOrderID).Scan(ctx, &status),
+	)
+
+	assert.Equal(t, string(expected), status)
 }

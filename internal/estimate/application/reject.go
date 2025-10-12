@@ -12,34 +12,34 @@ import (
 )
 
 type (
-	ApproveInput struct {
+	RejectInput struct {
 		ID uuid.UUID
 	}
 
-	Approve struct {
+	Reject struct {
 		repository Repository
 		eventBus   eventbus.Bus
 	}
 )
 
-func NewApproveEstimate(repository Repository, eventBus eventbus.Bus) *Approve {
-	return &Approve{
+func NewRejectEstimate(repository Repository, eventBus eventbus.Bus) *Reject {
+	return &Reject{
 		repository: repository,
 		eventBus:   eventBus,
 	}
 }
 
-func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
+func (a *Reject) Execute(ctx context.Context, input RejectInput) error {
 	estimate, err := a.repository.GetByID(ctx, input.ID)
 	if err != nil {
-		return ErrEstimateNotFound
+		return err
 	}
 
 	if estimate == nil {
 		return ErrEstimateNotFound
 	}
 
-	if err := estimate.MoveToAwaitingStock(); err != nil {
+	if err := estimate.Reject(); err != nil {
 		return err
 	}
 
@@ -50,22 +50,18 @@ func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
 	return a.publishEvent(ctx, *estimate)
 }
 
-func (a *Approve) publishEvent(ctx context.Context, estimate domain.Estimate) error {
-	products := make(map[uuid.UUID]int, 0)
-	for _, item := range estimate.Items() {
-		if item.Type == domain.ProductItemType {
-			products[item.ID] = item.Quantity
-		}
-	}
-
-	event := estimateEvent.StockReduceRequested{
+func (a *Reject) publishEvent(ctx context.Context, estimate domain.Estimate) error {
+	event := estimateEvent.Rejected{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
-		Products:      products,
 	}
 
-	b, _ := json.Marshal(event)
+	b, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
 	return a.eventBus.Publish(ctx, event.Topic(), b)
 }

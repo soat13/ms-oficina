@@ -42,4 +42,5 @@ func Setup(container *bootstrap.Container) {
 
 	container.EventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
 	container.EventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
+	container.EventBus.Subscribe(estimate.Rejected{}.Topic(), listeners.OnEstimateRejected(cancel))
 }

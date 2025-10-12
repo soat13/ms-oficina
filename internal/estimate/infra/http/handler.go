@@ -16,6 +16,7 @@ type (
 	Handler struct {
 		createUseCase  *app.Create
 		approveUseCase *app.Approve
+		rejectUseCase  *app.Reject
 		validate       *validator.Validate
 		errorHandler   *fiberHelper.ErrorHandler
 	}
@@ -31,7 +32,12 @@ type (
 	}
 )
 
-func NewHandler(createUseCase *app.Create, approveUseCase *app.Approve, errorHandler *fiberHelper.ErrorHandler) *Handler {
+func NewHandler(
+	createUseCase *app.Create,
+	approveUseCase *app.Approve,
+	rejectUseCase *app.Reject,
+	errorHandler *fiberHelper.ErrorHandler,
+) *Handler {
 	bodyValidator := validator.New()
 	bodyValidator.RegisterStructValidation(func(structLevel validator.StructLevel) {
 		body := structLevel.Current().Interface().(createEstimateBody)
@@ -44,6 +50,7 @@ func NewHandler(createUseCase *app.Create, approveUseCase *app.Approve, errorHan
 
 	return &Handler{
 		approveUseCase: approveUseCase,
+		rejectUseCase:  rejectUseCase,
 		createUseCase:  createUseCase,
 		validate:       bodyValidator,
 		errorHandler:   errorHandler,
@@ -54,6 +61,7 @@ func Register(app *fiber.App, h *Handler) {
 	group := app.Group("admin")
 	group.Post("repair-orders/:id/estimate", h.create)
 	group.Post("estimates/:id/approve", h.approve)
+	group.Post("estimates/:id/reject", h.reject)
 }
 
 func (h *Handler) create(ctx *fiber.Ctx) error {
@@ -88,6 +96,21 @@ func (h *Handler) approve(ctx *fiber.Ctx) error {
 	}
 
 	err = h.approveUseCase.Execute(ctx.Context(), app.ApproveInput{ID: id})
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	return ctx.SendStatus(fiber.StatusOK)
+}
+
+func (h *Handler) reject(ctx *fiber.Ctx) error {
+
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	err = h.rejectUseCase.Execute(ctx.Context(), app.RejectInput{ID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
