@@ -64,7 +64,7 @@ func TestOnEstimateApprovedOK(t *testing.T) {
 	require.Equal(t, repairorder.StatusApproved, repairOrder.Status)
 }
 
-func TestOnEstimateApproved_RepoErrorOnGet(t *testing.T) {
+func TestOnEstimateApprovedRepoErrorOnGet(t *testing.T) {
 	t.Parallel()
 
 	ctrl := gomock.NewController(t)
@@ -91,7 +91,7 @@ func TestOnEstimateApproved_RepoErrorOnGet(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestOnEstimateApproved_InvalidJSON(t *testing.T) {
+func TestOnEstimateApprovedInvalidJSON(t *testing.T) {
 	t.Parallel()
 
 	ctrl := gomock.NewController(t)

@@ -7,6 +7,7 @@ import (
 	estimateInfraDB "github.com/soat13/fase-1-oficina/internal/estimate/infra/db"
 	estimateInfraHttp "github.com/soat13/fase-1-oficina/internal/estimate/infra/http"
 	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
+	repairOrderEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {
@@ -28,13 +29,20 @@ func Setup(container *bootstrap.Container) {
 		container.EventBus,
 	)
 
-	approveEstimate := estimateApp.NewApproveEstimate(estimateRepository, container.EventBus)
+	approve := estimateApp.NewApproveEstimate(estimateRepository, container.EventBus)
+	cancel := estimateApp.NewCancelEstimate(estimateRepository, container.EventBus)
 
-	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approveEstimate, container.FiberErrorHandler)
+	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approve, container.FiberErrorHandler)
 	estimateInfraHttp.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(
 		productEvent.StockReduceConfirmed{}.Topic(),
 		estimaterListeners.OnStockReduceConfirmed(estimateRepository, container.EventBus),
 	)
+
+	container.EventBus.Subscribe(
+		repairOrderEvent.Canceled{}.Topic(),
+		estimaterListeners.OnRepairOrderCanceled(cancel),
+	)
+
 }

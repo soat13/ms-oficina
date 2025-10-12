@@ -130,6 +130,22 @@ func (r *BunRepairOrderRepository) Create(ctx context.Context, repairOrder *doma
 	return err
 }
 
+func (r *BunRepairOrderRepository) SaveCancellation(ctx context.Context, ro *domain.RepairOrder) error {
+
+	deniedStatusList := []repairorder.Status{
+		repairorder.StatusReleased,
+		repairorder.StatusCanceled,
+	}
+
+	_, err := r.db.NewUpdate().
+		Model(toModel(ro)).
+		WherePK().
+		Where("status not in (?)", bun.In(deniedStatusList)).
+		Exec(ctx)
+
+	return err
+}
+
 func (r *BunRepairOrderRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
 	return r.saveIfStatus(ctx, ro, repairorder.StatusApproved)
 }
