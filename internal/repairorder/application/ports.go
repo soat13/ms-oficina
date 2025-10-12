@@ -27,5 +27,6 @@ type (
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error
+		GetAverageExecutionTime(ctx context.Context) (*float64, error)
 	}
 )

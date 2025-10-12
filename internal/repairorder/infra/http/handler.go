@@ -13,13 +13,14 @@ import (
 
 type (
 	Handler struct {
-		listUseCase            *application.ListRepairOrders
-		getUseCase             *application.GetRepairOrder
-		startExecUseCase       *application.StartExecution
-		finishExecutionUseCase *application.FinishExecution
-		ReleaseVehicleUseCase  *application.ReleaseVehicle
-		CreateUseCase          *application.Create
-		errorHandler           *fiberHelper.ErrorHandler
+		listUseCase                    *application.ListRepairOrders
+		getUseCase                     *application.GetRepairOrder
+		startExecUseCase               *application.StartExecution
+		finishExecutionUseCase         *application.FinishExecution
+		releaseVehicleUseCase          *application.ReleaseVehicle
+		createUseCase                  *application.Create
+		getAverageExecutionTimeUseCase *application.GetAverageExecutionTime
+		errorHandler                   *fiberHelper.ErrorHandler
 	}
 )
 
@@ -28,21 +29,22 @@ func NewHandler(
 	getUseCase *application.GetRepairOrder,
 	startExecUseCase *application.StartExecution,
 	finishExecutionUseCase *application.FinishExecution,
-	ReleaseVehicleUseCase *application.ReleaseVehicle,
-	CreateUseCase *application.Create,
+	releaseVehicleUseCase *application.ReleaseVehicle,
+	createUseCase *application.Create,
+	getAverageExecutionTime *application.GetAverageExecutionTime,
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
-
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
 
 	return &Handler{
-		listUseCase:            listUseCase,
-		getUseCase:             getUseCase,
-		startExecUseCase:       startExecUseCase,
-		finishExecutionUseCase: finishExecutionUseCase,
-		ReleaseVehicleUseCase:  ReleaseVehicleUseCase,
-		CreateUseCase:          CreateUseCase,
-		errorHandler:           errorHandler,
+		listUseCase:                    listUseCase,
+		getUseCase:                     getUseCase,
+		startExecUseCase:               startExecUseCase,
+		finishExecutionUseCase:         finishExecutionUseCase,
+		releaseVehicleUseCase:          releaseVehicleUseCase,
+		createUseCase:                  createUseCase,
+		getAverageExecutionTimeUseCase: getAverageExecutionTime,
+		errorHandler:                   errorHandler,
 	}
 }
 
@@ -50,10 +52,11 @@ func Register(app *fiber.App, h *Handler) {
 	group := app.Group("admin")
 	group.Get("repair-orders", h.list)
 	group.Post("repair-orders", h.create)
+	group.Get("repair-orders/average-execution-time", h.getAverageExecutionTime)
 	group.Get("repair-orders/:id", h.getByID)
 	group.Post("repair-orders/:id/start-execution", h.startExecution)
 	group.Post("repair-orders/:id/finish-execution", h.finishExecution)
-	group.Post("repair-orders/:id/release-vehicle", h.ReleaseVehicle)
+	group.Post("repair-orders/:id/release-vehicle", h.releaseVehicle)
 }
 
 type repairOrderJSON struct {
@@ -91,7 +94,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		VehicleID:  req.VehicleID,
 	}
 
-	if err := h.CreateUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.createUseCase.Execute(ctx.Context(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -160,7 +163,7 @@ func (h *Handler) finishExecution(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (h *Handler) ReleaseVehicle(ctx *fiber.Ctx) error {
+func (h *Handler) releaseVehicle(ctx *fiber.Ctx) error {
 	id, err := fiberHelper.GetUuidParam(ctx, "id")
 
 	if err != nil {
@@ -171,9 +174,18 @@ func (h *Handler) ReleaseVehicle(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.ReleaseVehicleUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.releaseVehicleUseCase.Execute(ctx.Context(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *Handler) getAverageExecutionTime(ctx *fiber.Ctx) error {
+	output, err := h.getAverageExecutionTimeUseCase.Execute(ctx.Context())
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(output)
 }

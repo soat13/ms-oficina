@@ -150,3 +150,12 @@ func (mr *MockRepositoryMockRecorder) SaveIfInExecution(ctx, ro interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfInExecution", reflect.TypeOf((*MockRepository)(nil).SaveIfInExecution), ctx, ro)
 }
+
+// GetAverageExecutionTime implements application.Repository.
+func (m *MockRepository) GetAverageExecutionTime(ctx context.Context) (*float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAverageExecutionTime", ctx)
+	ret0, _ := ret[0].(*float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}

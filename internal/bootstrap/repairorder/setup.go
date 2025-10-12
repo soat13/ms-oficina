@@ -23,7 +23,7 @@ func Setup(container *bootstrap.Container) {
 	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
 	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
 	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
-
+	getAverageExecutionTime := repairOrderApp.NewGetAverageExecutionTime(repairOrderRepository)
 	create := repairOrderApp.NewCreate(repairOrderRepository, customerReader, vehicleReader)
 
 	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(
@@ -33,6 +33,7 @@ func Setup(container *bootstrap.Container) {
 		finishExecution,
 		releaseVehicle,
 		create,
+		getAverageExecutionTime,
 		container.FiberErrorHandler,
 	)
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)
