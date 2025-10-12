@@ -93,6 +93,7 @@ func TestRepairOrderFinishExecution(t *testing.T) {
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusFinished)
+		expectRepairOrderHasExecutionTime(t, setup.Container, repairOrderID)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
@@ -119,6 +120,77 @@ func TestRepairOrderReleaseVehicle(t *testing.T) {
 	})
 }
 
+func TestRepairOrderGetAverageExecutionTime(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success - With Finished Orders", func(t *testing.T) {
+		ro1 := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+		ro2 := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+		ro3 := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+
+		setExecutionTimeAndFinish(t, setup.Container, ro1, 60)
+		setExecutionTimeAndFinish(t, setup.Container, ro2, 120)
+		setExecutionTimeAndFinish(t, setup.Container, ro3, 180)
+
+		resp := getAverageExecutionTime(t, setup.Container.FiberApp, setup.AuthToken)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result struct {
+			AverageMinutes *float64 `json:"AverageMinutes"`
+		}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+
+		require.NotNil(t, result.AverageMinutes)
+		assert.InDelta(t, 120.0, *result.AverageMinutes, 0.1)
+	})
+
+	t.Run("Success - No Finished Orders", func(t *testing.T) {
+		cleanFinishedRepairOrders(t, setup.Container)
+
+		resp := getAverageExecutionTime(t, setup.Container.FiberApp, setup.AuthToken)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result struct {
+			AverageMinutes *float64 `json:"AverageMinutes"`
+		}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+
+		require.NotNil(t, result.AverageMinutes)
+		assert.Equal(t, 0.0, *result.AverageMinutes)
+	})
+
+	t.Run("Success - Only Finished Orders Count", func(t *testing.T) {
+		cleanFinishedRepairOrders(t, setup.Container)
+
+		roInExecution := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+		roApproved := testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+		roFinished1 := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+		roFinished2 := testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+
+		setExecutionTime(t, setup.Container, roInExecution, 100)
+		setExecutionTime(t, setup.Container, roApproved, 200)
+		setExecutionTimeAndFinish(t, setup.Container, roFinished1, 60)
+		setExecutionTimeAndFinish(t, setup.Container, roFinished2, 90)
+
+		resp := getAverageExecutionTime(t, setup.Container.FiberApp, setup.AuthToken)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result struct {
+			AverageMinutes *float64 `json:"AverageMinutes"`
+		}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+
+		require.NotNil(t, result.AverageMinutes)
+		assert.InDelta(t, 75.0, *result.AverageMinutes, 0.1)
+	})
+}
+
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
@@ -133,6 +205,18 @@ func expectRepairOrderStatus(t *testing.T, container *bootstrap.Container, repai
 	)
 
 	assert.Equal(t, string(expected), status)
+}
+
+func expectRepairOrderHasExecutionTime(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID) {
+	t.Helper()
+	ctx := context.Background()
+
+	var executionTimeMinutes *int64
+	require.NoError(t,
+		container.DB.NewRaw(`SELECT execution_time_minutes FROM repair_orders WHERE id = ?`, repairOrderID).Scan(ctx, &executionTimeMinutes),
+	)
+
+	require.NotNil(t, executionTimeMinutes)
 }
 
 func postStartExecution(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
@@ -181,6 +265,15 @@ func postCreateRepairOrder(t *testing.T, app *fiber.App, token string, customerI
 	return resp
 }
 
+func getAverageExecutionTime(t *testing.T, fiberApp *fiber.App, token string) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/admin/repair-orders/average-execution-time", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
 func expectRepairOrderExists(t *testing.T, container *bootstrap.Container, customerID, vehicleID uuid.UUID) {
 	t.Helper()
 	ctx := context.Background()
@@ -192,5 +285,40 @@ func expectRepairOrderExists(t *testing.T, container *bootstrap.Container, custo
 			Scan(ctx, &count),
 	)
 
-	require.Equal(t, 1, count, "repair order should be created for the given customer and vehicle")
+	require.Equal(t, 1, count)
+}
+
+func setExecutionTime(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID, minutes int64) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := container.DB.NewRaw(`
+		UPDATE repair_orders 
+		SET execution_time_minutes = ?
+		WHERE id = ?
+	`, minutes, repairOrderID).Exec(ctx)
+	require.NoError(t, err)
+}
+
+func setExecutionTimeAndFinish(t *testing.T, container *bootstrap.Container, repairOrderID uuid.UUID, minutes int64) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := container.DB.NewRaw(`
+		UPDATE repair_orders 
+		SET execution_time_minutes = ?, status = ?
+		WHERE id = ?
+	`, minutes, repairorderShared.StatusFinished, repairOrderID).Exec(ctx)
+	require.NoError(t, err)
+}
+
+func cleanFinishedRepairOrders(t *testing.T, container *bootstrap.Container) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := container.DB.NewRaw(`
+		DELETE FROM repair_orders 
+		WHERE status = ?
+	`, repairorderShared.StatusFinished).Exec(ctx)
+	require.NoError(t, err)
 }

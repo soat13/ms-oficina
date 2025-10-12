@@ -24,12 +24,13 @@ type BunRepairOrderRepository struct {
 type repairOrderModel struct {
 	bun.BaseModel `bun:"table:repair_orders"`
 
-	ID         uuid.UUID          `bun:"id,pk"`
-	CustomerID uuid.UUID          `bun:"customer_id"`
-	VehicleID  uuid.UUID          `bun:"vehicle_id"`
-	Status     repairorder.Status `bun:"status"`
-	CreatedAt  time.Time          `bun:"created_at,notnull,default:current_timestamp"`
-	UpdatedAt  time.Time          `bun:"updated_at,notnull,default:current_timestamp"`
+	ID                   uuid.UUID          `bun:"id,pk"`
+	CustomerID           uuid.UUID          `bun:"customer_id"`
+	VehicleID            uuid.UUID          `bun:"vehicle_id"`
+	Status               repairorder.Status `bun:"status"`
+	ExecutionTimeMinutes *int64             `bun:"execution_time_minutes"`
+	CreatedAt            time.Time          `bun:"created_at,notnull,default:current_timestamp"`
+	UpdatedAt            time.Time          `bun:"updated_at,notnull,default:current_timestamp"`
 }
 
 var _ bun.BeforeAppendModelHook = (*repairOrderModel)(nil)
@@ -98,11 +99,12 @@ func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.Re
 	timestamps := entity.NewTimestamps(m.CreatedAt, m.UpdatedAt)
 
 	return &domain.RepairOrder{
-		ID:         m.ID,
-		CustomerID: m.CustomerID,
-		VehicleID:  m.VehicleID,
-		Status:     m.Status,
-		Timestamps: &timestamps,
+		ID:                   m.ID,
+		CustomerID:           m.CustomerID,
+		VehicleID:            m.VehicleID,
+		Status:               m.Status,
+		ExecutionTimeMinutes: m.ExecutionTimeMinutes,
+		Timestamps:           &timestamps,
 	}
 }
 
@@ -122,6 +124,7 @@ func (r *BunRepairOrderRepository) Create(ctx context.Context, repairOrder *doma
 		Set("customer_id = EXCLUDED.customer_id").
 		Set("vehicle_id = EXCLUDED.vehicle_id").
 		Set("status = EXCLUDED.status").
+		Set("execution_time_minutes = EXCLUDED.execution_time_minutes").
 		Exec(ctx)
 
 	return err
@@ -147,25 +150,39 @@ func (r *BunRepairOrderRepository) SaveIfFinished(ctx context.Context, ro *domai
 	return r.saveIfStatus(ctx, ro, repairorder.StatusFinished)
 }
 
-func (r *BunRepairOrderRepository) saveIfStatus(
-	ctx context.Context,
-	ro *domain.RepairOrder,
-	status repairorder.Status,
-) error {
+func (r *BunRepairOrderRepository) GetAverageExecutionTime(ctx context.Context) (*float64, error) {
+	var avg float64
+	err := r.db.NewSelect().
+		Model((*repairOrderModel)(nil)).
+		ColumnExpr("AVG(execution_time_minutes) as average").
+		Where("execution_time_minutes IS NOT NULL").
+		Where("status = ?", repairorder.StatusFinished).
+		Scan(ctx, &avg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &avg, nil
+}
+
+func (r *BunRepairOrderRepository) saveIfStatus(ctx context.Context, ro *domain.RepairOrder, status repairorder.Status) error {
 	_, err := r.db.NewUpdate().
 		Model(toModel(ro)).
 		WherePK().
 		Where("status = ?", status).
 		Exec(ctx)
-
 	return err
 }
 
 func toModel(ro *domain.RepairOrder) *repairOrderModel {
 	return &repairOrderModel{
-		ID:         ro.ID,
-		CustomerID: ro.CustomerID,
-		VehicleID:  ro.VehicleID,
-		Status:     ro.Status,
+		ID:                   ro.ID,
+		CustomerID:           ro.CustomerID,
+		VehicleID:            ro.VehicleID,
+		Status:               ro.Status,
+		ExecutionTimeMinutes: ro.ExecutionTimeMinutes,
+		CreatedAt:            ro.CreatedAt,
+		UpdatedAt:            ro.UpdatedAt,
 	}
 }

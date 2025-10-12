@@ -13,10 +13,11 @@ import (
 
 type (
 	RepairOrder struct {
-		ID         uuid.UUID
-		CustomerID uuid.UUID
-		VehicleID  uuid.UUID
-		Status     repairorder.Status
+		ID                   uuid.UUID
+		CustomerID           uuid.UUID
+		VehicleID            uuid.UUID
+		Status               repairorder.Status
+		ExecutionTimeMinutes *int64
 		*entity.Timestamps
 	}
 )
@@ -46,6 +47,7 @@ func NewRepairOrder(id uuid.UUID, customerID, vehicleID uuid.UUID, status *repai
 	}, nil
 }
 func (r *RepairOrder) FinishExecution() error {
+	r.calculateExecutionTime()
 	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)
 }
 
@@ -72,4 +74,10 @@ func (r *RepairOrder) moveStatus(statusFrom, statusTo repairorder.Status) error 
 
 	r.Status = statusTo
 	return nil
+}
+
+func (r *RepairOrder) calculateExecutionTime() {
+	executionTime := time.Since(r.UpdatedAt).Minutes()
+	executionTimeMinutes := int64(executionTime)
+	r.ExecutionTimeMinutes = &executionTimeMinutes
 }
