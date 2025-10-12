@@ -51,6 +51,21 @@ func (mr *MockRepositoryMockRecorder) GetByID(ctx, id interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockRepository)(nil).GetByID), ctx, id)
 }
 
+// GetByRepairOrderID mocks base method.
+func (m *MockRepository) GetByRepairOrderID(ctx context.Context, repairOrderID uuid.UUID) (*domain.Estimate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByRepairOrderID", ctx, repairOrderID)
+	ret0, _ := ret[0].(*domain.Estimate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByRepairOrderID indicates an expected call of GetByRepairOrderID.
+func (mr *MockRepositoryMockRecorder) GetByRepairOrderID(ctx, repairOrderID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByRepairOrderID", reflect.TypeOf((*MockRepository)(nil).GetByRepairOrderID), ctx, repairOrderID)
+}
+
 // Save mocks base method.
 func (m *MockRepository) Save(ctx context.Context, estimate *domain.Estimate) error {
 	m.ctrl.T.Helper()

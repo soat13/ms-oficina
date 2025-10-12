@@ -20,7 +20,7 @@ type (
 		releaseVehicleUseCase          *application.ReleaseVehicle
 		createUseCase                  *application.Create
 		getAverageExecutionTimeUseCase *application.GetAverageExecutionTime
-		CancelUseCase                  *application.Cancel
+		cancelUseCase                  *application.Cancel
 		errorHandler                   *fiberHelper.ErrorHandler
 	}
 )
@@ -46,7 +46,7 @@ func NewHandler(
 		releaseVehicleUseCase:          releaseVehicleUseCase,
 		createUseCase:                  createUseCase,
 		getAverageExecutionTimeUseCase: getAverageExecutionTime,
-		CancelUseCase:                  CancelUseCase,
+		cancelUseCase:                  CancelUseCase,
 		errorHandler:                   errorHandler,
 	}
 }
@@ -57,7 +57,7 @@ func Register(app *fiber.App, h *Handler) {
 	group.Post("repair-orders", h.create)
 	group.Get("repair-orders/average-execution-time", h.getAverageExecutionTime)
 	group.Get("repair-orders/:id", h.getByID)
-	group.Post("repair-orders/:id/cancel", h.Cancel)
+	group.Post("repair-orders/:id/cancel", h.cancel)
 	group.Post("repair-orders/:id/start-execution", h.startExecution)
 	group.Post("repair-orders/:id/finish-execution", h.finishExecution)
 	group.Post("repair-orders/:id/release-vehicle", h.releaseVehicle)
@@ -185,7 +185,7 @@ func (h *Handler) releaseVehicle(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (h *Handler) Cancel(ctx *fiber.Ctx) error {
+func (h *Handler) cancel(ctx *fiber.Ctx) error {
 	id, err := fiberHelper.GetUuidParam(ctx, "id")
 
 	if err != nil {
@@ -196,7 +196,7 @@ func (h *Handler) Cancel(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.CancelUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.cancelUseCase.Execute(ctx.Context(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 

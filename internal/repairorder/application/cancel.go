@@ -29,6 +29,7 @@ func NewCancel(repository Repository, bus eventbus.Bus) *Cancel {
 }
 
 func (uc *Cancel) Execute(ctx context.Context, input CancelInput) error {
+
 	repairorder, err := uc.Repository.GetById(ctx, input.RepairOrderID)
 	if err != nil {
 		return err

@@ -31,7 +31,11 @@ func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return ErrEstimateNotFound
 	}
 
-	if estimate.IsCanceled() {
+	if estimate == nil {
+		return ErrEstimateNotFound
+	}
+
+	if estimate.IsCanceled() || estimate.IsRejected() {
 		return nil
 	}
 
