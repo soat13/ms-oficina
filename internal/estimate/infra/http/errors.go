@@ -34,4 +34,8 @@ var errorMap = map[error]ErrorInfo{
 		Status: fiber.StatusUnprocessableEntity,
 		Code:   "INVALID_STATUS_TRANSACTION",
 	},
+	app.ErrProductNotAvailable: {
+		Status: fiber.StatusUnprocessableEntity,
+		Code:   "PRODUCT_NOT_AVAILABLE",
+	},
 }
