@@ -27,6 +27,7 @@ type catalogRow struct {
 	ID    uuid.UUID
 	Name  string
 	Price int64
+	Stock *int
 }
 
 func (r *catalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]app.CatalogItemView, error) {
@@ -35,9 +36,14 @@ func (r *catalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]app.Ca
 	}
 
 	var rows []catalogRow
+	columnExpr := "c.id, c.name, c.price"
+	if r.table == "products" {
+		columnExpr = "c.id, c.name, c.price, c.stock"
+	}
+
 	if err := r.db.NewSelect().
 		TableExpr("? AS c", bun.Ident(r.table)).
-		ColumnExpr("c.id, c.name, c.price").
+		ColumnExpr(columnExpr).
 		Where("c.id IN (?)", bun.In(ids)).
 		Scan(ctx, &rows); err != nil {
 		return nil, err
@@ -49,10 +55,15 @@ func (r *catalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]app.Ca
 		if err != nil {
 			return nil, err
 		}
+		stock := 0
+		if row.Stock != nil {
+			stock = *row.Stock
+		}
 		out = append(out, app.CatalogItemView{
 			ID:    row.ID,
 			Name:  row.Name,
 			Price: m,
+			Stock: stock,
 		})
 	}
 	return out, nil

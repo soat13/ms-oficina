@@ -102,6 +102,23 @@ func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.E
 	if err != nil {
 		return err
 	}
+	// validate stock in batch using fetched products
+	productMap := make(map[uuid.UUID]CatalogItemView, len(products))
+	for _, p := range products {
+		productMap[p.ID] = p
+	}
+
+	for productID, qty := range input.Products {
+		if qty > 0 {
+			product, exists := productMap[productID]
+			if !exists {
+				return ErrProductNotAvailable
+			}
+			if product.Stock < qty {
+				return ErrProductNotAvailable
+			}
+		}
+	}
 	if err := c.addItemsToEstimate(estimate, input.Products, products, domain.ProductItemType); err != nil {
 		return err
 	}

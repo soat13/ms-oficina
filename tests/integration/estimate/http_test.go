@@ -188,6 +188,22 @@ func TestCreateFromRepairOrder(t *testing.T) {
 		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
 		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
 	})
+
+	t.Run("Insufficient stock", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		body := estimateBody{
+			Products: []estimateLine{
+				{ID: testsupport.OilFilterID, Quantity: 300},
+			},
+			Services: nil,
+		}
+
+		resp := postCreateEstimateWithBody(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, body)
+
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+		expectEstimateItemCount(t, setup.Container, repairOrderID, 0)
+	})
 }
 
 // -----------------------------------------------------------------------------

@@ -24,6 +24,7 @@ type (
 		ID    uuid.UUID
 		Name  string
 		Price money.Money
+		Stock int
 	}
 
 	ProductCatalogReader interface {

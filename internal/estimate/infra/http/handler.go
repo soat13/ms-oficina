@@ -47,6 +47,7 @@ func NewHandler(
 	}, createEstimateBody{})
 
 	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrEstimateNotFound)
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(app.ErrProductNotAvailable)
 
 	return &Handler{
 		approveUseCase: approveUseCase,
