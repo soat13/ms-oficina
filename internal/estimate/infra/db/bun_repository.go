@@ -17,11 +17,11 @@ type (
 	estimateModel struct {
 		bun.BaseModel `bun:"table:estimates"`
 
-		ID            uuid.UUID `bun:"id,pk,type:uuid"`
-		RepairOrderID uuid.UUID `bun:"repair_order_id,type:uuid,notnull"`
-		Status        string    `bun:"status,notnull"`
-		CreatedAt     time.Time `bun:"created_at,nullzero,default:now()"`
-		UpdatedAt     time.Time `bun:"updated_at,nullzero,default:now()"`
+		ID            uuid.UUID     `bun:"id,pk,type:uuid"`
+		RepairOrderID uuid.UUID     `bun:"repair_order_id,type:uuid,notnull"`
+		Status        domain.Status `bun:"status,notnull"`
+		CreatedAt     time.Time     `bun:"created_at,nullzero,default:now()"`
+		UpdatedAt     time.Time     `bun:"updated_at,nullzero,default:now()"`
 	}
 
 	estimateItemModel struct {
@@ -99,7 +99,7 @@ func (r *BunRepository) Save(ctx context.Context, estimate *domain.Estimate) err
 	estimateModel := estimateModel{
 		ID:            estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
-		Status:        string(estimate.Status),
+		Status:        estimate.Status,
 		UpdatedAt:     time.Now(),
 	}
 
@@ -152,13 +152,30 @@ func (r *BunRepository) Save(ctx context.Context, estimate *domain.Estimate) err
 }
 
 func (r *BunRepository) SaveIfAwaitingStock(ctx context.Context, estimate *domain.Estimate) error {
-	_, err := r.db.NewUpdate().
-		Model(estimate).
-		Where("id = ?", estimate.ID).
-		Where("status = ?", domain.StatusAwaitingStock).
-		Exec(ctx)
+	return r.saveIfStatus(ctx, estimate, domain.StatusAwaitingStock)
+}
 
+func (r *BunRepository) SaveIfAwaitingApproval(ctx context.Context, estimate *domain.Estimate) error {
+	return r.saveIfStatus(ctx, estimate, domain.StatusAwaitingApproval)
+}
+
+func (r *BunRepository) saveIfStatus(ctx context.Context, estimate *domain.Estimate, status domain.Status) error {
+	_, err := r.db.NewUpdate().
+		Model(toModel(estimate)).
+		WherePK().
+		Where("status = ?", status).
+		Exec(ctx)
 	return err
+}
+
+func toModel(estimate *domain.Estimate) *estimateModel {
+	return &estimateModel{
+		ID:            estimate.ID,
+		RepairOrderID: estimate.RepairOrderID,
+		Status:        estimate.Status,
+		CreatedAt:     estimate.CreatedAt,
+		UpdatedAt:     estimate.UpdatedAt,
+	}
 }
 
 func toEntity(er estimateModel, itemRows []estimateItemModel) (*domain.Estimate, error) {

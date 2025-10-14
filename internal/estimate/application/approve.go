@@ -43,7 +43,7 @@ func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
 		return err
 	}
 
-	if err := a.repository.Save(ctx, estimate); err != nil {
+	if err := a.repository.SaveIfAwaitingApproval(ctx, estimate); err != nil {
 		return err
 	}
 
