@@ -24,13 +24,13 @@ type BunRepairOrderRepository struct {
 type repairOrderModel struct {
 	bun.BaseModel `bun:"table:repair_orders"`
 
-	ID                   uuid.UUID          `bun:"id,pk"`
-	CustomerID           uuid.UUID          `bun:"customer_id"`
-	VehicleID            uuid.UUID          `bun:"vehicle_id"`
-	Status               repairorder.Status `bun:"status"`
-	ExecutionTimeMinutes *int64             `bun:"execution_time_minutes"`
-	CreatedAt            time.Time          `bun:"created_at,notnull,default:current_timestamp"`
-	UpdatedAt            time.Time          `bun:"updated_at,notnull,default:current_timestamp"`
+	ID                   uuid.UUID `bun:"id,pk,type:uuid"`
+	CustomerID           uuid.UUID `bun:"customer_id,type:uuid, notnull"`
+	VehicleID            uuid.UUID `bun:"vehicle_id,type:uuid, notnull"`
+	Status               string    `bun:"status,notnull"`
+	ExecutionTimeMinutes *int64    `bun:"execution_time_minutes"`
+	CreatedAt            time.Time `bun:"created_at,notnull,default:current_timestamp"`
+	UpdatedAt            time.Time `bun:"updated_at,notnull,default:current_timestamp"`
 }
 
 var _ bun.BeforeAppendModelHook = (*repairOrderModel)(nil)
@@ -95,43 +95,31 @@ func (r *BunRepairOrderRepository) List(ctx context.Context, pager pagination.Pa
 }
 
 func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
-
 	timestamps := entity.NewTimestamps(m.CreatedAt, m.UpdatedAt)
 
 	return &domain.RepairOrder{
 		ID:                   m.ID,
 		CustomerID:           m.CustomerID,
 		VehicleID:            m.VehicleID,
-		Status:               m.Status,
+		Status:               repairorder.Status(m.Status),
 		ExecutionTimeMinutes: m.ExecutionTimeMinutes,
 		Timestamps:           &timestamps,
 	}
 }
 
 func (r *BunRepairOrderRepository) Create(ctx context.Context, repairOrder *domain.RepairOrder) error {
-	m := repairOrderModel{
-		ID:         repairOrder.ID,
-		CustomerID: repairOrder.CustomerID,
-		VehicleID:  repairOrder.VehicleID,
-		Status:     repairOrder.Status,
-		CreatedAt:  repairOrder.CreatedAt,
-		UpdatedAt:  repairOrder.UpdatedAt,
-	}
-
 	_, err := r.db.NewInsert().
-		Model(&m).
+		Model(toModel(repairOrder)).
 		On("CONFLICT (id) DO UPDATE").
 		Set("customer_id = EXCLUDED.customer_id").
 		Set("vehicle_id = EXCLUDED.vehicle_id").
 		Set("status = EXCLUDED.status").
 		Set("execution_time_minutes = EXCLUDED.execution_time_minutes").
 		Exec(ctx)
-
 	return err
 }
 
 func (r *BunRepairOrderRepository) SaveCancellation(ctx context.Context, ro *domain.RepairOrder) error {
-
 	deniedStatusList := []repairorder.Status{
 		repairorder.StatusReleased,
 		repairorder.StatusCanceled,
@@ -196,7 +184,7 @@ func toModel(ro *domain.RepairOrder) *repairOrderModel {
 		ID:                   ro.ID,
 		CustomerID:           ro.CustomerID,
 		VehicleID:            ro.VehicleID,
-		Status:               ro.Status,
+		Status:               string(ro.Status),
 		ExecutionTimeMinutes: ro.ExecutionTimeMinutes,
 		CreatedAt:            ro.CreatedAt,
 		UpdatedAt:            ro.UpdatedAt,
