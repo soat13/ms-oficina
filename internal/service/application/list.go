@@ -7,29 +7,30 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
-type ListInput struct {
-	Pager pagination.Pagination
-}
+type (
+	ListInput struct {
+		Pager pagination.Pagination
+	}
 
-type ListOutput struct {
-	Services []ServiceView
-}
+	ListOutput struct {
+		Services []ServiceView
+	}
 
-type ListServices struct {
-	repo Repository
-}
+	ListServices struct {
+		repo ServiceRepository
+	}
+)
 
-func NewListServices(repo Repository) *ListServices {
+func NewListServices(repo ServiceRepository) *ListServices {
 	return &ListServices{repo: repo}
 }
 
-func (uc *ListServices) Execute(ctx context.Context, input ListInput) (*ListOutput, error) {
-	items, err := uc.repo.List(ctx, input.Pager)
+func (uc *ListServices) Execute(ctx context.Context, in ListInput) (*ListOutput, error) {
+	items, err := uc.repo.List(ctx, in.Pager)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ListOutput{
-		Services: maps.Map(items, toView),
-	}, nil
+	services := maps.Map(items, toView)
+	return &ListOutput{Services: services}, nil
 }

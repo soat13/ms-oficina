@@ -6,15 +6,17 @@ import (
 	"github.com/google/uuid"
 )
 
-type DeleteInput struct {
-	ID uuid.UUID
-}
+type (
+	DeleteInput struct {
+		ID uuid.UUID
+	}
 
-type DeleteService struct {
-	repo Repository
-}
+	DeleteService struct {
+		repo ServiceRepository
+	}
+)
 
-func NewDeleteService(repo Repository) *DeleteService {
+func NewDeleteService(repo ServiceRepository) *DeleteService {
 	return &DeleteService{repo: repo}
 }
 

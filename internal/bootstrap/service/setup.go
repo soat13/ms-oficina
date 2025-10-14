@@ -11,18 +11,16 @@ func SetupDefault(container *bootstrap.Container) {
 	Setup(container, nil)
 }
 
-func Setup(container *bootstrap.Container, repository serviceApp.Repository) {
-
+func Setup(container *bootstrap.Container, repository serviceApp.ServiceRepository) {
 	if repository == nil {
-		repository = serviceDB.NewBunRepository(container.DB)
+		repository = serviceDB.NewBunServiceRepository(container.DB)
 	}
 
-	serviceRepository := serviceDB.NewBunRepository(container.DB)
-	createService := serviceApp.NewCreateService(serviceRepository)
-	updateService := serviceApp.NewUpdateService(serviceRepository)
-	deleteService := serviceApp.NewDeleteService(serviceRepository)
-	getService := serviceApp.NewGetService(serviceRepository)
-	listService := serviceApp.NewListServices(serviceRepository)
+	createService := serviceApp.NewCreateService(repository)
+	updateService := serviceApp.NewUpdateService(repository)
+	deleteService := serviceApp.NewDeleteService(repository)
+	getService := serviceApp.NewGetService(repository)
+	listService := serviceApp.NewListServices(repository)
 
 	serviceHttpHandler := serviceHTTP.NewHandler(
 		createService,
