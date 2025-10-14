@@ -19,17 +19,24 @@ type Middleware struct {
 	tokens            authApp.TokenService
 	errorHandler      *fiberHelper.ErrorHandler
 	protectedPrefixes []string
+	publicRoutes      []PublicRoute
 }
 
-func NewMiddleware(tokens authApp.TokenService, errorHandler *fiberHelper.ErrorHandler, prefixes []string) *Middleware {
+type PublicRoute struct {
+	Method string
+	Path   string
+}
+
+func NewMiddleware(tokens authApp.TokenService, errorHandler *fiberHelper.ErrorHandler, prefixes []string, publicRoutes []PublicRoute) *Middleware {
 	if len(prefixes) == 0 {
-		prefixes = []string{"/admin"}
+		prefixes = []string{"/"}
 	}
 
 	m := &Middleware{
 		tokens:            tokens,
 		errorHandler:      errorHandler,
-		protectedPrefixes: prefixes,
+		protectedPrefixes: normalizePrefixes(prefixes),
+		publicRoutes:      normalizePublicRoutes(publicRoutes),
 	}
 
 	m.errorHandler.ErrorResolver.RegisterHTTPUnauthorizedError(authDomain.ErrMissingToken)
@@ -40,7 +47,7 @@ func NewMiddleware(tokens authApp.TokenService, errorHandler *fiberHelper.ErrorH
 }
 
 func (m *Middleware) Handle(ctx *fiber.Ctx) error {
-	if !m.shouldProtect(ctx.Path()) {
+	if !m.shouldProtect(ctx.Method(), ctx.Path()) {
 		return ctx.Next()
 	}
 
@@ -65,9 +72,22 @@ func (m *Middleware) Handle(ctx *fiber.Ctx) error {
 	return ctx.Next()
 }
 
-func (m *Middleware) shouldProtect(path string) bool {
+func (m *Middleware) shouldProtect(method, path string) bool {
+	if strings.EqualFold(method, fiber.MethodOptions) {
+		return false
+	}
+
+	requestPath := normalizePath(path)
+	requestMethod := strings.ToUpper(method)
+
+	for _, route := range m.publicRoutes {
+		if route.matches(requestMethod, requestPath) {
+			return false
+		}
+	}
+
 	for _, prefix := range m.protectedPrefixes {
-		if strings.HasPrefix(path, prefix) {
+		if strings.HasPrefix(requestPath, prefix) {
 			return true
 		}
 	}
@@ -86,4 +106,46 @@ func extractBearerToken(header string) (string, error) {
 		return "", authDomain.ErrInvalidToken
 	}
 	return parts[1], nil
+}
+
+func normalizePrefixes(prefixes []string) []string {
+	out := make([]string, 0, len(prefixes))
+	for _, prefix := range prefixes {
+		out = append(out, normalizePath(prefix))
+	}
+	return out
+}
+
+func normalizePublicRoutes(routes []PublicRoute) []PublicRoute {
+	out := make([]PublicRoute, 0, len(routes))
+	for _, route := range routes {
+		out = append(out, PublicRoute{
+			Method: strings.ToUpper(route.Method),
+			Path:   normalizePath(route.Path),
+		})
+	}
+	return out
+}
+
+func normalizePath(path string) string {
+	if path == "" {
+		return "/"
+	}
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	if len(path) > 1 && strings.HasSuffix(path, "/") {
+		path = strings.TrimSuffix(path, "/")
+	}
+	return path
+}
+
+func (r PublicRoute) matches(method, path string) bool {
+	if r.Path != path {
+		return false
+	}
+	if strings.TrimSpace(r.Method) == "" {
+		return true
+	}
+	return r.Method == method
 }
