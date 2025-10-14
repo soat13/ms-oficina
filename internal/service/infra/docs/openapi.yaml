@@ -2,35 +2,39 @@ openapi: "3.0.3"
 info:
   title: Oficina API
   version: 1.0.0
-  description: |
+  description: |-
     API da Oficina (Fase 1).
 
-    Esta especificação documenta os endpoints HTTP atuais, seguindo as camadas e decisões de DDD do projeto.
-
-    Observações:
-    - O grupo de rotas de serviços é exposto sob `/admin/services`.
-    - A criação de orçamento (estimate) é feita a partir de uma ordem de serviço específica.
-    - As rotas que exigem autenticação JWT estão identificadas com o requisito de segurança `bearerAuth`. Cadastre o token através do botão **Authorize** usando `Bearer <token>` após obter um `access_token` em `/auth/login`.
+    Utilize `POST /auth/login` para obter um token JWT e, em seguida, informe `Bearer <token>` no cabeçalho `Authorization` ao chamar as rotas protegidas. No Swagger UI, use o botão **Authorize** para registrar o token.
 servers:
   - url: http://localhost:8080
     description: Ambiente local (PORT=8080)
+security:
+  - bearerAuth: []
 tags:
   - name: Auth
-    description: Fluxo de autenticação e emissão de JWT
+    description: Fluxo de autenticação e emissão de tokens JWT.
+  - name: Users
+    description: Administração de usuários internos.
+  - name: Customers
+    description: Cadastro de clientes.
+  - name: Vehicles
+    description: Cadastro de veículos vinculados a clientes.
   - name: Services
-    description: Catálogo de serviços (admin)
+    description: Catálogo de serviços oferecidos.
   - name: Products
-    description: Catálogo de produtos (admin)
-  - name: Estimates
-    description: Orçamentos gerados a partir de ordens de serviço
+    description: Catálogo de produtos e controle de estoque.
   - name: Repair Orders
-    description: Transição de status das ordens de reparo (admin)
+    description: Gerenciamento das ordens de reparo.
+  - name: Estimates
+    description: Orçamentos gerados a partir de ordens de reparo.
 paths:
   /auth/login:
     post:
       tags: [Auth]
       summary: Autenticar usuário
-      description: Retorna um token JWT válido para acessar as rotas protegidas (`/admin/**`).
+      description: Retorna um token JWT válido para acessar as rotas protegidas.
+      security: []
       requestBody:
         required: true
         content:
@@ -42,915 +46,835 @@ paths:
               password: password123
       responses:
         '200':
-          description: Autenticação realizada com sucesso
+          description: Autenticação realizada com sucesso.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
-              example:
-                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                token_type: Bearer
-                expires_in: 3600
-                expires_at: 2024-12-31T12:00:00Z
-                user:
-                  id: d290f1ee-6c54-4b01-90e6-d701748f0851
-                  name: Admin User
-                  email: admin@example.com
-                  roles: [manager, attendant]
         '400':
-          description: JSON inválido
+          description: Corpo JSON inválido.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_JSON
-                message: invalid JSON body
         '401':
-          description: Credenciais inválidas
+          description: Credenciais inválidas.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_CREDENTIALS
-                message: invalid credentials
   /admin/services:
     get:
       tags: [Services]
       summary: Listar serviços
-      description: Lista serviços com paginação simples por `limit` e `offset`.
-      security:
-        - bearerAuth: []
       parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 50
-            minimum: 1
-          description: Número máximo de itens retornados.
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          description: Deslocamento para paginação.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
       responses:
         '200':
-          description: Lista de serviços
+          description: Lista de serviços.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServicesResponse'
-              example:
-                services:
-                  - id: "7e9f2c3a-4b5d-4c0e-9f3b-1a2b3c4d5e6f"
-                    name: "Alinhamento e Balanceamento"
-                    price_cents: 12000
-                    currency: "BRL"
-                  - id: "2d6b1a8f-9c4e-47f2-a1bc-1234567890ab"
-                    name: "Troca de Óleo"
-                    price_cents: 9000
-                    currency: "BRL"
+                $ref: '#/components/schemas/ServiceListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
     post:
       tags: [Services]
       summary: Criar serviço
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ServiceCreateRequest'
-            example:
-              name: "Alinhamento e Balanceamento"
-              price_cents: 12000
-              currency: "BRL"
       responses:
         '201':
-          description: Serviço criado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceResponse'
-              example:
-                service:
-                  id: "7e9f2c3a-4b5d-4c0e-9f3b-1a2b3c4d5e6f"
-                  name: "Alinhamento e Balanceamento"
-                  price_cents: 12000
-                  currency: "BRL"
+          description: Serviço criado.
         '400':
-          description: JSON inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_JSON
-                message: invalid JSON body
-        '422':
-          description: Validação de corpo inválida
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_BODY
-                message: "name: must be at least 3 characters"
+          $ref: '#/components/responses/InvalidJSONResponse'
         '409':
-          description: Serviço já existe (nome duplicado)
+          description: Serviço com mesmo nome já cadastrado.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: SERVICE_ALREADY_EXISTS
-                message: service with this name already exists
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-  /admin/products:
-    get:
-      tags: [Products]
-      summary: Listar produtos
-      description: Lista produtos com paginação simples por `limit` e `offset`.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 50
-            minimum: 1
-          description: Número máximo de itens retornados.
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          description: Deslocamento para paginação.
-      responses:
-        '200':
-          description: Lista de produtos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductsResponse'
-              example:
-                products:
-                  - id: "7fdcb813-62ad-4d6d-80f5-750a6c31a808"
-                    name: "Óleo Sintético 5W30"
-                    price: 9500
-                    stock: 25
-                  - id: "0d8a4e57-c26f-4d67-910f-9a1fab5b52c4"
-                    name: "Filtro de Óleo"
-                    price: 4500
-                    stock: 12
-    post:
-      tags: [Products]
-      summary: Criar produto
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductCreateRequest'
-            example:
-              name: "Filtro de Cabine"
-              price: 3800
-              stock: 8
-      responses:
-        '201':
-          description: Produto criado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-              example:
-                product:
-                  id: "51f5e7da-b1cf-4bf6-8ec1-6a26dd4043ed"
-                  name: "Filtro de Cabine"
-                  price: 3800
-                  stock: 8
-        '400':
-          description: JSON inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_JSON
-                message: invalid JSON body
         '422':
-          description: Validação de corpo inválida
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_BODY
-                message: "name: must be at least 3 characters"
-        '409':
-          description: Produto já existe (nome duplicado)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: PRODUCT_ALREADY_EXISTS
-                message: product.duplicate
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-  /admin/products/{id}:
-    get:
-      tags: [Products]
-      summary: Obter produto por ID
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Produto encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-              example:
-                product:
-                  id: "51f5e7da-b1cf-4bf6-8ec1-6a26dd4043ed"
-                  name: "Filtro de Cabine"
-                  price: 3800
-                  stock: 8
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '404':
-          description: Produto não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: PRODUCT_NOT_FOUND
-                message: product.not_found
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-    patch:
-      tags: [Products]
-      summary: Atualizar produto
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductUpdateRequest'
-            example:
-              name: "Óleo Sintético Premium"
-              price: 11000
-              stock: 30
-      responses:
-        '200':
-          description: Produto atualizado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-              example:
-                product:
-                  id: "7fdcb813-62ad-4d6d-80f5-750a6c31a808"
-                  name: "Óleo Sintético Premium"
-                  price: 11000
-                  stock: 30
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '404':
-          description: Produto não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: PRODUCT_NOT_FOUND
-                message: product.not_found
-        '422':
-          description: Validação de corpo inválida
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_BODY
-                message: "price: must be greater than 0"
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-    delete:
-      tags: [Products]
-      summary: Remover produto
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Produto removido
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
   /admin/services/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
     get:
       tags: [Services]
       summary: Obter serviço por ID
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '200':
-          description: Serviço encontrado
+          description: Serviço encontrado.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServiceResponse'
-              example:
-                service:
-                  id: "7e9f2c3a-4b5d-4c0e-9f3b-1a2b3c4d5e6f"
-                  name: "Alinhamento e Balanceamento"
-                  price_cents: 12000
-                  currency: "BRL"
+                $ref: '#/components/schemas/Service'
         '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Serviço não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: SERVICE_NOT_FOUND
-                message: service not found
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-    put:
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    patch:
       tags: [Services]
       summary: Atualizar serviço
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ServiceUpdateRequest'
-            example:
-              name: "Revisão Completa"
-              price_cents: 15000
       responses:
-        '200':
-          description: Serviço atualizado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceResponse'
-              example:
-                service:
-                  id: "7e9f2c3a-4b5d-4c0e-9f3b-1a2b3c4d5e6f"
-                  name: "Revisão Completa"
-                  price_cents: 15000
-                  currency: "BRL"
+        '204':
+          description: Serviço atualizado.
         '400':
-          description: ID/JSON inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_JSON
-                message: invalid JSON body
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Serviço não encontrado
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Serviço com mesmo nome já cadastrado.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: SERVICE_NOT_FOUND
-                message: service not found
         '422':
-          description: Validação de corpo inválida
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_BODY
-                message: "price_cents: must be greater than 0"
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
     delete:
       tags: [Services]
       summary: Remover serviço
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '204':
-          description: Removido com sucesso
+          description: Serviço removido.
         '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Serviço não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: SERVICE_NOT_FOUND
-                message: service not found
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
-  /admin/repair-orders/{id}/estimate:
-    post:
-      tags: [Estimates]
-      summary: Criar orçamento a partir de ordem de serviço
-      security:
-        - bearerAuth: []
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/products:
+    get:
+      tags: [Products]
+      summary: Listar produtos
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de serviço (repair order)
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Lista de produtos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    post:
+      tags: [Products]
+      summary: Criar produto
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEstimateRequest'
-            example:
-              products:
-                - id: "11111111-2222-3333-4444-555555555555"
-                  quantity: 2
-              services:
-                - id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-                  quantity: 1
+              $ref: '#/components/schemas/ProductCreateRequest'
       responses:
         '201':
-          description: Orçamento criado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateEstimateResponse'
-              example:
-                Estimate:
-                  ID: "0f3b4a2e-7c1d-4b9b-8f1e-abcdefabcdef"
-                  RepairOrderID: "123e4567-e89b-12d3-a456-426614174000"
-                  Total:
-                    Cents: 33000
+          description: Produto criado.
         '400':
-          description: ID da ordem inválido ou JSON inválido
+          $ref: '#/components/responses/InvalidJSONResponse'
+        '409':
+          description: Produto com mesmo nome já cadastrado.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_ID
-                message: invalid repair order id
-        '404':
-          description: Ordem de serviço não encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
         '422':
-          description: Status inválido da ordem de serviço
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/products/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    get:
+      tags: [Products]
+      summary: Obter produto por ID
+      responses:
+        '200':
+          description: Produto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    patch:
+      tags: [Products]
+      summary: Atualizar produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+      responses:
+        '204':
+          description: Produto atualizado.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Produto com mesmo nome já cadastrado.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
-        '500':
-          description: Erro interno
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    delete:
+      tags: [Products]
+      summary: Remover produto
+      responses:
+        '204':
+          description: Produto removido.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/customers:
+    get:
+      tags: [Customers]
+      summary: Listar clientes
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Lista de clientes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    post:
+      tags: [Customers]
+      summary: Criar cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreateRequest'
+      responses:
+        '201':
+          description: Cliente criado.
+        '400':
+          $ref: '#/components/responses/InvalidJSONResponse'
+        '409':
+          description: Documento ou e-mail já cadastrados.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/customers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    get:
+      tags: [Customers]
+      summary: Obter cliente por ID
+      responses:
+        '200':
+          description: Cliente encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    patch:
+      tags: [Customers]
+      summary: Atualizar cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateRequest'
+      responses:
+        '204':
+          description: Cliente atualizado.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Documento ou e-mail já cadastrados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    delete:
+      tags: [Customers]
+      summary: Remover cliente
+      responses:
+        '204':
+          description: Cliente removido.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/customers/{customerId}/vehicles:
+    parameters:
+      - $ref: '#/components/parameters/CustomerIdParam'
+    get:
+      tags: [Vehicles]
+      summary: Listar veículos por cliente
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Veículos do cliente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleListResponse'
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+  /admin/vehicles:
+    get:
+      tags: [Vehicles]
+      summary: Listar veículos
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Lista de veículos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    post:
+      tags: [Vehicles]
+      summary: Criar veículo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCreateRequest'
+      responses:
+        '201':
+          description: Veículo criado.
+        '400':
+          $ref: '#/components/responses/InvalidJSONResponse'
+        '409':
+          description: Placa já cadastrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/vehicles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    get:
+      tags: [Vehicles]
+      summary: Obter veículo por ID
+      responses:
+        '200':
+          description: Veículo encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    patch:
+      tags: [Vehicles]
+      summary: Atualizar veículo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleUpdateRequest'
+      responses:
+        '204':
+          description: Veículo atualizado.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Placa já cadastrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    delete:
+      tags: [Vehicles]
+      summary: Remover veículo
+      responses:
+        '204':
+          description: Veículo removido.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/users:
+    get:
+      tags: [Users]
+      summary: Listar usuários
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Lista de usuários.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    post:
+      tags: [Users]
+      summary: Criar usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Usuário criado.
+        '400':
+          $ref: '#/components/responses/InvalidJSONResponse'
+        '409':
+          description: Documento ou e-mail já cadastrados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    get:
+      tags: [Users]
+      summary: Obter usuário por ID
+      responses:
+        '200':
+          description: Usuário encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    patch:
+      tags: [Users]
+      summary: Atualizar usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '204':
+          description: Usuário atualizado.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Documento ou e-mail já cadastrados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    delete:
+      tags: [Users]
+      summary: Remover usuário
+      responses:
+        '204':
+          description: Usuário removido.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders:
     get:
       tags: [Repair Orders]
       summary: Listar ordens de reparo
-      description: Lista ordens de reparo com paginação simples por `limit` e `offset`.
-      security:
-        - bearerAuth: []
       parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 50
-            minimum: 1
-          description: Número máximo de itens retornados.
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          description: Deslocamento para paginação.
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
       responses:
         '200':
-          description: Lista de ordens de reparo
+          description: Lista de ordens de reparo.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RepairOrdersResponse'
-              example:
-                data:
-                  - id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
-                    customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
-                    vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
-                    status: "approved"
-                    created_at: "2025-10-09T12:00:00Z"
-                    updated_at: "2025-10-09T12:00:00Z"
-                  - id: "2c4a1f56-76b3-4d88-8c2f-5b7e9d1f0c3a"
-                    customer_id: "2e72f0ed-2b32-4a07-a6f8-b21c8df6e2d1"
-                    vehicle_id: "893ab8bb-4f84-487c-9f3f-1f63d5e4b85e"
-                    status: "in_execution"
-                    created_at: "2025-10-10T09:15:00Z"
-                    updated_at: "2025-10-10T09:45:00Z"
-  /admin/repair-orders/{id}:
+                $ref: '#/components/schemas/RepairOrderListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+    post:
+      tags: [Repair Orders]
+      summary: Criar ordem de reparo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepairOrderCreateRequest'
+      responses:
+        '201':
+          description: Ordem de reparo criada.
+        '400':
+          $ref: '#/components/responses/InvalidJSONResponse'
+        '422':
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '404':
+          description: Cliente ou veículo não encontrados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/repair-orders/average-execution-time:
     get:
       tags: [Repair Orders]
-      summary: Consultar ordem de reparo
-      description: Recupera uma ordem de reparo pelo identificador.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
+      summary: Obter tempo médio de execução
       responses:
         '200':
-          description: Ordem de reparo encontrada
+          description: Tempo médio em minutos (pode ser nulo se inexistente).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RepairOrderResponse'
-              example:
-                id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
-                customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
-                vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
-                status: "approved"
-                created_at: "2025-10-09T12:00:00Z"
-                updated_at: "2025-10-09T12:00:00Z"
+                $ref: '#/components/schemas/AverageExecutionTimeResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/repair-orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    get:
+      tags: [Repair Orders]
+      summary: Obter ordem de reparo por ID
+      responses:
+        '200':
+          description: Ordem de reparo encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairOrder'
         '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Ordem de reparo não encontrada
+          $ref: '#/components/responses/NotFoundResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/repair-orders/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Repair Orders]
+      summary: Cancelar ordem de reparo
+      responses:
+        '204':
+          description: Ordem cancelada.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Transição de status não permitida.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/start-execution:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
     post:
       tags: [Repair Orders]
-      summary: Iniciar execução da ordem de reparo
-      description: Move a ordem de reparo do estado aprovado para em execução.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
+      summary: Iniciar execução da ordem
       responses:
         '204':
-          description: Execução iniciada com sucesso
+          description: Execução iniciada.
         '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Ordem de reparo não encontrada
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Transição de status não permitida.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
-        '422':
-          description: Estado da ordem não permite iniciar execução
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/finish-execution:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
     post:
       tags: [Repair Orders]
-      summary: Finalizar execução da ordem de reparo
-      description: Move a ordem de reparo de em execução para finalizada.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
+      summary: Finalizar execução da ordem
       responses:
         '204':
-          description: Execução finalizada
+          description: Execução finalizada.
         '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Ordem de reparo não encontrada
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Transição de status não permitida.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
-        '422':
-          description: Estado da ordem não permite finalizar execução
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/release-vehicle:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
     post:
       tags: [Repair Orders]
-      summary: Liberar veículo ao cliente
-      description: Atualiza a ordem de reparo finalizada para liberada.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID da ordem de reparo
+      summary: Liberar veículo
       responses:
         '204':
-          description: Veículo liberado
+          description: Veículo liberado.
         '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
+          $ref: '#/components/responses/InvalidIDResponse'
         '404':
-          description: Ordem de reparo não encontrada
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Transição de status não permitida.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: REPAIR_ORDER_NOT_FOUND
-                message: repair order not found
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/repair-orders/{id}/estimate:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Estimates]
+      summary: Criar orçamento para ordem de reparo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstimateCreateRequest'
+      responses:
+        '201':
+          description: Orçamento criado.
+        '400':
+          $ref: '#/components/responses/InvalidJSONResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
         '422':
-          description: Estado da ordem não permite liberar veículo
+          $ref: '#/components/responses/InvalidBodyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/estimates/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Estimates]
+      summary: Aprovar orçamento
+      responses:
+        '200':
+          description: Orçamento aprovado.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Transição de status não permitida.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_REPAIR_ORDER_STATUS
-                message: invalid repair order status
-        '500':
-          description: Erro interno
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+  /admin/estimates/{id}/reject:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Estimates]
+      summary: Rejeitar orçamento
+      responses:
+        '200':
+          description: Orçamento rejeitado.
+        '400':
+          $ref: '#/components/responses/InvalidIDResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          description: Transição de status não permitida.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Forneça o token no formato `Bearer <token>`.
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      description: Número máximo de registros a retornar.
+      schema:
+        type: integer
+        minimum: 1
+        default: 50
+    OffsetParam:
+      name: offset
+      in: query
+      description: Quantidade de registros a ignorar antes de retornar resultados.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    ResourceIdParam:
+      name: id
+      in: path
+      required: true
+      description: Identificador do recurso.
+      schema:
+        type: string
+        format: uuid
+    CustomerIdParam:
+      name: customerId
+      in: path
+      required: true
+      description: Identificador do cliente.
+      schema:
+        type: string
+        format: uuid
+  responses:
+    UnauthorizedResponse:
+      description: Token ausente ou inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidJSONResponse:
+      description: Corpo JSON inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidBodyResponse:
+      description: Falha de validação no corpo da requisição.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidIDResponse:
+      description: Identificador inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundResponse:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     Error:
       type: object
+      required: [code, message]
       properties:
         code:
           type: string
-          example: INVALID_BODY
+          example: INVALID_JSON
         message:
           type: string
           example: invalid JSON body
-      required: [code, message]
     LoginRequest:
       type: object
+      required: [email, password]
       properties:
         email:
           type: string
@@ -958,12 +882,9 @@ components:
         password:
           type: string
           minLength: 8
-      required: [email, password]
-      example:
-        email: admin@example.com
-        password: password123
     AuthenticatedUser:
       type: object
+      required: [id, name, email, roles]
       properties:
         id:
           type: string
@@ -977,14 +898,9 @@ components:
           type: array
           items:
             type: string
-      required: [id, name, email, roles]
-      example:
-        id: d290f1ee-6c54-4b01-90e6-d701748f0851
-        name: Admin User
-        email: admin@example.com
-        roles: [manager]
     LoginResponse:
       type: object
+      required: [access_token, token_type, expires_in, expires_at, user]
       properties:
         access_token:
           type: string
@@ -994,111 +910,293 @@ components:
         expires_in:
           type: integer
           format: int64
-          description: Tempo em segundos até a expiração
+          description: Tempo (em segundos) até a expiração do token.
         expires_at:
           type: string
           format: date-time
         user:
           $ref: '#/components/schemas/AuthenticatedUser'
-      required: [access_token, token_type, expires_in, expires_at, user]
-      example:
-        access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        token_type: Bearer
-        expires_in: 3600
-        expires_at: 2024-12-31T12:00:00Z
-        user:
-          id: d290f1ee-6c54-4b01-90e6-d701748f0851
-          name: Admin User
-          email: admin@example.com
-          roles: [manager, attendant]
     Service:
       type: object
+      required: [id, name, price]
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
-          minLength: 3
-        price_cents:
+        price:
           type: integer
           format: int64
-          minimum: 1
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-          example: BRL
-      required: [id, name, price_cents, currency]
+          description: Preço do serviço em centavos (BRL).
     ServiceCreateRequest:
       type: object
+      required: [name, price]
       properties:
         name:
           type: string
           minLength: 3
-        price_cents:
+        price:
           type: integer
           format: int64
           minimum: 1
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-          description: Código da moeda (padrão BRL)
-      required: [name, price_cents]
-      example:
-        name: "Alinhamento e Balanceamento"
-        price_cents: 12000
-        currency: "BRL"
+          description: Preço do serviço em centavos (BRL).
     ServiceUpdateRequest:
       type: object
       properties:
         name:
           type: string
           minLength: 3
-        price_cents:
+        price:
           type: integer
           format: int64
           minimum: 1
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-      example:
-        name: "Revisão Completa"
-        price_cents: 15000
-    ServiceResponse:
+          description: Preço do serviço em centavos (BRL).
+    ServiceListResponse:
       type: object
+      required: [data]
       properties:
-        service:
-          $ref: '#/components/schemas/Service'
-      required: [service]
-      example:
-        service:
-          id: "7e9f2c3a-4b5d-4c0e-9f3b-1a2b3c4d5e6f"
-          name: "Alinhamento e Balanceamento"
-          price_cents: 12000
-          currency: "BRL"
-    ServicesResponse:
-      type: object
-      properties:
-        services:
+        data:
           type: array
           items:
             $ref: '#/components/schemas/Service'
-      required: [services]
-      example:
-        services:
-          - id: "7e9f2c3a-4b5d-4c0e-9f3b-1a2b3c4d5e6f"
-            name: "Alinhamento e Balanceamento"
-            price_cents: 12000
-            currency: "BRL"
-          - id: "2d6b1a8f-9c4e-47f2-a1bc-1234567890ab"
-            name: "Troca de Óleo"
-            price_cents: 9000
-            currency: "BRL"
+    Product:
+      type: object
+      required: [id, name, price, stock]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: integer
+          format: int64
+          description: Preço do produto em centavos (BRL).
+        stock:
+          type: integer
+          minimum: 0
+    ProductCreateRequest:
+      type: object
+      required: [name, price]
+      properties:
+        name:
+          type: string
+          minLength: 3
+        price:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Preço do produto em centavos (BRL).
+        stock:
+          type: integer
+          minimum: 0
+          default: 0
+    ProductUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        price:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Preço do produto em centavos (BRL).
+        stock:
+          type: integer
+          minimum: 0
+    ProductListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    Customer:
+      type: object
+      required: [id, name, document, document_type, email, phone_number]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        document:
+          type: string
+        document_type:
+          type: string
+          description: Tipo de documento (CPF ou CNPJ).
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+    CustomerCreateRequest:
+      type: object
+      required: [name, document, email, phone_number]
+      properties:
+        name:
+          type: string
+          minLength: 3
+        document:
+          type: string
+          description: CPF ou CNPJ sem pontuação.
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+          description: Telefone no formato E.164 ou somente dígitos (mínimo 11).
+    CustomerUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+          description: Telefone atualizado.
+    CustomerListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+    Vehicle:
+      type: object
+      required: [id, customer_id, plate, brand, model, year]
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        plate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+    VehicleCreateRequest:
+      type: object
+      required: [customer_id, plate, brand, model, year]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        plate:
+          type: string
+          description: Placa do veículo.
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+          minimum: 1900
+    VehicleUpdateRequest:
+      type: object
+      properties:
+        plate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+          minimum: 1900
+    VehicleListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vehicle'
+    User:
+      type: object
+      required: [id, name, document, document_type, email, phone_number, roles]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        document:
+          type: string
+        document_type:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+    UserCreateRequest:
+      type: object
+      required: [name, document, email, phone_number, password, roles]
+      properties:
+        name:
+          type: string
+          minLength: 3
+        document:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        roles:
+          type: array
+          minItems: 1
+          items:
+            type: string
+    UserUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        roles:
+          type: array
+          items:
+            type: string
+    UserListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     RepairOrder:
       type: object
+      required: [id, customer_id, vehicle_id, status, created_at, updated_at]
       properties:
         id:
           type: string
@@ -1111,53 +1209,42 @@ components:
           format: uuid
         status:
           type: string
-          description: Status atual da ordem de reparo.
-          enum: [received, in_diagnostics, awaiting_approval, approved, in_execution, finished, released]
+          description: Status atual da ordem (por exemplo, created, in_execution, finished, etc).
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-      required: [id, customer_id, vehicle_id, status, created_at, updated_at]
-    RepairOrderResponse:
+    RepairOrderCreateRequest:
       type: object
+      required: [customer_id, vehicle_id]
       properties:
-        data:
-          $ref: '#/components/schemas/RepairOrder'
-      required: [data]
-      example:
-        data:
-          id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
-          customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
-          vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
-          status: "approved"
-          created_at: "2025-10-09T12:00:00Z"
-          updated_at: "2025-10-09T12:00:00Z"
-    RepairOrdersResponse:
+        customer_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+    RepairOrderListResponse:
       type: object
+      required: [data]
       properties:
         data:
           type: array
           items:
             $ref: '#/components/schemas/RepairOrder'
-      required: [data]
-      example:
-        data:
-          - id: "1f3e1c89-3ad4-4ca9-87a9-0a6f1dcb1e2f"
-            customer_id: "8f61c381-663b-4bf1-93c8-67a0a28cceaf"
-            vehicle_id: "a3b834e2-0d60-4c7d-9fd0-2966b5aa1dba"
-            status: "approved"
-            created_at: "2025-10-09T12:00:00Z"
-            updated_at: "2025-10-09T12:00:00Z"
-          - id: "2c4a1f56-76b3-4d88-8c2f-5b7e9d1f0c3a"
-            customer_id: "2e72f0ed-2b32-4a07-a6f8-b21c8df6e2d1"
-            vehicle_id: "893ab8bb-4f84-487c-9f3f-1f63d5e4b85e"
-            status: "in_execution"
-            created_at: "2025-10-10T09:15:00Z"
-            updated_at: "2025-10-10T09:45:00Z"
-    LinePayload:
+    AverageExecutionTimeResponse:
       type: object
+      properties:
+        AverageMinutes:
+          type: number
+          format: float
+          nullable: true
+          description: Tempo médio de execução das ordens em minutos.
+    EstimateItem:
+      type: object
+      required: [id, quantity]
       properties:
         id:
           type: string
@@ -1165,108 +1252,15 @@ components:
         quantity:
           type: integer
           minimum: 1
-      required: [id, quantity]
-    CreateEstimateRequest:
+    EstimateCreateRequest:
       type: object
-      description: Pelo menos um de `products` ou `services` deve conter itens.
       properties:
         products:
           type: array
           items:
-            $ref: '#/components/schemas/LinePayload'
+            $ref: '#/components/schemas/EstimateItem'
         services:
           type: array
           items:
-            $ref: '#/components/schemas/LinePayload'
-      example:
-        products:
-          - id: "11111111-2222-3333-4444-555555555555"
-            quantity: 2
-        services:
-          - id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-            quantity: 1
-    Money:
-      type: object
-      properties:
-        Cents:
-          type: integer
-          format: int64
-      required: [Cents]
-    Estimate:
-      type: object
-      properties:
-        ID:
-          type: string
-          format: uuid
-        RepairOrderID:
-          type: string
-          format: uuid
-        Total:
-          $ref: '#/components/schemas/Money'
-      required: [ID, RepairOrderID, Total]
-    CreateEstimateResponse:
-      type: object
-      properties:
-        Estimate:
-          $ref: '#/components/schemas/Estimate'
-      required: [Estimate]
-      example:
-        Estimate:
-          ID: "0f3b4a2e-7c1d-4b9b-8f1e-abcdefabcdef"
-          RepairOrderID: "123e4567-e89b-12d3-a456-426614174000"
-          Total:
-            Cents: 33000
-  /admin/estimates/{id}/approve:
-    post:
-      tags: [Estimates]
-      summary: Aprovar orçamento
-      description: Transiciona o orçamento para aguardando baixa de estoque e atualiza o status da ordem de reparo.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID do orçamento a ser aprovado
-      responses:
-        '200':
-          description: Orçamento aprovado
-        '400':
-          description: ID inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ID
-                message: invalid id
-        '404':
-          description: Orçamento não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: ESTIMATE_NOT_FOUND
-                message: estimate not found
-        '422':
-          description: Estado inválido para aprovação
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INVALID_ESTIMATE_STATE
-                message: estimate cannot be approved in current state
-        '500':
-          description: Erro interno
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: INTERNAL_ERROR
-                message: internal error
+            $ref: '#/components/schemas/EstimateItem'
+      description: É necessário informar ao menos um produto ou serviço para gerar o orçamento.
