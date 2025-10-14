@@ -17,11 +17,11 @@ type (
 	estimateModel struct {
 		bun.BaseModel `bun:"table:estimates"`
 
-		ID            uuid.UUID     `bun:"id,pk,type:uuid"`
-		RepairOrderID uuid.UUID     `bun:"repair_order_id,type:uuid,notnull"`
-		Status        domain.Status `bun:"status,notnull"`
-		CreatedAt     time.Time     `bun:"created_at,nullzero,default:now()"`
-		UpdatedAt     time.Time     `bun:"updated_at,nullzero,default:now()"`
+		ID            uuid.UUID `bun:"id,pk,type:uuid"`
+		RepairOrderID uuid.UUID `bun:"repair_order_id,type:uuid,notnull"`
+		Status        string    `bun:"status,notnull"`
+		CreatedAt     time.Time `bun:"created_at,nullzero,default:now()"`
+		UpdatedAt     time.Time `bun:"updated_at,nullzero,default:now()"`
 	}
 
 	estimateItemModel struct {
@@ -99,7 +99,7 @@ func (r *BunRepository) Save(ctx context.Context, estimate *domain.Estimate) err
 	estimateModel := estimateModel{
 		ID:            estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
-		Status:        estimate.Status,
+		Status:        string(estimate.Status),
 		UpdatedAt:     time.Now(),
 	}
 
@@ -172,7 +172,7 @@ func toModel(estimate *domain.Estimate) *estimateModel {
 	return &estimateModel{
 		ID:            estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
-		Status:        estimate.Status,
+		Status:        string(estimate.Status),
 		CreatedAt:     estimate.CreatedAt,
 		UpdatedAt:     estimate.UpdatedAt,
 	}
