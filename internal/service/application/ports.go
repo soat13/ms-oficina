@@ -5,8 +5,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/service/domain"
+	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
+
+type ServiceView struct {
+	ID    uuid.UUID
+	Name  string
+	Price money.Money
+}
 
 func toView(s *domain.Service) ServiceView {
 	return ServiceView{
@@ -16,7 +23,7 @@ func toView(s *domain.Service) ServiceView {
 	}
 }
 
-type Repository interface {
+type ServiceRepository interface {
 	Create(ctx context.Context, s *domain.Service) error
 	Update(ctx context.Context, s *domain.Service) error
 	Delete(ctx context.Context, id uuid.UUID) error

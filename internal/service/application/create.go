@@ -9,47 +9,35 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
 
-type CreateInput struct {
-	Name  string
-	Price money.Money
-	Now   time.Time
-}
+type (
+	CreateInput struct {
+		Name  string
+		Price money.Money
+		Now   time.Time
+	}
 
-type ServiceView struct {
-	ID    uuid.UUID   `json:"id"`
-	Name  string      `json:"name"`
-	Price money.Money `json:"price"`
-}
+	CreateService struct {
+		repo ServiceRepository
+	}
+)
 
-type CreateOutput struct {
-	Service ServiceView `json:"service"`
-}
-
-type CreateService struct {
-	repo Repository
-}
-
-func NewCreateService(repo Repository) *CreateService {
+func NewCreateService(repo ServiceRepository) *CreateService {
 	return &CreateService{repo: repo}
 }
 
-func (uc *CreateService) Execute(ctx context.Context, input CreateInput) (*CreateOutput, error) {
+func (uc *CreateService) Execute(ctx context.Context, input CreateInput) error {
 	exists, err := uc.repo.ExistsByName(ctx, input.Name)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if exists {
-		return nil, ErrDuplicateService
+		return ErrDuplicateService
 	}
 
-	s, err := domain.NewService(uuid.Nil, input.Name, input.Price, input.Now, input.Now)
+	service, err := domain.NewService(uuid.Nil, input.Name, input.Price, input.Now, input.Now)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if err := uc.repo.Create(ctx, s); err != nil {
-		return nil, err
-	}
-
-	return &CreateOutput{Service: toView(s)}, nil
+	return uc.repo.Create(ctx, service)
 }

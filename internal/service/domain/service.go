@@ -39,13 +39,13 @@ func NewService(id uuid.UUID, name string, price money.Money, CratedAt, UpdatedA
 	return service, nil
 }
 
-func (s *Service) Rename(newName string, now time.Time) error {
+func (s *Service) Rename(newName string) error {
 	newName = strings.TrimSpace(newName)
 	if len(newName) < 3 {
 		return ErrInvalidServiceName
 	}
 	s.Name = newName
-	s.UpdatedAt = now
+	s.Touch()
 	return nil
 }
 
