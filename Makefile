@@ -1,6 +1,12 @@
 .PHONY: install up down run test test-coverage mod vendor tidy fmt lint sh \
         migrate-up migrate-down migrate-status seed-up sonar sonar-analysis
 
+# Load .env file if it exists
+ifneq (,$(wildcard .env))
+    include .env
+    export
+endif
+
 # Infra
 up:
 	@if [ ! -f .env ]; then cp .env-example .env; fi
@@ -86,9 +92,12 @@ mock: mockgen-install
 # -------------------------------
 # SonarQube Analysis
 # -------------------------------
-SONAR_TOKEN ?= sqp_99e63549a1cd754cafb31b7d906aa31e95347e1d
 
 sonar:
+	@if [ -z "$(SONAR_TOKEN)" ]; then \
+		echo "Error: SONAR_TOKEN is not set. Please set it in your .env file."; \
+		exit 1; \
+	fi
 	make test-coverage
 	sonar-scanner \
 		-D"sonar.projectKey=oficina" \

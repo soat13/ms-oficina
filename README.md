@@ -128,10 +128,16 @@ Este comando:
 - Gera o relatório de coverage (`coverage.out`)
 - Envia a análise para o SonarQube (http://localhost:9000)
 
+**Configuração:**
+1. Certifique-se de que o SonarQube está rodando: `docker compose up -d sonarqube`
+2. Acesse http://localhost:9000 (login: `admin` / senha: `admin`)
+3. Gere um token de autenticação em **My Account → Security → Generate Token**
+4. Adicione o token no arquivo `.env`: `SONAR_TOKEN=seu_token_aqui`
+
 **Observações:**
 - Os testes de integração sobem um banco isolado por teste e aplicam migrações automaticamente
 - O coverage inclui código testado pelos testes de integração em `tests/integration/`
-- O SonarQube deve estar rodando localmente na porta 9000
+- O `SONAR_TOKEN` deve estar definido no arquivo `.env` (não commitado no git)
 
 ## Comandos úteis
 - `make migrate-status` — status das migrações
