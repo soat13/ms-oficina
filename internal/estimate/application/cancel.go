@@ -28,9 +28,8 @@ func NewCancelEstimate(repository Repository, eventBus eventbus.Bus) *Cancel {
 func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {
 	estimate, err := a.repository.GetByID(ctx, input.ID)
 	if err != nil {
-		return ErrEstimateNotFound
+		return err
 	}
-
 	if estimate == nil {
 		return ErrEstimateNotFound
 	}

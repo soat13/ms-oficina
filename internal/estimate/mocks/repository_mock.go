@@ -88,6 +88,14 @@ func (m *MockRepository) SaveIfAwaitingStock(ctx context.Context, estimate *doma
 	return ret0
 }
 
+// SaveIfAwaitingApproval mocks base method.
+func (m *MockRepository) SaveIfAwaitingApproval(ctx context.Context, estimate *domain.Estimate) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfAwaitingApproval", ctx, estimate)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
 // SaveIfAwaitingStock indicates an expected call of SaveIfAwaitingStock.
 func (mr *MockRepositoryMockRecorder) SaveIfAwaitingStock(ctx, estimate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()

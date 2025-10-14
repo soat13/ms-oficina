@@ -13,5 +13,6 @@ type (
 		GetByRepairOrderID(ctx context.Context, repairOrderID uuid.UUID) (*domain.Estimate, error)
 		Save(ctx context.Context, estimate *domain.Estimate) error
 		SaveIfAwaitingStock(ctx context.Context, estimate *domain.Estimate) error
+		SaveIfAwaitingApproval(ctx context.Context, estimate *domain.Estimate) error
 	}
 )
