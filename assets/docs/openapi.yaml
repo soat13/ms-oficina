@@ -93,14 +93,6 @@ paths:
           description: Serviço criado.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '409':
-          description: Serviço com mesmo nome já cadastrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/services/{id}:
@@ -118,8 +110,6 @@ paths:
                 $ref: '#/components/schemas/Service'
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     patch:
@@ -136,16 +126,6 @@ paths:
           description: Serviço atualizado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Serviço com mesmo nome já cadastrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     delete:
@@ -156,8 +136,6 @@ paths:
           description: Serviço removido.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/products:
@@ -190,14 +168,6 @@ paths:
           description: Produto criado.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '409':
-          description: Produto com mesmo nome já cadastrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/products/{id}:
@@ -215,8 +185,6 @@ paths:
                 $ref: '#/components/schemas/Product'
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     patch:
@@ -233,16 +201,6 @@ paths:
           description: Produto atualizado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Produto com mesmo nome já cadastrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     delete:
@@ -253,8 +211,6 @@ paths:
           description: Produto removido.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/customers:
@@ -287,14 +243,6 @@ paths:
           description: Cliente criado.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '409':
-          description: Documento ou e-mail já cadastrados.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/customers/{id}:
@@ -312,8 +260,6 @@ paths:
                 $ref: '#/components/schemas/Customer'
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     patch:
@@ -330,16 +276,6 @@ paths:
           description: Cliente atualizado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Documento ou e-mail já cadastrados.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     delete:
@@ -350,8 +286,6 @@ paths:
           description: Cliente removido.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/customers/{customerId}/vehicles:
@@ -374,8 +308,6 @@ paths:
           $ref: '#/components/responses/InvalidIDResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
   /admin/vehicles:
     get:
       tags: [Vehicles]
@@ -406,14 +338,6 @@ paths:
           description: Veículo criado.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '409':
-          description: Placa já cadastrada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/vehicles/{id}:
@@ -431,8 +355,6 @@ paths:
                 $ref: '#/components/schemas/Vehicle'
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     patch:
@@ -449,16 +371,6 @@ paths:
           description: Veículo atualizado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Placa já cadastrada.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     delete:
@@ -469,8 +381,6 @@ paths:
           description: Veículo removido.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/users:
@@ -503,14 +413,6 @@ paths:
           description: Usuário criado.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '409':
-          description: Documento ou e-mail já cadastrados.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/users/{id}:
@@ -528,8 +430,6 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     patch:
@@ -546,16 +446,6 @@ paths:
           description: Usuário atualizado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Documento ou e-mail já cadastrados.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
     delete:
@@ -566,8 +456,6 @@ paths:
           description: Usuário removido.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders:
@@ -600,14 +488,6 @@ paths:
           description: Ordem de reparo criada.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
-        '404':
-          description: Cliente ou veículo não encontrados.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/average-execution-time:
@@ -638,8 +518,6 @@ paths:
                 $ref: '#/components/schemas/RepairOrder'
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/cancel:
@@ -653,14 +531,6 @@ paths:
           description: Ordem cancelada.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Transição de status não permitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/start-execution:
@@ -674,14 +544,6 @@ paths:
           description: Execução iniciada.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Transição de status não permitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/finish-execution:
@@ -695,14 +557,6 @@ paths:
           description: Execução finalizada.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Transição de status não permitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/release-vehicle:
@@ -716,14 +570,6 @@ paths:
           description: Veículo liberado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Transição de status não permitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/repair-orders/{id}/estimate:
@@ -743,10 +589,6 @@ paths:
           description: Orçamento criado.
         '400':
           $ref: '#/components/responses/InvalidJSONResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '422':
-          $ref: '#/components/responses/InvalidBodyResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/estimates/{id}/approve:
@@ -760,14 +602,6 @@ paths:
           description: Orçamento aprovado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Transição de status não permitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/estimates/{id}/reject:
@@ -781,14 +615,6 @@ paths:
           description: Orçamento rejeitado.
         '400':
           $ref: '#/components/responses/InvalidIDResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundResponse'
-        '409':
-          description: Transição de status não permitida.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
 components:
