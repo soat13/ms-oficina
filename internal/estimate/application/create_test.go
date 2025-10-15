@@ -1,4 +1,4 @@
-package application
+package application_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	"github.com/soat13/fase-1-oficina/pkg/money"
@@ -29,7 +30,7 @@ func TestCreateStockValidation(t *testing.T) {
 			name:          "Insufficient stock",
 			productStock:  50,
 			requestedQty:  100,
-			expectedError: ErrProductNotAvailable,
+			expectedError: application.ErrProductNotAvailable,
 		},
 		{
 			name:          "Exact stock match",
@@ -41,13 +42,13 @@ func TestCreateStockValidation(t *testing.T) {
 			name:          "Zero stock",
 			productStock:  0,
 			requestedQty:  1,
-			expectedError: ErrProductNotAvailable,
+			expectedError: application.ErrProductNotAvailable,
 		},
 		{
 			name:          "Non-existent product",
 			productStock:  50,
 			requestedQty:  50,
-			expectedError: ErrProductNotAvailable,
+			expectedError: application.ErrProductNotAvailable,
 		},
 	}
 
@@ -57,15 +58,15 @@ func TestCreateStockValidation(t *testing.T) {
 			repairOrderID := uuid.New()
 
 			mockRepairOrderReader := &mockRepairOrderReader{
-				repairOrder: &RepairOrderView{
+				repairOrder: &application.RepairOrderView{
 					ID:     repairOrderID,
 					Status: "in_diagnostics",
 				},
 			}
 
-			var products []CatalogItemView
+			var products []application.CatalogItemView
 			if tt.name != "Non-existent product" {
-				products = []CatalogItemView{
+				products = []application.CatalogItemView{
 					{
 						ID:    productID,
 						Name:  "Test Product",
@@ -80,13 +81,13 @@ func TestCreateStockValidation(t *testing.T) {
 			}
 
 			mockServiceCatalogReader := &mockServiceCatalogReader{
-				services: []CatalogItemView{},
+				services: []application.CatalogItemView{},
 			}
 
 			mockRepository := &mockRepository{}
 			mockEventBus := &mockEventBus{}
 
-			createUseCase := NewCreateEstimate(
+			createUseCase := application.NewCreateEstimate(
 				mockRepairOrderReader,
 				mockProductCatalogReader,
 				mockServiceCatalogReader,
@@ -94,7 +95,7 @@ func TestCreateStockValidation(t *testing.T) {
 				mockEventBus,
 			)
 
-			input := CreateInput{
+			input := application.CreateInput{
 				RepairOrderID: repairOrderID,
 				Products:      map[uuid.UUID]int{productID: tt.requestedQty},
 				Services:      map[uuid.UUID]int{},
@@ -113,26 +114,26 @@ func TestCreateStockValidation(t *testing.T) {
 }
 
 type mockRepairOrderReader struct {
-	repairOrder *RepairOrderView
+	repairOrder *application.RepairOrderView
 }
 
-func (m *mockRepairOrderReader) GetByID(ctx context.Context, id uuid.UUID) (*RepairOrderView, error) {
+func (m *mockRepairOrderReader) GetByID(ctx context.Context, id uuid.UUID) (*application.RepairOrderView, error) {
 	return m.repairOrder, nil
 }
 
 type mockProductCatalogReader struct {
-	products []CatalogItemView
+	products []application.CatalogItemView
 }
 
-func (m *mockProductCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]CatalogItemView, error) {
+func (m *mockProductCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]application.CatalogItemView, error) {
 	return m.products, nil
 }
 
 type mockServiceCatalogReader struct {
-	services []CatalogItemView
+	services []application.CatalogItemView
 }
 
-func (m *mockServiceCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]CatalogItemView, error) {
+func (m *mockServiceCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]application.CatalogItemView, error) {
 	return m.services, nil
 }
 
