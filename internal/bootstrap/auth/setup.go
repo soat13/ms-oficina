@@ -39,6 +39,10 @@ func SetupDefault(container *bootstrap.Container) {
 				Method: fiber.MethodGet,
 				Path:   "/openapi.yaml",
 			},
+			{
+				Method: fiber.MethodGet,
+				Path:   "/favicon.ico",
+			},
 		},
 	}
 	Setup(container, cfg)

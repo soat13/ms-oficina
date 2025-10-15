@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/soat13/fase-1-oficina/assets/docs"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/customer"
@@ -15,7 +16,6 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
-	"github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 )
 
 func main() {
