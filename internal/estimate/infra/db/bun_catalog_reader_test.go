@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCatalogReader_ColumnExpression(t *testing.T) {
+func TestCatalogReaderColumnExpression(t *testing.T) {
 	tests := []struct {
 		name     string
 		table    string
@@ -38,7 +38,7 @@ func TestCatalogReader_ColumnExpression(t *testing.T) {
 	}
 }
 
-func TestCatalogRow_StockHandling(t *testing.T) {
+func TestCatalogRowStockHandling(t *testing.T) {
 	tests := []struct {
 		name     string
 		stock    *int

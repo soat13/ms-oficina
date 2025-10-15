@@ -3,7 +3,7 @@ package application
 import "errors"
 
 var (
-	ErrInvalidRepairOrderStatus = errors.New("estimate.invalid.repair.order.status")
-	ErrEstimateNotFound         = errors.New("estimate.not.found")
-	ErrProductNotAvailable      = errors.New("stock.not.available")
+	ErrInvalidRepairOrderStatus = errors.New("invalid repair order status")
+	ErrEstimateNotFound         = errors.New("estimate not found")
+	ErrProductNotAvailable      = errors.New("product not available")
 )

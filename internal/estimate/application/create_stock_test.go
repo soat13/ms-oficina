@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreate_StockValidation(t *testing.T) {
+func TestCreateStockValidation(t *testing.T) {
 	tests := []struct {
 		name          string
 		productStock  int
@@ -53,11 +53,9 @@ func TestCreate_StockValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup
 			productID := uuid.New()
 			repairOrderID := uuid.New()
 
-			// Mock readers
 			mockRepairOrderReader := &mockRepairOrderReader{
 				repairOrder: &RepairOrderView{
 					ID:     repairOrderID,
@@ -96,7 +94,6 @@ func TestCreate_StockValidation(t *testing.T) {
 				mockEventBus,
 			)
 
-			// Execute
 			input := CreateInput{
 				RepairOrderID: repairOrderID,
 				Products:      map[uuid.UUID]int{productID: tt.requestedQty},
@@ -106,7 +103,6 @@ func TestCreate_StockValidation(t *testing.T) {
 
 			err := createUseCase.Execute(context.Background(), input)
 
-			// Assert
 			if tt.expectedError == nil {
 				assert.NoError(t, err)
 			} else {
@@ -116,7 +112,6 @@ func TestCreate_StockValidation(t *testing.T) {
 	}
 }
 
-// Mock implementations for testing
 type mockRepairOrderReader struct {
 	repairOrder *RepairOrderView
 }
@@ -151,7 +146,15 @@ func (m *mockRepository) SaveIfAwaitingStock(ctx context.Context, estimate *doma
 	return nil
 }
 
+func (m *mockRepository) SaveIfAwaitingApproval(ctx context.Context, estimate *domain.Estimate) error {
+	return nil
+}
+
 func (m *mockRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Estimate, error) {
+	return nil, nil
+}
+
+func (m *mockRepository) GetByRepairOrderID(ctx context.Context, repairOrderID uuid.UUID) (*domain.Estimate, error) {
 	return nil, nil
 }
 
