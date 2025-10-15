@@ -116,10 +116,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	err := h.createUseCase.Execute(ctx.Context(), app.CreateInput{
@@ -157,10 +154,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 	}
 
 	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	err = h.updateUseCase.Execute(ctx.Context(), app.UpdateInput{

@@ -27,7 +27,7 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New())
 
-	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil)
+	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, nil)
 
 	ensureTestJWTConfig()
 	authBootstrap.SetupDefault(container)

@@ -21,19 +21,26 @@ type Handler struct {
 	deleteUseCase *app.DeleteCustomer
 	getUseCase    *app.GetCustomer
 	listUseCase   *app.ListCustomers
-	validate      *validator.Validate
+	validator     *validator.Validate
 	errorHandler  *fiberHelper.ErrorHandler
 }
 
-func NewHandler(create *app.CreateCustomer, update *app.UpdateCustomer, delete *app.DeleteCustomer, get *app.GetCustomer, list *app.ListCustomers, errorHandler *fiberHelper.ErrorHandler) *Handler {
-	validate := validator.New()
+func NewHandler(
+	create *app.CreateCustomer,
+	update *app.UpdateCustomer,
+	delete *app.DeleteCustomer,
+	get *app.GetCustomer,
+	list *app.ListCustomers,
+	validator *validator.Validate,
+	errorHandler *fiberHelper.ErrorHandler,
+) *Handler {
 	handler := &Handler{
 		createUseCase: create,
 		updateUseCase: update,
 		deleteUseCase: delete,
 		getUseCase:    get,
 		listUseCase:   list,
-		validate:      validate,
+		validator:     validator,
 		errorHandler:  errorHandler,
 	}
 
@@ -101,11 +108,8 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&body); err != nil {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
-	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+	if err := h.validator.Struct(body); err != nil {
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	documentVO, err := document.New(body.Document)
@@ -143,11 +147,8 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&body); err != nil {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
-	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+	if err := h.validator.Struct(body); err != nil {
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	var emailVO *email.Email

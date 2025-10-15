@@ -28,6 +28,7 @@ func Setup(container *bootstrap.Container, repository userApp.UserRepository) {
 		deleteUser,
 		getUser,
 		listUsers,
+		container.Validator,
 		container.FiberErrorHandler,
 	)
 
