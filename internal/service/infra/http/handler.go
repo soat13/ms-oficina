@@ -90,10 +90,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	price, err := money.New(body.Price)
@@ -124,10 +121,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	var priceVO *money.Money

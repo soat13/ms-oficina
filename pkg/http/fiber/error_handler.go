@@ -4,25 +4,36 @@ import (
 	"errors"
 	"strconv"
 
+	enLocale "github.com/go-playground/locales/en"
+	"github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
+	enTranslator "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
-
 	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
+	"github.com/soat13/fase-1-oficina/pkg/maps"
 )
 
 type ErrorHandler struct {
-	ErrorResolver *errorHelper.Resolver
+	ErrorResolver        *errorHelper.Resolver
+	validationTranslator ut.Translator
 }
 
-func NewErrorHandler(errorResolver *errorHelper.Resolver) *ErrorHandler {
+func NewErrorHandler(errorResolver *errorHelper.Resolver, validator *validator.Validate) *ErrorHandler {
 
 	if errorResolver == nil {
 		errorResolver = errorHelper.NewErrorResolver()
 	}
 
+	uni := ut.New(enLocale.New(), enLocale.New())
+	translator, _ := uni.GetTranslator("enTranslator")
+	_ = enTranslator.RegisterDefaultTranslations(validator, translator)
+
+	translator, _ = uni.GetTranslator("enTranslator")
+
 	return &ErrorHandler{
-		ErrorResolver: errorResolver,
+		ErrorResolver:        errorResolver,
+		validationTranslator: translator,
 	}
 }
 
@@ -32,7 +43,8 @@ func (e *ErrorHandler) Handle(ctx *fiber.Ctx, err error) error {
 	if errors.As(err, &validationErrors) {
 		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 			"code":    "INVALID_BODY",
-			"message": err.Error(),
+			"message": "Body validation failed",
+			"errors":  e.getValidationErrors(validationErrors),
 		})
 	}
 
@@ -65,4 +77,13 @@ func jsonFromErrorInfo(errorInfo errorHelper.Info) map[string]string {
 		"code":    errorInfo.PublicCode,
 		"message": errorInfo.Message(),
 	}
+}
+
+func (e *ErrorHandler) getValidationErrors(err validator.ValidationErrors) []map[string]string {
+	return maps.Map(err, func(ve validator.FieldError) map[string]string {
+		return map[string]string{
+			"field":   ve.Field(),
+			"message": ve.Translate(e.validationTranslator),
+		}
+	})
 }

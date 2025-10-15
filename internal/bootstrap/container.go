@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -20,17 +21,19 @@ type Container struct {
 	DB                *bun.DB
 	FiberApp          *fiber.App
 	FiberErrorHandler *fiberHelper.ErrorHandler
+	Validator         *validator.Validate
 	EventBus          eventbus.Bus
 }
 
 func BuildDefault() *Container {
-	return Build(nil, nil, nil, nil)
+	return Build(nil, nil, nil, nil, nil)
 }
 
 func Build(
 	bunDB *bun.DB,
 	fiberApp *fiber.App,
 	fiberErrorHandler *fiberHelper.ErrorHandler,
+	structValidator *validator.Validate,
 	EventBus eventbus.Bus,
 ) *Container {
 
@@ -38,8 +41,12 @@ func Build(
 		fiberApp = newApp()
 	}
 
+	if structValidator == nil {
+		structValidator = validator.New()
+	}
+
 	if fiberErrorHandler == nil {
-		fiberErrorHandler = fiberHelper.NewErrorHandler(NewErrorResolver())
+		fiberErrorHandler = fiberHelper.NewErrorHandler(NewErrorResolver(), structValidator)
 	}
 
 	if bunDB == nil {
@@ -54,6 +61,7 @@ func Build(
 		DB:                bunDB,
 		FiberApp:          fiberApp,
 		FiberErrorHandler: fiberErrorHandler,
+		Validator:         structValidator,
 		EventBus:          EventBus,
 	}
 }

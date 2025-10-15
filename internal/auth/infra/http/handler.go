@@ -6,7 +6,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-
 	authApp "github.com/soat13/fase-1-oficina/internal/auth/application"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
@@ -15,15 +14,18 @@ import (
 
 type Handler struct {
 	authenticate *authApp.AuthenticateUser
-	validate     *validator.Validate
+	validator    *validator.Validate
 	errorHandler *fiberHelper.ErrorHandler
 }
 
-func NewHandler(authenticate *authApp.AuthenticateUser, errorHandler *fiberHelper.ErrorHandler) *Handler {
-	validate := validator.New()
+func NewHandler(
+	authenticate *authApp.AuthenticateUser,
+	validator *validator.Validate,
+	errorHandler *fiberHelper.ErrorHandler,
+) *Handler {
 	handler := &Handler{
 		authenticate: authenticate,
-		validate:     validate,
+		validator:    validator,
 		errorHandler: errorHandler,
 	}
 
@@ -61,11 +63,8 @@ func (h *Handler) login(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&body); err != nil {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
 	}
-	if err := h.validate.Struct(body); err != nil {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"code":    "INVALID_BODY",
-			"message": err.Error(),
-		})
+	if err := h.validator.Struct(body); err != nil {
+		return h.errorHandler.Handle(ctx, err)
 	}
 
 	emailVO, err := email.New(body.Email)

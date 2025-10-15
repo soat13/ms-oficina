@@ -45,7 +45,7 @@ func Setup(container *bootstrap.Container, cfg Config) {
 
 	userRepo := userDB.NewBunUserRepository(container.DB)
 	authenticate := authApp.NewAuthenticateUser(userRepo, tokenService)
-	handler := authHTTP.NewHandler(authenticate, container.FiberErrorHandler)
+	handler := authHTTP.NewHandler(authenticate, container.Validator, container.FiberErrorHandler)
 
 	middleware := authHTTP.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes)
 	container.FiberApp.Use(middleware.Handle)

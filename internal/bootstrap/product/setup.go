@@ -31,6 +31,7 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 		deleteProduct,
 		getProduct,
 		listProducts,
+		container.Validator,
 		container.FiberErrorHandler,
 	)
 

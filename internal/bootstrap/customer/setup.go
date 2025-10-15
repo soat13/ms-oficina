@@ -28,6 +28,7 @@ func Setup(container *bootstrap.Container, repository customerApp.CustomerReposi
 		deleteCustomer,
 		getCustomer,
 		listCustomers,
+		container.Validator,
 		container.FiberErrorHandler,
 	)
 
