@@ -103,7 +103,7 @@ sonar:
 		-D"sonar.projectKey=oficina" \
 		-D"sonar.projectName=Fase 1 - Oficina" \
 		-D"sonar.sources=." \
-		-D"sonar.exclusions=**/vendor/**,**/mocks/**,**/*_test.go,**/tests/**,**/scripts/**,**/docs/**,.env*,**/*.md,**/cmd/**" \
+		-D"sonar.exclusions=**/vendor/**,**/mocks/**,**/*_test.go,**/tests/**,**/scripts/**,**/assets/**,.env*,**/*.md,**/cmd/**" \
 		-D"sonar.tests=." \
 		-D"sonar.test.inclusions=**/*_test.go" \
 		-D"sonar.go.coverage.reportPaths=coverage.out" \
