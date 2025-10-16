@@ -102,7 +102,7 @@ func (repo *BunVehicleRepository) ListByCustomerID(ctx context.Context, customer
 func (repo *BunVehicleRepository) ExistsByPlate(ctx context.Context, plateVO plate.Plate) (bool, error) {
 	return repo.db.NewSelect().
 		Model((*vehicleModel)(nil)).
-		Where("UPPER(plate) = UPPER(?)", plateVO.String()).
+		Where("plate = ?", plateVO.String()).
 		Exists(ctx)
 }
 

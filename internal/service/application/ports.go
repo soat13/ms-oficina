@@ -9,11 +9,22 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
-type ServiceView struct {
-	ID    uuid.UUID
-	Name  string
-	Price money.Money
-}
+type (
+	ServiceView struct {
+		ID    uuid.UUID
+		Name  string
+		Price money.Money
+	}
+
+	ServiceRepository interface {
+		Create(ctx context.Context, s *domain.Service) error
+		Update(ctx context.Context, s *domain.Service) error
+		Delete(ctx context.Context, id uuid.UUID) error
+		GetByID(ctx context.Context, id uuid.UUID) (*domain.Service, error)
+		List(ctx context.Context, pager pagination.Pagination) ([]*domain.Service, error)
+		ExistsByName(ctx context.Context, name string) (bool, error)
+	}
+)
 
 func toView(s *domain.Service) ServiceView {
 	return ServiceView{
@@ -21,13 +32,4 @@ func toView(s *domain.Service) ServiceView {
 		Name:  s.Name,
 		Price: s.Price,
 	}
-}
-
-type ServiceRepository interface {
-	Create(ctx context.Context, s *domain.Service) error
-	Update(ctx context.Context, s *domain.Service) error
-	Delete(ctx context.Context, id uuid.UUID) error
-	GetByID(ctx context.Context, id uuid.UUID) (*domain.Service, error)
-	List(ctx context.Context, pager pagination.Pagination) ([]*domain.Service, error)
-	ExistsByName(ctx context.Context, name string) (bool, error)
 }

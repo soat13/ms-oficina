@@ -2,11 +2,9 @@ package vehicle
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -63,7 +61,6 @@ func TestVehicleCreate(t *testing.T) {
 		customerID := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Jane Doe", "52998224725", "CPF", "11987654322", "jane@example.com")
 		plate := "XYZ5678"
 
-		// Create first vehicle
 		body1 := createBody{
 			CustomerID: customerID,
 			Plate:      plate,
@@ -74,7 +71,6 @@ func TestVehicleCreate(t *testing.T) {
 		resp1 := postCreateVehicle(t, setup, body1)
 		require.Equal(t, fiber.StatusCreated, resp1.StatusCode)
 
-		// Try to create second vehicle with same plate
 		body2 := createBody{
 			CustomerID: customerID,
 			Plate:      plate,
@@ -123,7 +119,6 @@ func TestVehicleDelete(t *testing.T) {
 		resp := deleteVehicle(t, setup, vehicleID)
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
 
-		// Verify deletion
 		resp2 := getVehicle(t, setup, vehicleID)
 		require.Equal(t, fiber.StatusNotFound, resp2.StatusCode)
 	})
@@ -190,11 +185,9 @@ func TestVehicleListByCustomer(t *testing.T) {
 		customerID1 := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "John Doe", "11144477735", "CPF", "11987654321", "john@example.com")
 		customerID2 := testsupport.ThereIsACustomerWithDocument(t, setup.Container.DB, uuid.Nil, "Jane Doe", "52998224725", "CPF", "11987654322", "jane@example.com")
 
-		// Create vehicles for customer 1
 		testsupport.ThereIsAVehicle(t, setup.Container.DB, uuid.Nil, customerID1, "ABC1234", "Toyota", "Corolla", 2020)
 		testsupport.ThereIsAVehicle(t, setup.Container.DB, uuid.Nil, customerID1, "XYZ5678", "Honda", "Civic", 2019)
 
-		// Create vehicle for customer 2
 		testsupport.ThereIsAVehicle(t, setup.Container.DB, uuid.Nil, customerID2, "DEF9012", "Ford", "Focus", 2021)
 
 		resp := getVehiclesByCustomer(t, setup, customerID1)
@@ -312,22 +305,4 @@ func stringPtr(s string) *string {
 
 func intPtr(i int) *int {
 	return &i
-}
-
-func expectVehicleData(t *testing.T, setup *testsupport.SetupConfig, vehicleID uuid.UUID, expectedPlate, expectedBrand, expectedModel string, expectedYear int) {
-	t.Helper()
-	ctx := context.Background()
-
-	var plate, brand, model string
-	var year int
-	require.NoError(t,
-		setup.Container.DB.NewRaw(`SELECT plate, brand, model, year FROM vehicles WHERE id = ?`, vehicleID).Scan(ctx, &plate, &brand, &model, &year),
-	)
-
-	// The database stores the normalized plate, so we need to compare with the normalized version
-	expectedPlateNormalized := strings.ReplaceAll(strings.ToUpper(expectedPlate), "-", "")
-	assert.Equal(t, expectedPlateNormalized, plate)
-	assert.Equal(t, expectedBrand, brand)
-	assert.Equal(t, expectedModel, model)
-	assert.Equal(t, expectedYear, year)
 }

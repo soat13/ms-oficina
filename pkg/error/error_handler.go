@@ -8,14 +8,16 @@ const (
 	HTTPStatusUnprocessable = "422"
 )
 
-type Info struct {
-	PrivateCode string
-	PublicCode  string
-}
+type (
+	Info struct {
+		PrivateCode string
+		PublicCode  string
+	}
 
-type Resolver struct {
-	errorMap map[error]Info
-}
+	Resolver struct {
+		errorMap map[error]Info
+	}
+)
 
 func NewErrorResolver() *Resolver {
 	return &Resolver{
@@ -56,5 +58,5 @@ func (e *Resolver) Resolve(error error) (Info, bool) {
 }
 
 func (i *Info) Message() string {
-	return i.PrivateCode // todo: will be changed to message
+	return i.PrivateCode // TODO: will be changed to message
 }

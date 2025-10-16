@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -83,14 +84,14 @@ func (repo *BunServiceRepository) List(ctx context.Context, pager pagination.Pag
 func (repo *BunServiceRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
 	return repo.db.NewSelect().
 		Model((*serviceModel)(nil)).
-		Where("LOWER(name) = LOWER(?)", name).
+		Where("name = ?", strings.ToLower(name)).
 		Exists(ctx)
 }
 
 func toModel(service *domain.Service) *serviceModel {
 	return &serviceModel{
 		ID:        service.ID,
-		Name:      service.Name,
+		Name:      strings.ToLower(service.Name),
 		Price:     service.Price.Cents,
 		CreatedAt: service.CreatedAt,
 		UpdatedAt: service.UpdatedAt,

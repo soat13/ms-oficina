@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -136,7 +137,7 @@ func TestGetProduct(t *testing.T) {
 		var body productJSON
 		decodeJSON(t, resp, &body)
 		require.Equal(t, pid, body.ID)
-		require.Equal(t, "Air Filter", body.Name)
+		require.Equal(t, "air filter", body.Name)
 		require.Equal(t, int64(3500), body.Price)
 		require.Equal(t, 25, body.Stock)
 	})
@@ -175,7 +176,7 @@ func TestUpdateProduct(t *testing.T) {
 			setup.Container.DB.NewRaw(`SELECT name, price, stock FROM products WHERE id = ?`, pid).
 				Scan(context.Background(), &got),
 		)
-		require.Equal(t, newName, got.Name)
+		require.Equal(t, "new product name", got.Name)
 		require.Equal(t, newPrice, got.Price)
 		require.Equal(t, newStock, got.Stock)
 	})
@@ -277,7 +278,7 @@ func assertProductCreated(t *testing.T, db *bun.DB, payload createBody) {
 	require.NoError(t,
 		db.NewRaw(
 			`SELECT COUNT(*) FROM products WHERE name = ? AND price = ? AND stock = ?`,
-			payload.Name, payload.Price, payload.Stock,
+			strings.ToLower(payload.Name), payload.Price, payload.Stock,
 		).Scan(context.Background(), &count),
 	)
 	require.Equal(t, 1, count, "Product should be created in database")
