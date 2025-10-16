@@ -125,7 +125,7 @@ func ThereIsAVehicle(t *testing.T, db *bun.DB, id, customerID uuid.UUID, plate, 
 		INSERT INTO vehicles (id, customer_id, plate, brand, model, year)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, customerID, plate, brand, model, year).Exec(context.Background())
+	`, id, customerID, strings.ToUpper(plate), brand, model, year).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir vehicle")
 	return id
 }
@@ -215,7 +215,7 @@ func insertService(ctx context.Context, db *bun.DB, id uuid.UUID, name string, c
 		INSERT INTO services (id, name, price)
 		VALUES (?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, cents).Exec(ctx)
+	`, id, strings.ToLower(name), cents).Exec(ctx)
 	return err
 }
 
@@ -224,7 +224,7 @@ func insertProduct(ctx context.Context, db *bun.DB, id uuid.UUID, name string, p
 		INSERT INTO products (id, name, price, stock)
 		VALUES (?, ?, ?, ?)
 		ON CONFLICT (id) DO NOTHING
-	`, id, name, priceCents, stock).Exec(ctx)
+	`, id, strings.ToLower(name), priceCents, stock).Exec(ctx)
 	return err
 }
 

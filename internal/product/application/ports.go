@@ -10,12 +10,25 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
-type ProductView struct {
-	ID    uuid.UUID
-	Name  string
-	Price money.Money
-	Stock int
-}
+type (
+	ProductView struct {
+		ID    uuid.UUID
+		Name  string
+		Price money.Money
+		Stock int
+	}
+
+	ProductRepository interface {
+		Create(ctx context.Context, product *domain.Product) error
+		Update(ctx context.Context, product *domain.Product) error
+		UpdateBatch(ctx context.Context, products []*domain.Product) error
+		Delete(ctx context.Context, id uuid.UUID) error
+		GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error)
+		GetByIDs(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error)
+		List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error)
+		ExistsByName(ctx context.Context, name string) (bool, error)
+	}
+)
 
 func toView(p *domain.Product) ProductView {
 	return ProductView{
@@ -24,15 +37,4 @@ func toView(p *domain.Product) ProductView {
 		Price: p.Price,
 		Stock: p.Stock,
 	}
-}
-
-type ProductRepository interface {
-	Create(ctx context.Context, product *domain.Product) error
-	Update(ctx context.Context, product *domain.Product) error
-	UpdateBatch(ctx context.Context, products []*domain.Product) error
-	Delete(ctx context.Context, id uuid.UUID) error
-	GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error)
-	GetByIDs(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error)
-	List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error)
-	ExistsByName(ctx context.Context, name string) (bool, error)
 }

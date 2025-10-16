@@ -7,17 +7,19 @@ import (
 	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
 )
 
-type DocumentType string
+type (
+	DocumentType string
+
+	Document struct {
+		Value        string
+		DocumentType DocumentType
+	}
+)
 
 const (
 	CPF  DocumentType = "CPF"
 	CNPJ DocumentType = "CNPJ"
 )
-
-type Document struct {
-	Value        string
-	DocumentType DocumentType
-}
 
 func New(v string) (Document, error) {
 	value := string_helper.OnlyNumbers(strings.TrimSpace(v))

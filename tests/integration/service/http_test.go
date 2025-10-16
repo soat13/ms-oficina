@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -104,7 +105,7 @@ func TestGetService(t *testing.T) {
 		var body serviceJSON
 		decodeJSON(t, resp, &body)
 		require.Equal(t, sid, body.ID)
-		require.Equal(t, "Rotation", body.Name)
+		require.Equal(t, "rotation", body.Name)
 		require.Equal(t, int64(8000), body.Price)
 	})
 
@@ -140,7 +141,7 @@ func TestUpdateService(t *testing.T) {
 			setup.Container.DB.NewRaw(`SELECT name, price FROM services WHERE id = ?`, sid).
 				Scan(context.Background(), &got),
 		)
-		require.Equal(t, expectedName, got.Name)
+		require.Equal(t, "tire rotation pro", got.Name)
 		require.Equal(t, expectedPrice, got.Price)
 	})
 
@@ -213,7 +214,7 @@ func assertServiceCreated(t *testing.T, db *bun.DB, payload createBody) {
 	require.NoError(t,
 		db.NewRaw(
 			`SELECT COUNT(*) FROM services WHERE name = ? AND price = ?`,
-			payload.Name, payload.Price,
+			strings.ToLower(payload.Name), payload.Price,
 		).Scan(context.Background(), &count),
 	)
 	require.Equal(t, 1, count)

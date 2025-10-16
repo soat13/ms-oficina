@@ -2,8 +2,10 @@ package role
 
 import "strings"
 
-type Roles []Role
-type Role string
+type (
+	Roles []Role
+	Role  string
+)
 
 const (
 	attendant = "attendant"

@@ -26,7 +26,7 @@ type Handler struct {
 func NewHandler(
 	create *app.CreateProduct,
 	update *app.UpdateProduct,
-	del *app.DeleteProduct,
+	delete *app.DeleteProduct,
 	get *app.GetProduct,
 	list *app.ListProducts,
 	validator *validator.Validate,
@@ -35,7 +35,7 @@ func NewHandler(
 	handler := &Handler{
 		createUseCase: create,
 		updateUseCase: update,
-		deleteUseCase: del,
+		deleteUseCase: delete,
 		getUseCase:    get,
 		listUseCase:   list,
 		validator:     validator,

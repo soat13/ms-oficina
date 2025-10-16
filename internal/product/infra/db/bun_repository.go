@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -116,14 +117,14 @@ func (r *BunProductRepository) List(ctx context.Context, pager pagination.Pagina
 func (r *BunProductRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
 	return r.db.NewSelect().
 		Model((*productModel)(nil)).
-		Where("LOWER(name) = LOWER(?)", name).
+		Where("name = ?", strings.ToLower(name)).
 		Exists(ctx)
 }
 
 func toModel(p *domain.Product) *productModel {
 	return &productModel{
 		ID:        p.ID,
-		Name:      p.Name,
+		Name:      strings.ToLower(p.Name),
 		Price:     p.Price.Cents,
 		Stock:     p.Stock,
 		CreatedAt: p.CreatedAt,

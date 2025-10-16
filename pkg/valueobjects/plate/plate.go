@@ -29,7 +29,7 @@ func New(value string) (Plate, error) {
 }
 
 func (p Plate) String() string {
-	return p.value
+	return strings.ToUpper(p.value)
 }
 
 func (p Plate) isValid() bool {

@@ -57,7 +57,7 @@ func NewHandler(
 }
 
 func Register(app *fiber.App, h *Handler) {
-	grp := app.Group("/admin/vehicles") // TODO: PROTECT WITH JWT
+	grp := app.Group("/admin/vehicles")
 	grp.Post("/", h.create)
 	grp.Patch("/:id", h.update)
 	grp.Delete("/:id", h.delete)
