@@ -100,26 +100,40 @@ A comunicação entre contextos ocorre através de **eventos de domínio** geren
 
 ## Subir o ambiente (com Make)
 
-1. Suba os containers (DB e app-dev):
+1. Suba os containers:
    - `make up`
    - Dica: se não existir `.env`, ele será criado a partir de `.env-example`.
+   - Os bancos `oficina` e `sonarqube` são criados automaticamente na primeira vez.
 2. Aplique as migrações de banco:
    - `make migrate-up`
 3. Rode a API:
    - `make run`
 
+## Sem Make (comandos equivalentes)
+
+1. Crie o .env seguindo o .env-example
+2. Suba os containers:
+  - `docker compose up -d`
+  - Os bancos `oficina` e `sonarqube` são criados automaticamente na primeira vez.
+3. Aplique as migrações de banco (instala a ferramenta dentro do container se necessário):
+  - `docker compose exec -T app-dev sh -lc 'test -x /go/bin/sql-migrate || GOBIN=/go/bin /usr/local/go/bin/go install github.com/rubenv/sql-migrate/sql-migrate@latest'`
+  - `docker compose exec -T app-dev sh -lc '/go/bin/sql-migrate up -config=./scripts/db/dbconfig.yml -env=development'`
+4. Rode a API:
+  - `docker compose exec app-dev go run ./cmd/api`
+
+## Swagger / OpenAPI
+
 Por padrão a aplicação escuta na porta `8080` dentro do container e está
 exposta no host em `http://localhost` (porta 80 mapeada para 8080).
 
-## Sem Make (comandos equivalentes)
+Após subir a API, acesse a documentação:
 
-- Subir os serviços:
-  - `docker compose up -d`
-- Aplicar migrações (instala a ferramenta dentro do container se necessário):
-  - `docker compose exec -T app-dev sh -lc 'test -x /go/bin/sql-migrate || GOBIN=/go/bin /usr/local/go/bin/go install github.com/rubenv/sql-migrate/sql-migrate@latest'`
-  - `docker compose exec -T app-dev sh -lc '/go/bin/sql-migrate up -config=./scripts/db/dbconfig.yml -env=development'`
-- Executar a API:
-  - `docker compose exec app-dev go run ./cmd/api`
+- UI: `http://localhost:8080/docs`
+- Esquema: `http://localhost:8080/openapi.yaml`
+
+Observações:
+- A UI usa assets do CDN (swagger-ui-dist). O arquivo do esquema fica embarcado no binário.
+- As rotas documentadas correspondem às implementadas em todos os contextos.  
 
 ## Variáveis de Ambiente
 
@@ -135,6 +149,7 @@ O arquivo `.env-example` contém todas as variáveis com valores de exemplo. Pri
 ### PostgreSQL
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — Credenciais do banco
+- Os bancos `oficina` e `sonarqube` são criados automaticamente via script de inicialização
 
 ### Testes
 
@@ -151,39 +166,6 @@ O arquivo `.env-example` contém todas as variáveis com valores de exemplo. Pri
 
 - `LOG_LEVEL` — Nível de log (`debug`, `info`, `warn`, `error`)
 - `APP_ENV` — Ambiente de execução (`development`, `test`, `production`)
-
-## Comandos úteis
-
-### Gerenciamento de Containers
-
-- `make up` — sobe os containers (DB e app-dev)
-- `make down` — para os containers
-- `make install` — reinstala todo ambiente (remove volumes, rebuilda containers)
-- `make run` — executa a API no container
-
-### Migrações de Banco
-
-- `make migrate-up` — aplica todas as migrações pendentes
-- `make migrate-down` — desfaz a última migração
-- `make migrate-status` — exibe o status das migrações
-
-## Estrutura principal
-
-- `cmd/api/` — composição da aplicação (wiring)
-- `internal/*/{domain,application,infra}` — camadas por contexto de domínio
-- `scripts/db/migrations` — migrações SQL
-- `tests/` — testes de integração e utilitários de banco
-
-## Swagger / OpenAPI
-
-Após subir a API, acesse a documentação:
-
-- UI: `http://localhost/docs`
-- Esquema: `http://localhost/openapi.yaml`
-
-Observações:
-- A UI usa assets do CDN (swagger-ui-dist). O arquivo do esquema fica embarcado no binário.
-- As rotas documentadas correspondem às implementadas em todos os contextos.
  
 ## Autenticação JWT
 
