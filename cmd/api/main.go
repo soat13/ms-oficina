@@ -12,9 +12,10 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/product"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
+	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
-	serviceDocs "github.com/soat13/fase-1-oficina/internal/service/infra/docs"
+	"github.com/soat13/fase-1-oficina/internal/service/infra/docs"
 )
 
 func main() {
@@ -29,10 +30,11 @@ func main() {
 	fiberApp := container.FiberApp
 
 	authBootstrap.SetupDefault(container)
-	serviceDocs.Register(fiberApp)
+	docs.Register(fiberApp)
 	estimate.SetupDefault(container)
 	repairorder.SetupDefault(container)
 	product.SetupDefault(container)
+	service.SetupDefault(container)
 	customer.SetupDefault(container)
 	user.SetupDefault(container)
 	vehicle.SetupDefault(container)
