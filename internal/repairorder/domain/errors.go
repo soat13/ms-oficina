@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	ErrCustomerOrVehicleIDInvalid = errors.New("repair.order.customer.or.vehicle.id.invalid")
+	ErrCustomerOrVehicleIDInvalid = errors.New("customer or vehicle ID invalid")
 )

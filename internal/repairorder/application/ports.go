@@ -23,9 +23,10 @@ type (
 		List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error)
 		Create(ctx context.Context, repairOrder *domain.RepairOrder) error
 		SaveCancellation(ctx context.Context, ro *domain.RepairOrder) error
-		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
-		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfReceived(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error
 		GetAverageExecutionTime(ctx context.Context) (*float64, error)

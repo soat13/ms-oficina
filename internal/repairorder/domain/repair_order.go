@@ -47,6 +47,10 @@ func NewRepairOrder(id uuid.UUID, customerID, vehicleID uuid.UUID, status *repai
 	}, nil
 }
 
+func (r *RepairOrder) IsCancelled() bool {
+	return r.Status == repairorder.StatusCanceled
+}
+
 func (r *RepairOrder) Cancel() error {
 	if r.Status == repairorder.StatusReleased {
 		return errors.ErrInvalidStatusTransaction
@@ -56,13 +60,8 @@ func (r *RepairOrder) Cancel() error {
 	return nil
 }
 
-func (r *RepairOrder) IsCancelled() bool {
-	return r.Status == repairorder.StatusCanceled
-}
-
-func (r *RepairOrder) FinishExecution() error {
-	r.calculateExecutionTime()
-	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)
+func (r *RepairOrder) StartDiagnostics() error {
+	return r.moveStatus(repairorder.StatusReceived, repairorder.StatusInDiagnostics)
 }
 
 func (r *RepairOrder) MoveToAwaitingApproval() error {
@@ -75,6 +74,11 @@ func (r *RepairOrder) MoveToApproved() error {
 
 func (r *RepairOrder) StartExecution() error {
 	return r.moveStatus(repairorder.StatusApproved, repairorder.StatusInExecution)
+}
+
+func (r *RepairOrder) FinishExecution() error {
+	r.calculateExecutionTime()
+	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)
 }
 
 func (r *RepairOrder) ReleaseVehicle() error {

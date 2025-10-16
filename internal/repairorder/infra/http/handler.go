@@ -16,6 +16,7 @@ type (
 		listUseCase                    *application.ListRepairOrders
 		getUseCase                     *application.GetRepairOrder
 		startExecUseCase               *application.StartExecution
+		startDiagnosticsUseCase        *application.StartDiagnostics
 		finishExecutionUseCase         *application.FinishExecution
 		releaseVehicleUseCase          *application.ReleaseVehicle
 		createUseCase                  *application.Create
@@ -28,12 +29,13 @@ type (
 func NewHandler(
 	listUseCase *application.ListRepairOrders,
 	getUseCase *application.GetRepairOrder,
+	createUseCase *application.Create,
+	startDiagnosticsUseCase *application.StartDiagnostics,
 	startExecUseCase *application.StartExecution,
 	finishExecutionUseCase *application.FinishExecution,
 	releaseVehicleUseCase *application.ReleaseVehicle,
-	createUseCase *application.Create,
-	getAverageExecutionTime *application.GetAverageExecutionTime,
-	CancelUseCase *application.Cancel,
+	getAverageExecutionTimeUseCase *application.GetAverageExecutionTime,
+	cancelUseCase *application.Cancel,
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
@@ -41,12 +43,13 @@ func NewHandler(
 	return &Handler{
 		listUseCase:                    listUseCase,
 		getUseCase:                     getUseCase,
+		startDiagnosticsUseCase:        startDiagnosticsUseCase,
 		startExecUseCase:               startExecUseCase,
 		finishExecutionUseCase:         finishExecutionUseCase,
 		releaseVehicleUseCase:          releaseVehicleUseCase,
 		createUseCase:                  createUseCase,
-		getAverageExecutionTimeUseCase: getAverageExecutionTime,
-		cancelUseCase:                  CancelUseCase,
+		getAverageExecutionTimeUseCase: getAverageExecutionTimeUseCase,
+		cancelUseCase:                  cancelUseCase,
 		errorHandler:                   errorHandler,
 	}
 }
@@ -58,6 +61,7 @@ func Register(app *fiber.App, h *Handler) {
 	group.Get("repair-orders/average-execution-time", h.getAverageExecutionTime)
 	group.Get("repair-orders/:id", h.getByID)
 	group.Post("repair-orders/:id/cancel", h.cancel)
+	group.Post("repair-orders/:id/start-diagnostics", h.startDiagnostics)
 	group.Post("repair-orders/:id/start-execution", h.startExecution)
 	group.Post("repair-orders/:id/finish-execution", h.finishExecution)
 	group.Post("repair-orders/:id/release-vehicle", h.releaseVehicle)
@@ -129,6 +133,23 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(toJSON(output.RepairOrder))
+}
+
+func (h *Handler) startDiagnostics(ctx *fiber.Ctx) error {
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	input := application.StartDiagnosticsInput{
+		RepairOrderID: id,
+	}
+
+	if err := h.startDiagnosticsUseCase.Execute(ctx.Context(), input); err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 func (h *Handler) startExecution(ctx *fiber.Ctx) error {

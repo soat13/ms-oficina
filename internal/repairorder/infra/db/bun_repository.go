@@ -25,8 +25,8 @@ type repairOrderModel struct {
 	bun.BaseModel `bun:"table:repair_orders"`
 
 	ID                   uuid.UUID `bun:"id,pk,type:uuid"`
-	CustomerID           uuid.UUID `bun:"customer_id,type:uuid, notnull"`
-	VehicleID            uuid.UUID `bun:"vehicle_id,type:uuid, notnull"`
+	CustomerID           uuid.UUID `bun:"customer_id,type:uuid,notnull"`
+	VehicleID            uuid.UUID `bun:"vehicle_id,type:uuid,notnull"`
 	Status               string    `bun:"status,notnull"`
 	ExecutionTimeMinutes *int64    `bun:"execution_time_minutes"`
 	CreatedAt            time.Time `bun:"created_at,notnull,default:current_timestamp"`
@@ -134,16 +134,20 @@ func (r *BunRepairOrderRepository) SaveCancellation(ctx context.Context, ro *dom
 	return err
 }
 
-func (r *BunRepairOrderRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
-	return r.saveIfStatus(ctx, ro, repairorder.StatusApproved)
+func (r *BunRepairOrderRepository) SaveIfReceived(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusReceived)
+}
+
+func (r *BunRepairOrderRepository) SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusInDiagnostics)
 }
 
 func (r *BunRepairOrderRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
 	return r.saveIfStatus(ctx, ro, repairorder.StatusAwaitingApproval)
 }
 
-func (r *BunRepairOrderRepository) SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error {
-	return r.saveIfStatus(ctx, ro, repairorder.StatusInDiagnostics)
+func (r *BunRepairOrderRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusApproved)
 }
 
 func (r *BunRepairOrderRepository) SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error {

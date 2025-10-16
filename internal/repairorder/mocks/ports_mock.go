@@ -227,6 +227,21 @@ func (mr *MockRepositoryMockRecorder) SaveIfInDiagnostics(ctx, ro interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfInDiagnostics", reflect.TypeOf((*MockRepository)(nil).SaveIfInDiagnostics), ctx, ro)
 }
 
+// SaveIfReceived mocks base method.
+
+func (m *MockRepository) SaveIfReceived(ctx context.Context, ro *domain.RepairOrder) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveIfReceived", ctx, ro)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveIfReceived indicates an expected call of SaveIfReceived.
+func (mr *MockRepositoryMockRecorder) SaveIfReceived(ctx, ro interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveIfReceived", reflect.TypeOf((*MockRepository)(nil).SaveIfReceived), ctx, ro)
+}
+
 // SaveIfInExecution mocks base method.
 func (m *MockRepository) SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error {
 	m.ctrl.T.Helper()
