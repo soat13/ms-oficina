@@ -13,7 +13,7 @@ import (
 
 type (
 	ApproveInput struct {
-		ID uuid.UUID
+		RepairOrderID uuid.UUID
 	}
 
 	Approve struct {
@@ -30,7 +30,7 @@ func NewApproveEstimate(repository Repository, eventBus eventbus.Bus) *Approve {
 }
 
 func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
-	estimate, err := a.repository.GetByID(ctx, input.ID)
+	estimate, err := a.repository.GetByRepairOrderID(ctx, input.RepairOrderID)
 	if err != nil {
 		return ErrEstimateNotFound
 	}

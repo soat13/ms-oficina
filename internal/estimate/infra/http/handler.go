@@ -61,8 +61,8 @@ func NewHandler(
 func Register(app *fiber.App, h *Handler) {
 	group := app.Group("admin")
 	group.Post("repair-orders/:id/estimate", h.create)
-	group.Post("estimates/:id/approve", h.approve)
-	group.Post("estimates/:id/reject", h.reject)
+	group.Post("repair-orders/:id/estimate/approve", h.approve)
+	group.Post("repair-orders/:id/estimate/reject", h.reject)
 }
 
 func (h *Handler) create(ctx *fiber.Ctx) error {
@@ -96,7 +96,7 @@ func (h *Handler) approve(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.approveUseCase.Execute(ctx.Context(), app.ApproveInput{ID: id})
+	err = h.approveUseCase.Execute(ctx.Context(), app.ApproveInput{RepairOrderID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -111,7 +111,7 @@ func (h *Handler) reject(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.rejectUseCase.Execute(ctx.Context(), app.RejectInput{ID: id})
+	err = h.rejectUseCase.Execute(ctx.Context(), app.RejectInput{RepairOrderID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}

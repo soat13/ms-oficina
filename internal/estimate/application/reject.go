@@ -13,7 +13,7 @@ import (
 
 type (
 	RejectInput struct {
-		ID uuid.UUID
+		RepairOrderID uuid.UUID
 	}
 
 	Reject struct {
@@ -30,7 +30,7 @@ func NewRejectEstimate(repository Repository, eventBus eventbus.Bus) *Reject {
 }
 
 func (a *Reject) Execute(ctx context.Context, input RejectInput) error {
-	estimate, err := a.repository.GetByID(ctx, input.ID)
+	estimate, err := a.repository.GetByRepairOrderID(ctx, input.RepairOrderID)
 	if err != nil {
 		return err
 	}
