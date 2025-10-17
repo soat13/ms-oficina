@@ -15,6 +15,11 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 
 A aplicação segue princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, organizando o código em contextos de domínio bem definidos e isolados, facilitando manutenção e evolução.
 
+## Links úteis
+
+- Miro: https://miro.com/app/board/uXjVJLyIcr8= 
+- Github: https://github.com/soat13/fase-1-oficina
+
 ---
 
 ## De-Para: Termos em Português → Inglês
