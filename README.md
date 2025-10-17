@@ -15,6 +15,11 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 
 A aplicação segue princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, organizando o código em contextos de domínio bem definidos e isolados, facilitando manutenção e evolução.
 
+## Links úteis
+
+- Miro: https://miro.com/app/board/uXjVJLyIcr8= 
+- Github: https://github.com/soat13/fase-1-oficina
+
 ---
 
 ## De-Para: Termos em Português → Inglês
@@ -74,12 +79,12 @@ API construída em **Go** utilizando o framework **Fiber** (HTTP) e **Bun** como
 
 - **Linguagem**: Go 1.25.1
 - **Framework HTTP**: Fiber v2
-- **Banco de Dados**: PostgreSQL
 - **ORM**: Bun (query builder type-safe)
 - **Migrações**: sql-migrate
 - **Autenticação**: JWT (HS256)
 - **Testes**: Go testing + testify
 - **Containerização**: Docker + Docker Compose
+- **Banco de Dados**: PostgreSQL — Escolhido por ser um SGBD relacional robusto e maduro, ideal para garantir integridade transacional em operações críticas (criação de OS, aprovação de orçamentos, redução de estoque). O modelo relacional é essencial para manter consistência referencial entre entidades fortemente relacionadas (Cliente ↔ Veículo, OS ↔ Orçamento, Orçamento ↔ Produtos/Serviços), suportar queries complexas (relatórios, métricas de tempo médio de execução) e oferecer recursos avançados como constraints, índices compostos e transações ACID, fundamentais para a confiabilidade de um sistema de gestão empresarial.
 
 ### Arquitetura
 
