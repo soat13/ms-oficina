@@ -4,6 +4,11 @@
 
 Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de atendimento, desde a entrada do veículo até a entrega ao cliente. A aplicação gerencia clientes, veículos, catálogos de serviços e produtos, orçamentos e ordens de serviço, proporcionando controle total sobre as operações da oficina.
 
+### Links úteis
+
+- Miro: https://miro.com/app/board/uXjVJLyIcr8= 
+- Github: https://github.com/soat13/fase-1-oficina
+
 ### Funcionalidades Principais
 
 - **Gestão de Clientes e Veículos** — Cadastro completo de clientes (donos dos veículos) e seus automóveis
@@ -14,11 +19,6 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 - **Eventos de Domínio** — Arquitetura orientada a eventos para desacoplar contextos (ex: redução de estoque ao aprovar orçamento)
 
 A aplicação segue princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, organizando o código em contextos de domínio bem definidos e isolados, facilitando manutenção e evolução.
-
-## Links úteis
-
-- Miro: https://miro.com/app/board/uXjVJLyIcr8= 
-- Github: https://github.com/soat13/fase-1-oficina
 
 ---
 
@@ -192,3 +192,8 @@ Toda a funcionalidade segue o padrão modular existente (`internal/auth/{domain,
 **SonarQube:** Acesse http://localhost:9000 (login: `admin`/`admin`), gere um token em **My Account → Security → Generate Token** e adicione no `.env` como `SONAR_TOKEN`.
 
 **Nota:** Os testes de integração criam bancos isolados automaticamente e aplicam migrações.
+
+Resultado Sonar para coverage e vulnerabilidades:
+<img width="1527" height="741" alt="Captura de tela 2025-02-18 214226" src="https://github.com/user-attachments/assets/71cb9d96-d9f5-4be1-9b3a-5d10bf538804" />
+
+
