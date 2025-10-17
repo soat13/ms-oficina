@@ -58,9 +58,9 @@ func TestReject(t *testing.T) {
 		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
 		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
 
-		estimateID := getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
+		getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
 
-		resp := postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID)
+		resp := postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		expectEstimateStatus(t, setup.Container, repairOrderID, domain.StatusRejected)
@@ -79,13 +79,13 @@ func TestReject(t *testing.T) {
 	})
 
 	t.Run("Twice Should Fail", func(t *testing.T) {
-		roID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
-		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, roID).StatusCode)
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
 
-		estimateID := getEstimateIDByRepairOrder(t, setup.Container, roID)
+		getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
 
-		require.Equal(t, fiber.StatusOK, postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID).StatusCode)
-		resp := postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID)
+		require.Equal(t, fiber.StatusOK, postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
+		resp := postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
@@ -98,9 +98,9 @@ func TestApprove(t *testing.T) {
 		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
 		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
 
-		estimateID := getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
+		getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
 
-		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID)
+		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 		expectEstimateStatus(t, setup.Container, repairOrderID, domain.StatusAwaitingStock)
@@ -118,12 +118,12 @@ func TestApprove(t *testing.T) {
 	})
 
 	t.Run("Twice Should Fail", func(t *testing.T) {
-		roID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
-		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, roID).StatusCode)
-		estimateID := getEstimateIDByRepairOrder(t, setup.Container, roID)
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
+		getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
 
-		require.Equal(t, fiber.StatusOK, postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID).StatusCode)
-		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, estimateID)
+		require.Equal(t, fiber.StatusOK, postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
+		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
 	})
@@ -308,9 +308,9 @@ func postCreateEstimateWithBody(t *testing.T, fiberApp *fiber.App, token string,
 	return resp
 }
 
-func postApproveEstimate(t *testing.T, fiberApp *fiber.App, token string, estimateID uuid.UUID) *http.Response {
+func postApproveEstimate(t *testing.T, fiberApp *fiber.App, token string, id uuid.UUID) *http.Response {
 	t.Helper()
-	req := httptest.NewRequest("POST", "/admin/estimates/"+estimateID.String()+"/approve", nil)
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+id.String()+"/estimate/approve", nil)
 	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
@@ -319,7 +319,7 @@ func postApproveEstimate(t *testing.T, fiberApp *fiber.App, token string, estima
 
 func postApproveEstimateRaw(t *testing.T, fiberApp *fiber.App, token string, id string) *http.Response {
 	t.Helper()
-	req := httptest.NewRequest("POST", "/admin/estimates/"+id+"/approve", nil)
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+id+"/estimate/approve", nil)
 	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
@@ -328,7 +328,7 @@ func postApproveEstimateRaw(t *testing.T, fiberApp *fiber.App, token string, id 
 
 func postRejectEstimate(t *testing.T, fiberApp *fiber.App, token string, estimateID uuid.UUID) *http.Response {
 	t.Helper()
-	req := httptest.NewRequest("POST", "/admin/estimates/"+estimateID.String()+"/reject", nil)
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+estimateID.String()+"/estimate/reject", nil)
 	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)
@@ -337,7 +337,7 @@ func postRejectEstimate(t *testing.T, fiberApp *fiber.App, token string, estimat
 
 func postRejectEstimateRaw(t *testing.T, fiberApp *fiber.App, token string, id string) *http.Response {
 	t.Helper()
-	req := httptest.NewRequest("POST", "/admin/estimates/"+id+"/reject", nil)
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+id+"/estimate/reject", nil)
 	testauth.AddAuthHeader(req, token)
 	resp, err := fiberApp.Test(req, -1)
 	require.NoError(t, err)

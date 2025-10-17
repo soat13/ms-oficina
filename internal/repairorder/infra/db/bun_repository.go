@@ -160,11 +160,17 @@ func (r *BunRepairOrderRepository) SaveIfFinished(ctx context.Context, ro *domai
 
 func (r *BunRepairOrderRepository) GetAverageExecutionTime(ctx context.Context) (*float64, error) {
 	var avg float64
+
+	validStatusList := []repairorder.Status{
+		repairorder.StatusReleased,
+		repairorder.StatusFinished,
+	}
+
 	err := r.db.NewSelect().
 		Model((*repairOrderModel)(nil)).
 		ColumnExpr("AVG(execution_time_minutes) as average").
 		Where("execution_time_minutes IS NOT NULL").
-		Where("status = ?", repairorder.StatusFinished).
+		Where("status in (?)", bun.In(validStatusList)).
 		Scan(ctx, &avg)
 
 	if err != nil {
