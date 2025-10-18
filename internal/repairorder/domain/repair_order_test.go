@@ -40,7 +40,7 @@ func TestRepairOrderStatusTransitionsTable(t *testing.T) {
 	type actionFn func(ro *RepairOrder) error
 
 	moveToAwaiting := func(ro *RepairOrder) error { return ro.MoveToAwaitingApproval() }
-	moveToApproved := func(ro *RepairOrder) error { return ro.MoveToApproved() }
+	moveToApproved := func(ro *RepairOrder) error { return ro.Approve() }
 	startExecution := func(ro *RepairOrder) error { return ro.StartExecution() }
 
 	cases := []struct {
@@ -75,7 +75,7 @@ func TestRepairOrderStatusTransitionsTable(t *testing.T) {
 			wantErr:    nil,
 		},
 		{
-			name:       "InDiagnosis -> Approved (ERR)",
+			name:       "InDiagnosis -> Approve (ERR)",
 			initial:    repairorder.StatusInDiagnostics,
 			act:        moveToApproved,
 			wantStatus: repairorder.StatusInDiagnostics,

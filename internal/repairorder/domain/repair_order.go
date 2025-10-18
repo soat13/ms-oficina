@@ -68,7 +68,7 @@ func (r *RepairOrder) MoveToAwaitingApproval() error {
 	return r.moveStatus(repairorder.StatusInDiagnostics, repairorder.StatusAwaitingApproval)
 }
 
-func (r *RepairOrder) MoveToApproved() error {
+func (r *RepairOrder) Approve() error {
 	return r.moveStatus(repairorder.StatusAwaitingApproval, repairorder.StatusApproved)
 }
 

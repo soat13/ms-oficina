@@ -7,6 +7,7 @@ import (
 	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
+	product "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
 )
 
 func SetupDefault(container *bootstrap.Container) {
@@ -45,4 +46,12 @@ func Setup(container *bootstrap.Container) {
 	container.EventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
 	container.EventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
 	container.EventBus.Subscribe(estimate.Rejected{}.Topic(), listeners.OnEstimateRejected(cancel))
+	container.EventBus.Subscribe(
+		product.StockInsufficientDetected{}.Topic(),
+		listeners.OnStockInsufficientDetected(cancel),
+	)
+	container.EventBus.Subscribe(
+		product.StockReduceConfirmed{}.Topic(),
+		listeners.OnStockReduceConfirmed(repairOrderRepository),
+	)
 }

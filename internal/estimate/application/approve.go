@@ -39,7 +39,7 @@ func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
 		return ErrEstimateNotFound
 	}
 
-	if err := estimate.MoveToAwaitingStock(); err != nil {
+	if err := estimate.Approve(); err != nil {
 		return err
 	}
 
@@ -58,7 +58,7 @@ func (a *Approve) publishEvent(ctx context.Context, estimate domain.Estimate) er
 		}
 	}
 
-	event := estimateEvent.StockReduceRequested{
+	event := estimateEvent.Approved{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,

@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	estimateEvents "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
+	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
 )
 
-func OnEstimateApproved(repository application.Repository) func(ctx context.Context, _ string, payload []byte) error {
+func OnStockReduceConfirmed(repository application.Repository) func(ctx context.Context, _ string, payload []byte) error {
 	return func(ctx context.Context, _ string, payload []byte) error {
-		var event estimateEvents.Approved
+		var event productEvent.StockReduceConfirmed
 		if err := json.Unmarshal(payload, &event); err != nil {
 			return err
 		}
