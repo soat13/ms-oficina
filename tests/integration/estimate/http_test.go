@@ -96,15 +96,15 @@ func TestApprove(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
-		require.Equal(t, fiber.StatusCreated, postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID).StatusCode)
-
+		createEstimateResponse := postCreateEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		require.Equal(t, fiber.StatusCreated, createEstimateResponse.StatusCode)
 		getEstimateIDByRepairOrder(t, setup.Container, repairOrderID)
 
-		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		approveEstimateResponse := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
-		require.Equal(t, fiber.StatusOK, resp.StatusCode)
-		expectEstimateStatus(t, setup.Container, repairOrderID, domain.StatusAwaitingStock)
-		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusAwaitingApproval)
+		require.Equal(t, fiber.StatusOK, approveEstimateResponse.StatusCode)
+		expectEstimateStatus(t, setup.Container, repairOrderID, domain.StatusApproved)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusApproved)
 	})
 
 	t.Run("Invalid ID", func(t *testing.T) {

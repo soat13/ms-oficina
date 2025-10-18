@@ -96,18 +96,8 @@ func (e *Estimate) Total() money.Money {
 	return total
 }
 
-func (e *Estimate) MoveToAwaitingStock() error {
-	if e.Status != StatusAwaitingApproval {
-		return errors.ErrInvalidStatusTransaction
-	}
-
-	e.Status = StatusAwaitingStock
-	e.Touch()
-	return nil
-}
-
 func (e *Estimate) Approve() error {
-	if e.Status != StatusAwaitingStock {
+	if e.Status != StatusAwaitingApproval {
 		return errors.ErrInvalidStatusTransaction
 	}
 

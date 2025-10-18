@@ -23,7 +23,7 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 	deleteProduct := productApp.NewDeleteProduct(repository)
 	getProduct := productApp.NewGetProduct(repository)
 	listProducts := productApp.NewListProducts(repository)
-	reduceStock := productApp.NewReduceStock(repository)
+	reduceStock := productApp.NewReduceStock(repository, container.EventBus)
 
 	productHandler := productHTTP.NewHandler(
 		createProduct,
@@ -38,7 +38,7 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 	productHTTP.Register(container.FiberApp, productHandler)
 
 	container.EventBus.Subscribe(
-		estimateEvent.StockReduceRequested{}.Topic(),
-		productListeners.OnStockReduceRequested(reduceStock, container.EventBus),
+		estimateEvent.Approved{}.Topic(),
+		productListeners.OnEstimateApproved(reduceStock, container.EventBus),
 	)
 }

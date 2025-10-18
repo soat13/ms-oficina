@@ -12,9 +12,9 @@ import (
 	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
 )
 
-func OnStockReduceRequested(reduceStock *application.ReduceStock, eventBus eventbus.Bus) func(ctx context.Context, _ string, payload []byte) error {
+func OnEstimateApproved(reduceStock *application.ReduceStock, eventBus eventbus.Bus) func(ctx context.Context, _ string, payload []byte) error {
 	return func(ctx context.Context, _ string, payload []byte) error {
-		var event estimateEvent.StockReduceRequested
+		var event estimateEvent.Approved
 		if err := json.Unmarshal(payload, &event); err != nil {
 			return err
 		}
@@ -28,7 +28,7 @@ func OnStockReduceRequested(reduceStock *application.ReduceStock, eventBus event
 	}
 }
 
-func publishEvent(ctx context.Context, event estimateEvent.StockReduceRequested, eventBus eventbus.Bus) error {
+func publishEvent(ctx context.Context, event estimateEvent.Approved, eventBus eventbus.Bus) error {
 	confirmedEvent := productEvent.StockReduceConfirmed{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
