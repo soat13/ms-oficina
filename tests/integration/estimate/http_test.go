@@ -104,7 +104,7 @@ func TestApprove(t *testing.T) {
 
 		require.Equal(t, fiber.StatusOK, approveEstimateResponse.StatusCode)
 		expectEstimateStatus(t, setup.Container, repairOrderID, domain.StatusApproved)
-		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusApproved)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusAwaitingApproval)
 	})
 
 	t.Run("Invalid ID", func(t *testing.T) {
