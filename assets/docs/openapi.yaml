@@ -57,12 +57,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           description: Credenciais inválidas.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                code: invalid credentials
+                message: "401"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/services:
     get:
       tags: [Services]
@@ -92,9 +100,27 @@ paths:
         '201':
           description: Serviço criado.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: Corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '409':
+          description: Serviço duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: service with this name already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/services/{id}:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -109,9 +135,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Serviço não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: service not found
+                message: "404"
     patch:
       tags: [Services]
       summary: Atualizar serviço
@@ -125,9 +167,42 @@ paths:
         '204':
           description: Serviço atualizado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: invalid ID
+                    message: "400"
+                invalidJson:
+                  value:
+                    code: invalid JSON body
+                    message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Serviço não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: service not found
+                message: "404"
+        '409':
+          description: Serviço duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: service with this name already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
     delete:
       tags: [Services]
       summary: Remover serviço
@@ -135,9 +210,25 @@ paths:
         '204':
           description: Serviço removido.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Serviço não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: service not found
+                message: "404"
   /admin/products:
     get:
       tags: [Products]
@@ -167,9 +258,27 @@ paths:
         '201':
           description: Produto criado.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: Corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '409':
+          description: Produto duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: product with this name already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/products/{id}:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -184,9 +293,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Product'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Produto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: product not found
+                message: "404"
     patch:
       tags: [Products]
       summary: Atualizar produto
@@ -200,9 +325,42 @@ paths:
         '204':
           description: Produto atualizado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: invalid ID
+                    message: "400"
+                invalidJson:
+                  value:
+                    code: invalid JSON body
+                    message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Produto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: product not found
+                message: "404"
+        '409':
+          description: Produto duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: product with this name already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
     delete:
       tags: [Products]
       summary: Remover produto
@@ -210,9 +368,25 @@ paths:
         '204':
           description: Produto removido.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Produto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: product not found
+                message: "404"
   /admin/customers:
     get:
       tags: [Customers]
@@ -242,9 +416,33 @@ paths:
         '201':
           description: Cliente criado.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: Corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '409':
+          description: Cliente duplicado (documento ou email já existente).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicateDocument:
+                  value:
+                    code: customer with this document already exists
+                    message: "409"
+                duplicateEmail:
+                  value:
+                    code: customer with this email already exists
+                    message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/customers/{id}:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -259,9 +457,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Customer'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Cliente não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: customer not found
+                message: "404"
     patch:
       tags: [Customers]
       summary: Atualizar cliente
@@ -275,9 +489,42 @@ paths:
         '204':
           description: Cliente atualizado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: invalid ID
+                    message: "400"
+                invalidJson:
+                  value:
+                    code: invalid JSON body
+                    message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Cliente não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: customer not found
+                message: "404"
+        '409':
+          description: Email duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: customer with this email already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
     delete:
       tags: [Customers]
       summary: Remover cliente
@@ -285,9 +532,25 @@ paths:
         '204':
           description: Cliente removido.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Cliente não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: customer not found
+                message: "404"
   /admin/customers/{customerId}/vehicles:
     parameters:
       - $ref: '#/components/parameters/CustomerIdParam'
@@ -305,7 +568,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/VehicleListResponse'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID de cliente inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
   /admin/vehicles:
@@ -337,9 +607,27 @@ paths:
         '201':
           description: Veículo criado.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: Corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '409':
+          description: Placa duplicada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: vehicle plate already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/vehicles/{id}:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -354,9 +642,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Vehicle'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Veículo não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: vehicle not found
+                message: "404"
     patch:
       tags: [Vehicles]
       summary: Atualizar veículo
@@ -370,9 +674,42 @@ paths:
         '204':
           description: Veículo atualizado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: invalid ID
+                    message: "400"
+                invalidJson:
+                  value:
+                    code: invalid JSON body
+                    message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Veículo não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: vehicle not found
+                message: "404"
+        '409':
+          description: Placa duplicada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: vehicle plate already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
     delete:
       tags: [Vehicles]
       summary: Remover veículo
@@ -380,9 +717,25 @@ paths:
         '204':
           description: Veículo removido.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Veículo não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: vehicle not found
+                message: "404"
   /admin/users:
     get:
       tags: [Users]
@@ -412,9 +765,33 @@ paths:
         '201':
           description: Usuário criado.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: Corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '409':
+          description: Usuário duplicado (documento ou email já existente).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicateDocument:
+                  value:
+                    code: user with this document already exists
+                    message: "409"
+                duplicateEmail:
+                  value:
+                    code: user with this email already exists
+                    message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/users/{id}:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -429,9 +806,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Usuário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: user not found
+                message: "404"
     patch:
       tags: [Users]
       summary: Atualizar usuário
@@ -445,9 +838,42 @@ paths:
         '204':
           description: Usuário atualizado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: invalid ID
+                    message: "400"
+                invalidJson:
+                  value:
+                    code: invalid JSON body
+                    message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Usuário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: user not found
+                message: "404"
+        '409':
+          description: Email duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: user with this email already exists
+                message: "409"
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityResponse'
     delete:
       tags: [Users]
       summary: Remover usuário
@@ -455,9 +881,25 @@ paths:
         '204':
           description: Usuário removido.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Usuário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: user not found
+                message: "404"
   /admin/repair-orders:
     get:
       tags: [Repair Orders]
@@ -487,9 +929,25 @@ paths:
         '201':
           description: Ordem de reparo criada.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: Corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid JSON body
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '422':
+          description: Veículo ou cliente não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              example:
+                code: vehicle or customer not found
+                message: "422"
   /admin/repair-orders/average-execution-time:
     get:
       tags: [Repair Orders]
@@ -517,9 +975,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/RepairOrder'
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: repair order not found
+                message: "404"
   /admin/repair-orders/{id}/cancel:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -530,9 +1004,54 @@ paths:
         '204':
           description: Ordem cancelada.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: repair order not found
+                message: "404"
+  /admin/repair-orders/{id}/start-diagnostics:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Repair Orders]
+      summary: Iniciar diagnóstico da ordem
+      responses:
+        '204':
+          description: Diagnóstico iniciado.
+        '400':
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: repair order not found
+                message: "404"
   /admin/repair-orders/{id}/start-execution:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -543,9 +1062,25 @@ paths:
         '204':
           description: Execução iniciada.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: repair order not found
+                message: "404"
   /admin/repair-orders/{id}/finish-execution:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -556,9 +1091,25 @@ paths:
         '204':
           description: Execução finalizada.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: repair order not found
+                message: "404"
   /admin/repair-orders/{id}/release-vehicle:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -569,9 +1120,25 @@ paths:
         '204':
           description: Veículo liberado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: repair order not found
+                message: "404"
   /admin/repair-orders/{id}/estimate:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -588,10 +1155,41 @@ paths:
         '201':
           description: Orçamento criado.
         '400':
-          $ref: '#/components/responses/InvalidJSONResponse'
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: invalid ID
+                    message: "400"
+                invalidJson:
+                  value:
+                    code: invalid JSON body
+                    message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
-  /admin/estimates/{id}/approve:
+        '422':
+          description: Produto indisponível ou erro de validação.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              examples:
+                productNotAvailable:
+                  value:
+                    code: product not available
+                    message: "422"
+                validationError:
+                  value:
+                    code: INVALID_BODY
+                    message: Body validation failed
+                    errors:
+                      - field: products
+                        message: At least one product or service required
+  /admin/repair-orders/{id}/estimate/approve:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
     post:
@@ -601,10 +1199,26 @@ paths:
         '200':
           description: Orçamento aprovado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
-  /admin/estimates/{id}/reject:
+        '404':
+          description: Orçamento não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: estimate not found
+                message: "404"
+  /admin/repair-orders/{id}/estimate/reject:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
     post:
@@ -614,9 +1228,25 @@ paths:
         '200':
           description: Orçamento rejeitado.
         '400':
-          $ref: '#/components/responses/InvalidIDResponse'
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: invalid ID
+                message: "400"
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Orçamento não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: estimate not found
+                message: "404"
 components:
   securitySchemes:
     bearerAuth:
@@ -658,23 +1288,36 @@ components:
         format: uuid
   responses:
     UnauthorizedResponse:
-      description: Token ausente ou inválido.
+      description: Token ausente, inválido ou expirado.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          examples:
+            missingToken:
+              value:
+                code: missing authorization token
+                message: "401"
+            invalidToken:
+              value:
+                code: invalid token
+                message: "401"
+            expiredToken:
+              value:
+                code: token expired
+                message: "401"
     InvalidJSONResponse:
       description: Corpo JSON inválido.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    InvalidBodyResponse:
-      description: Falha de validação no corpo da requisição.
+    UnprocessableEntityResponse:
+      description: Entidade não processável (erros de validação ou regras de negócio).
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ValidationError'
     InvalidIDResponse:
       description: Identificador inválido.
       content:
@@ -683,6 +1326,12 @@ components:
             $ref: '#/components/schemas/Error'
     NotFoundResponse:
       description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ConflictResponse:
+      description: Conflito (recurso duplicado ou operação inválida).
       content:
         application/json:
           schema:
@@ -698,6 +1347,27 @@ components:
         message:
           type: string
           example: invalid JSON body
+    ValidationError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_BODY
+        message:
+          type: string
+          example: Body validation failed
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: password
+              message:
+                type: string
+                example: Password is a required field
     LoginRequest:
       type: object
       required: [email, password]

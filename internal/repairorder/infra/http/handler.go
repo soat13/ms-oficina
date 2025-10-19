@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 )
@@ -39,6 +40,7 @@ func NewHandler(
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
+	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(sharedRepairOrder.ErrRepairOrderNotFound)
 
 	return &Handler{
 		listUseCase:                    listUseCase,
