@@ -44,7 +44,6 @@ func Setup(container *bootstrap.Container) {
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)
 
 	container.EventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
-	container.EventBus.Subscribe(estimate.Approved{}.Topic(), listeners.OnEstimateApproved(repairOrderRepository))
 	container.EventBus.Subscribe(estimate.Rejected{}.Topic(), listeners.OnEstimateRejected(cancel))
 	container.EventBus.Subscribe(
 		product.StockInsufficientDetected{}.Topic(),

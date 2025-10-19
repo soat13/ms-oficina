@@ -77,10 +77,6 @@ mockgen-install:
 
 mock: mockgen-install
 	$(DOCKER_EXEC) sh -lc '$(MOCKGEN) \
-	  -source=internal/repairorder/application/ports.go \
-	  -destination=internal/repairorder/mocks/ports_mock.go \
-	  -package=mocks'
-	$(DOCKER_EXEC) sh -lc '$(MOCKGEN) \
     	  -source=internal/estimate/application/repository.go \
     	  -destination=internal/estimate/mocks/repository_mock.go \
     	  -package=mocks'
