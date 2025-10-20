@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -43,9 +44,19 @@ func main() {
 	// HTTP server start
 	// -----------------------------------------------------------------------------
 	port := os.Getenv("PORT")
+	printUsefulLinks(port)
+
 	if err := fiberApp.Listen(":" + port); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func printUsefulLinks(port string) {
+	baseURL := "http://localhost:" + port
+
+	fmt.Printf("\n🌐 Base URL:        %-45s\n", baseURL)
+	fmt.Printf("📚 Swagger/OpenAPI: %-45s\n", baseURL+"/docs")
+	fmt.Printf("📊 SonarQube:       %-45s\n", "http://localhost:9000")
 }
 
 func loadEnv() {
