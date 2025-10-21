@@ -64,8 +64,12 @@ func (r *RepairOrder) StartDiagnostics() error {
 	return r.moveStatus(repairorder.StatusReceived, repairorder.StatusInDiagnostics)
 }
 
+func (r *RepairOrder) FinishDiagnostics() error {
+	return r.moveStatus(repairorder.StatusInDiagnostics, repairorder.StatusDiagnosticsFinished)
+}
+
 func (r *RepairOrder) MoveToAwaitingApproval() error {
-	return r.moveStatus(repairorder.StatusInDiagnostics, repairorder.StatusAwaitingApproval)
+	return r.moveStatus(repairorder.StatusDiagnosticsFinished, repairorder.StatusAwaitingApproval)
 }
 
 func (r *RepairOrder) Approve() error {

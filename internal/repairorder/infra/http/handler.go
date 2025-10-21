@@ -3,10 +3,13 @@ package http
 import (
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
+	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
@@ -18,11 +21,13 @@ type (
 		getUseCase                     *application.GetRepairOrder
 		startExecUseCase               *application.StartExecution
 		startDiagnosticsUseCase        *application.StartDiagnostics
+		finishDiagnosticsUseCase       *application.FinishDiagnostics
 		finishExecutionUseCase         *application.FinishExecution
 		releaseVehicleUseCase          *application.ReleaseVehicle
 		createUseCase                  *application.Create
 		getAverageExecutionTimeUseCase *application.GetAverageExecutionTime
 		cancelUseCase                  *application.Cancel
+		validator                      *validator.Validate
 		errorHandler                   *fiberHelper.ErrorHandler
 	}
 )
@@ -32,26 +37,36 @@ func NewHandler(
 	getUseCase *application.GetRepairOrder,
 	createUseCase *application.Create,
 	startDiagnosticsUseCase *application.StartDiagnostics,
+	finishDiagnosticsUseCase *application.FinishDiagnostics,
 	startExecUseCase *application.StartExecution,
 	finishExecutionUseCase *application.FinishExecution,
 	releaseVehicleUseCase *application.ReleaseVehicle,
 	getAverageExecutionTimeUseCase *application.GetAverageExecutionTime,
 	cancelUseCase *application.Cancel,
+	validator *validator.Validate,
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
-	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
 	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(sharedRepairOrder.ErrRepairOrderNotFound)
+	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(application.ErrProductNotFound)
+	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(application.ErrServiceNotFound)
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrNoProductsOrServicesFound)
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrInsufficientStock)
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrInvalidQuantity)
+	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(estimateApp.ErrProductNotAvailable)
 
 	return &Handler{
 		listUseCase:                    listUseCase,
 		getUseCase:                     getUseCase,
 		startDiagnosticsUseCase:        startDiagnosticsUseCase,
+		finishDiagnosticsUseCase:       finishDiagnosticsUseCase,
 		startExecUseCase:               startExecUseCase,
 		finishExecutionUseCase:         finishExecutionUseCase,
 		releaseVehicleUseCase:          releaseVehicleUseCase,
 		createUseCase:                  createUseCase,
 		getAverageExecutionTimeUseCase: getAverageExecutionTimeUseCase,
 		cancelUseCase:                  cancelUseCase,
+		validator:                      validator,
 		errorHandler:                   errorHandler,
 	}
 }
@@ -64,19 +79,27 @@ func Register(app *fiber.App, h *Handler) {
 	group.Get("repair-orders/:id", h.getByID)
 	group.Post("repair-orders/:id/cancel", h.cancel)
 	group.Post("repair-orders/:id/start-diagnostics", h.startDiagnostics)
+	group.Post("repair-orders/:id/finish-diagnostics", h.finishDiagnostics)
 	group.Post("repair-orders/:id/start-execution", h.startExecution)
 	group.Post("repair-orders/:id/finish-execution", h.finishExecution)
 	group.Post("repair-orders/:id/release-vehicle", h.releaseVehicle)
 }
 
-type repairOrderJSON struct {
-	ID         uuid.UUID `json:"id"`
-	CustomerID uuid.UUID `json:"customer_id"`
-	VehicleID  uuid.UUID `json:"vehicle_id"`
-	Status     string    `json:"status"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-}
+type (
+	repairOrderJSON struct {
+		ID         uuid.UUID `json:"id"`
+		CustomerID uuid.UUID `json:"customer_id"`
+		VehicleID  uuid.UUID `json:"vehicle_id"`
+		Status     string    `json:"status"`
+		CreatedAt  time.Time `json:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at"`
+	}
+
+	finishDiagnosticsBody struct {
+		Products []fiberHelper.ItemLinePayload `json:"products" validate:"required,min=1,dive"`
+		Services []fiberHelper.ItemLinePayload `json:"services" validate:"required,min=1,dive"`
+	}
+)
 
 func toJSON(view application.RepairOrderView) repairOrderJSON {
 	return repairOrderJSON{
@@ -148,6 +171,32 @@ func (h *Handler) startDiagnostics(ctx *fiber.Ctx) error {
 	}
 
 	if err := h.startDiagnosticsUseCase.Execute(ctx.Context(), input); err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *Handler) finishDiagnostics(ctx *fiber.Ctx) error {
+	id, err := fiberHelper.GetUuidParam(ctx, "id")
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	var body finishDiagnosticsBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
+	}
+	if err := h.validator.Struct(body); err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	input, err := getFinishDiagnosticsInput(id, body)
+	if err != nil {
+		return h.errorHandler.Handle(ctx, err)
+	}
+
+	if err := h.finishDiagnosticsUseCase.Execute(ctx.Context(), *input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -233,4 +282,22 @@ func (h *Handler) getAverageExecutionTime(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(output)
+}
+
+func getFinishDiagnosticsInput(repairOrderID uuid.UUID, body finishDiagnosticsBody) (*application.FinishDiagnosticsInput, error) {
+	productsQty, err := fiberHelper.ParseItemQuantities(body.Products)
+	if err != nil {
+		return nil, err
+	}
+
+	servicesQty, err := fiberHelper.ParseItemQuantities(body.Services)
+	if err != nil {
+		return nil, err
+	}
+
+	return &application.FinishDiagnosticsInput{
+		RepairOrderID: repairOrderID,
+		Products:      productsQty,
+		Services:      servicesQty,
+	}, nil
 }

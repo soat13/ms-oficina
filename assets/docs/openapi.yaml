@@ -1052,6 +1052,97 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
+  /admin/repair-orders/{id}/finish-diagnostics:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Repair Orders]
+      summary: Finalizar diagnóstico da ordem
+      description: Finaliza o diagnóstico informando produtos e serviços necessários para o reparo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinishDiagnosticsRequest'
+            example:
+              products:
+                - id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  quantity: 2
+                - id: "4fb85f64-5717-4562-b3fc-2c963f66afa7"
+                  quantity: 1
+              services:
+                - id: "5fc85f64-5717-4562-b3fc-2c963f66afa8"
+                  quantity: 1
+                - id: "6fd85f64-5717-4562-b3fc-2c963f66afa9"
+                  quantity: 1
+      responses:
+        '204':
+          description: Diagnóstico finalizado.
+        '400':
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: "400"
+                    message: invalid ID
+                invalidJson:
+                  value:
+                    code: "400"
+                    message: invalid JSON body
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Ordem de reparo não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                repairOrderNotFound:
+                  value:
+                    code: "404"
+                    message: repair order not found
+        '422':
+          description: Validação falhou - erros de negócio ou validação.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                productNotFound:
+                  value:
+                    code: "422"
+                    message: product not found
+                serviceNotFound:
+                  value:
+                    code: "422"
+                    message: service not found
+                noProductsOrServices:
+                  value:
+                    code: "422"
+                    message: at least one product and service is required
+                quantityInvalid:
+                  value:
+                    code: "422"
+                    message: product or service quantity must be greater than zero
+                insufficientStock:
+                  value:
+                    code: "422"
+                    message: insufficient stock for one or more products
+                validationError:
+                  value:
+                    code: INVALID_BODY
+                    message: Body validation failed
+                    errors:
+                      - field: products
+                        message: products is required
+                      - field: services
+                        message: services is required
   /admin/repair-orders/{id}/start-execution:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1139,56 +1230,6 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
-  /admin/repair-orders/{id}/estimate:
-    parameters:
-      - $ref: '#/components/parameters/ResourceIdParam'
-    post:
-      tags: [Estimates]
-      summary: Criar orçamento para ordem de reparo
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EstimateCreateRequest'
-      responses:
-        '201':
-          description: Orçamento criado.
-        '400':
-          description: ID inválido ou corpo JSON inválido.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                invalidId:
-                  value:
-                    code: "400"
-                    message: invalid ID
-                invalidJson:
-                  value:
-                    code: "400"
-                    message: invalid JSON body
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
-        '422':
-          description: Produto indisponível ou erro de validação.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-              examples:
-                productNotAvailable:
-                  value:
-                    code: "422"
-                    message: product not available
-                validationError:
-                  value:
-                    code: INVALID_BODY
-                    message: Body validation failed
-                    errors:
-                      - field: products
-                        message: At least one product or service required
   /admin/repair-orders/{id}/estimate/approve:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1738,25 +1779,44 @@ components:
           format: float
           nullable: true
           description: Tempo médio de execução das ordens em minutos.
-    EstimateItem:
+    DiagnosticProductItem:
       type: object
       required: [id, quantity]
       properties:
         id:
           type: string
           format: uuid
+          description: ID do produto.
         quantity:
           type: integer
           minimum: 1
-    EstimateCreateRequest:
+          description: Quantidade necessária do produto.
+    DiagnosticServiceItem:
       type: object
+      required: [id, quantity]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID do serviço.
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantidade do serviço.
+    FinishDiagnosticsRequest:
+      type: object
+      required: [products, services]
       properties:
         products:
           type: array
           items:
-            $ref: '#/components/schemas/EstimateItem'
+            $ref: '#/components/schemas/DiagnosticProductItem'
+          minItems: 1
+          description: Lista de produtos necessários para o reparo.
         services:
           type: array
           items:
-            $ref: '#/components/schemas/EstimateItem'
-      description: É necessário informar ao menos um produto ou serviço para gerar o orçamento.
+            $ref: '#/components/schemas/DiagnosticServiceItem'
+          minItems: 1
+          description: Lista de serviços necessários para o reparo.
+      description: É necessário informar ao menos um produto e um serviço para finalizar o diagnóstico.

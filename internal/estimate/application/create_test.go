@@ -9,6 +9,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/stretchr/testify/assert"
 )
@@ -60,7 +61,7 @@ func TestCreateStockValidation(t *testing.T) {
 			mockRepairOrderReader := &mockRepairOrderReader{
 				repairOrder: &application.RepairOrderView{
 					ID:     repairOrderID,
-					Status: "in_diagnostics",
+					Status: repairorder.StatusDiagnosticsFinished,
 				},
 			}
 
@@ -80,8 +81,16 @@ func TestCreateStockValidation(t *testing.T) {
 				products: products,
 			}
 
+			serviceID := uuid.New()
 			mockServiceCatalogReader := &mockServiceCatalogReader{
-				services: []application.CatalogItemView{},
+				services: []application.CatalogItemView{
+					{
+						ID:    serviceID,
+						Name:  "Test Service",
+						Price: money.Money{Cents: 5000},
+						Stock: 0,
+					},
+				},
 			}
 
 			mockRepository := &mockRepository{}
@@ -98,7 +107,7 @@ func TestCreateStockValidation(t *testing.T) {
 			input := application.CreateInput{
 				RepairOrderID: repairOrderID,
 				Products:      map[uuid.UUID]int{productID: tt.requestedQty},
-				Services:      map[uuid.UUID]int{},
+				Services:      map[uuid.UUID]int{serviceID: tt.requestedQty},
 				Now:           time.Now(),
 			}
 

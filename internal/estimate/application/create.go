@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	sharederrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
@@ -153,8 +153,8 @@ func (c *Create) getRepairOrder(ctx context.Context, repairID uuid.UUID) (*Repai
 		return nil, repairorder.ErrRepairOrderNotFound
 	}
 
-	if repairOrder.Status != repairorder.StatusInDiagnostics {
-		return nil, sharederrors.ErrInvalidStatusTransaction
+	if repairOrder.Status != repairorder.StatusDiagnosticsFinished {
+		return nil, sharedErrors.ErrInvalidStatusTransaction
 	}
 
 	return repairOrder, nil
