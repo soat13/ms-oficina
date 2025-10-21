@@ -6,8 +6,8 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 
 ### Links úteis
 
-- Miro: https://miro.com/app/board/uXjVJLyIcr8= 
 - Github: https://github.com/soat13/fase-1-oficina
+- Miro: [https://miro.com/app/board/uXjVJLyIcr8= ](https://miro.com/welcomeonboard/dDQ0TTVTVkFBeXNoVGZRYjVJVmZOc1ZZVlcvREJyajNHdXZRQjNtK3BXSVRyUTd0NGs0WHlXc0dZMHM4b002a3dqNUFhYmhTOHJTZ0tpUlIvMCttN2tTaUNRNlkrR0IrZ3JndkNDWnQ3anpMcTVKSWFOMytTa0VtdEJQcTlLVGxnbHpza3F6REdEcmNpNEFOMmJXWXBBPT0hdjE=?share_link_id=805040402316)
 
 ### Funcionalidades Principais
 
@@ -48,16 +48,17 @@ A aplicação segue princípios de **Domain-Driven Design (DDD)** e **Arquitetur
 
 ### Estados da Ordem de Serviço (Repair Order Status)
 
-| Português            | Inglês (código)   | Constante            | Explicação                                                     |
-|----------------------|-------------------|----------------------|----------------------------------------------------------------|
-| Recebida             | Received          | `received`           | Veículo chegou na oficina                                      |
-| Em Diagnóstico       | In Diagnostics    | `in_diagnostics`     | Mecânico está avaliando o problema                             |
-| Aguardando Aprovação | Awaiting Approval | `awaiting_approval`  | Cliente precisa aprovar o orçamento                            |
-| Aprovada             | Approved          | `approved`           | Cliente aprovou, estoque atualizado, pode iniciar execução     |
-| Em Execução          | In Execution      | `in_execution`       | Serviços sendo executados                                      |
-| Finalizada           | Finished          | `finished`           | Serviços concluídos, aguardando retirada                       |
-| Liberada             | Released          | `released`           | Veículo entregue ao cliente                                    |
-| Cancelada            | Canceled          | `canceled`           | OS foi cancelada                                               |
+| Português              | Inglês (código)      | Constante              | Explicação                                                     |
+|------------------------|----------------------|----------------------  |----------------------------------------------------------------|
+| Recebida               | Received             | `received`             | Veículo chegou na oficina                                      |
+| Em Diagnóstico         | In Diagnostics       | `in_diagnostics`       | Mecânico está avaliando o problema                             |
+| Diagnóstico finalizado | Diagnostics Finished | `diagnostics_finished` | Diagnóstico do mecânico finalizado                             |
+| Aguardando Aprovação   | Awaiting Approval    | `awaiting_approval`    | Cliente precisa aprovar o orçamento                            |
+| Aprovada               | Approved             | `approved`             | Cliente aprovou, estoque atualizado, pode iniciar execução     |
+| Em Execução            | In Execution         | `in_execution`         | Serviços sendo executados                                      |
+| Finalizada             | Finished             | `finished`             | Serviços concluídos, aguardando retirada                       |
+| Liberada               | Released             | `released`             | Veículo entregue ao cliente                                    |
+| Cancelada              | Canceled             | `canceled`             | OS foi cancelada                                               |
 
 ### Estados do Orçamento (Estimate Status)
 

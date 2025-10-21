@@ -18,11 +18,14 @@ func Setup(container *bootstrap.Container) {
 	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
 	vehicleReader := repairOrderDB.NewVehicleReader(container.DB)
 	customerReader := repairOrderDB.NewCustomerReader(container.DB)
+	productReader := repairOrderDB.NewProductReader(container.DB)
+	serviceReader := repairOrderDB.NewServiceReader(container.DB)
 
 	list := repairOrderApp.NewListRepairOrders(repairOrderRepository)
 	get := repairOrderApp.NewGetRepairOrder(repairOrderRepository)
 	create := repairOrderApp.NewCreate(repairOrderRepository, customerReader, vehicleReader)
 	startDiagnostics := repairOrderApp.NewStartDiagnostics(repairOrderRepository)
+	finishDiagnostics := repairOrderApp.NewFinishDiagnostics(repairOrderRepository, container.EventBus, productReader, serviceReader)
 	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
 	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
 	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
@@ -34,11 +37,13 @@ func Setup(container *bootstrap.Container) {
 		get,
 		create,
 		startDiagnostics,
+		finishDiagnostics,
 		startExecution,
 		finishExecution,
 		releaseVehicle,
 		getAverageExecutionTime,
 		cancel,
+		container.Validator,
 		container.FiberErrorHandler,
 	)
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)

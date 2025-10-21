@@ -18,6 +18,19 @@ type (
 		Exists(ctx context.Context, id uuid.UUID) (bool, error)
 	}
 
+	ServiceReader interface {
+		ExistByIds(ctx context.Context, ids []uuid.UUID) (bool, error)
+	}
+
+	ProductReader interface {
+		GetByIDs(ctx context.Context, ids []uuid.UUID) ([]ProductView, error)
+	}
+
+	ProductView struct {
+		ID    uuid.UUID
+		Stock int
+	}
+
 	Repository interface {
 		GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error)
 		List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error)
@@ -25,6 +38,7 @@ type (
 		SaveCancellation(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfReceived(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfDiagnosticsFinished(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error

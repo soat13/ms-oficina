@@ -52,8 +52,8 @@ func TestRepairOrderStatusTransitionsTable(t *testing.T) {
 	}{
 		// MoveToAwaitingApproval
 		{
-			name:       "InDiagnosis -> AwaitingApproval (OK)",
-			initial:    repairorder.StatusInDiagnostics,
+			name:       "DiagnosticsFinished -> AwaitingApproval (OK)",
+			initial:    repairorder.StatusDiagnosticsFinished,
 			act:        moveToAwaiting,
 			wantStatus: repairorder.StatusAwaitingApproval,
 			wantErr:    nil,

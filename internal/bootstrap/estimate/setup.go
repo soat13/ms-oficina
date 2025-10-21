@@ -32,12 +32,16 @@ func Setup(container *bootstrap.Container) {
 	cancel := estimateApp.NewCancelEstimate(repository, container.EventBus)
 	reject := estimateApp.NewRejectEstimate(repository, container.EventBus)
 
-	estimateHttpHandler := estimateInfraHttp.NewHandler(createEstimate, approve, reject, container.FiberErrorHandler)
+	estimateHttpHandler := estimateInfraHttp.NewHandler(approve, reject, container.FiberErrorHandler)
 	estimateInfraHttp.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(
 		repairOrderEvent.Canceled{}.Topic(),
 		estimaterListeners.OnRepairOrderCanceled(cancel, repository),
+	)
+	container.EventBus.Subscribe(
+		repairOrderEvent.DiagnosticsFinished{}.Topic(),
+		estimaterListeners.OnDiagnosticsFinished(createEstimate),
 	)
 
 }
