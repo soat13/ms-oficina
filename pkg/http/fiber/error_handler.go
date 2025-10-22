@@ -74,8 +74,8 @@ func StatusCodeFromErrorInfo(status string) int {
 
 func jsonFromErrorInfo(errorInfo errorHelper.Info) map[string]string {
 	return map[string]string{
-		"code":    errorInfo.PublicCode,
-		"message": errorInfo.Message(),
+		"code":    errorInfo.Message(),
+		"message": errorInfo.PublicCode,
 	}
 }
 
