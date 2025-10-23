@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./scripts/db/init-sonar-database.sql:/docker-entrypoint-initdb.d/init-sonar-database.sql
+      - ./scripts/db/init-sonar-database.sh:/docker-entrypoint-initdb.d/init-sonar-database.sh
     ports:
       - "5432:5432"
     healthcheck:
@@ -26,6 +26,11 @@ services:
       SONAR_JDBC_USERNAME: ${SONAR_JDBC_USERNAME}
       SONAR_JDBC_PASSWORD: ${SONAR_JDBC_PASSWORD}
       SONAR_JDBC_URL: ${SONAR_JDBC_URL}
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - sonarqube_conf:/opt/sonarqube/conf
       - sonarqube_data:/opt/sonarqube/data
@@ -34,6 +39,13 @@ services:
       - sonarqube_temp:/opt/sonarqube/temp
     ports:
       - "9000:9000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9000/api/system/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
 
   app-dev:
     image: golang:1.25.1
@@ -50,6 +62,17 @@ services:
       db:
         condition: service_healthy
     ports: ["8080:8080"]
+
+  sonar-scanner:
+    image: sonarsource/sonar-scanner-cli:latest
+    environment:
+      SONAR_TOKEN: ${SONAR_TOKEN}
+      SONAR_HOST_URL: http://sonarqube:9000
+    volumes:
+      - ./:/usr/src
+    working_dir: /usr/src
+    profiles:
+      - tools
 
 volumes:
   pgdata:

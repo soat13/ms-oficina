@@ -138,7 +138,8 @@ Após subir a API, acesse a documentação:
 
 Observações:
 - A UI usa assets do CDN (swagger-ui-dist). O arquivo do esquema fica embarcado no binário.
-- As rotas documentadas correspondem às implementadas em todos os contextos.  
+- As rotas documentadas correspondem às implementadas em todos os contextos.
+- O arquivo OpenAPI está disponível no repositório: [openapi.yaml](https://github.com/soat13/fase-1-oficina/blob/main/assets/docs/openapi.yaml). Você pode importá-lo no [Swagger Editor](https://editor.swagger.io/) para visualizar e testar a documentação.  
 
 ## Variáveis de Ambiente
 
