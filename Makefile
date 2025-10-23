@@ -89,19 +89,17 @@ mock: mockgen-install
 # SonarQube Analysis
 # -------------------------------
 
-sonar:
+sonar: up
 	@if [ -z "$(SONAR_TOKEN)" ]; then \
 		echo "Error: SONAR_TOKEN is not set. Please set it in your .env file."; \
 		exit 1; \
 	fi
 	make test-coverage
-	sonar-scanner \
-		-D"sonar.projectKey=oficina" \
-		-D"sonar.projectName=Fase 1 - Oficina" \
-		-D"sonar.sources=." \
-		-D"sonar.exclusions=**/vendor/**,**/mocks/**,**/*_test.go,**/tests/**,**/scripts/**,**/assets/**,.env*,**/*.md,**/cmd/**" \
-		-D"sonar.tests=." \
-		-D"sonar.test.inclusions=**/*_test.go" \
-		-D"sonar.go.coverage.reportPaths=coverage.out" \
-		-D"sonar.host.url=http://localhost:9000" \
-		-D"sonar.token=$(SONAR_TOKEN)"
+	docker compose run --rm sonar-scanner \
+		-Dsonar.projectKey=oficina \
+		-Dsonar.projectName="Fase 1 - Oficina" \
+		-Dsonar.sources=. \
+		-Dsonar.exclusions=**/vendor/**,**/mocks/**,**/*_test.go,**/tests/**,**/scripts/**,**/assets/**,.env*,**/*.md,**/cmd/**,**/views.go,**/repository.go,**/bootstrap/** \
+		-Dsonar.tests=. \
+		-Dsonar.test.inclusions=**/*_test.go \
+		-Dsonar.go.coverage.reportPaths=coverage.out

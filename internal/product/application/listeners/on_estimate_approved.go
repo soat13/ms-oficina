@@ -19,7 +19,11 @@ func OnEstimateApproved(reduceStock *application.ReduceStock, eventBus eventbus.
 			return err
 		}
 
-		input := application.ReduceStockInput{Products: event.Products}
+		input := application.ReduceStockInput{
+			Products:      event.Products,
+			EstimateID:    event.EstimateID,
+			RepairOrderID: event.RepairOrderID,
+		}
 		if err := reduceStock.Execute(ctx, input); err != nil {
 			return err
 		}

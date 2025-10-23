@@ -118,6 +118,191 @@ func TestRepairOrderCreate(t *testing.T) {
 	})
 }
 
+func TestRepairOrderStartDiagnostics(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsAReceivedRepairOrder(t, setup.Container.DB)
+
+		resp := postStartDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusInDiagnostics)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		resp := postStartDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Invalid UUID", func(t *testing.T) {
+		req := httptest.NewRequest("POST", "/admin/repair-orders/invalid-uuid/start-diagnostics", nil)
+		testauth.AddAuthHeader(req, setup.AuthToken)
+		resp, err := setup.Container.FiberApp.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+}
+
+func TestRepairOrderFinishDiagnostics(t *testing.T) {
+	setup := ensureSetup(t)
+
+	productID1 := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 10)
+	productID2 := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Brake Pad", 15000, 5)
+	serviceID1 := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Engine Oil Change", 12000)
+	serviceID2 := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Brake Check", 8000)
+
+	t.Run("Success", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": 2},
+			{"id": productID2.String(), "quantity": 1},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+			{"id": serviceID2.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+
+		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusAwaitingApproval)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": 1},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, uuid.New(), products, services)
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Empty Products", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Empty Services", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": 1},
+		}
+		services := []map[string]interface{}{}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Invalid Quantity - Zero", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": 0},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Invalid Quantity - Negative", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": -1},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Product Not Found", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": uuid.New().String(), "quantity": 1},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Service Not Found", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": 1},
+		}
+		services := []map[string]interface{}{
+			{"id": uuid.New().String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Insufficient Stock", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": productID1.String(), "quantity": 100},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Invalid UUID in Product", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		products := []map[string]interface{}{
+			{"id": "invalid-uuid", "quantity": 1},
+		}
+		services := []map[string]interface{}{
+			{"id": serviceID1.String(), "quantity": 1},
+		}
+
+		resp := postFinishDiagnostics(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID, products, services)
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Invalid JSON", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+
+		req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/finish-diagnostics", bytes.NewReader([]byte("invalid json")))
+		req.Header.Set("Content-Type", "application/json")
+		testauth.AddAuthHeader(req, setup.AuthToken)
+
+		resp, err := setup.Container.FiberApp.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+}
+
 func TestRepairOrderStartExecution(t *testing.T) {
 	setup := ensureSetup(t)
 
@@ -170,6 +355,92 @@ func TestRepairOrderReleaseVehicle(t *testing.T) {
 	t.Run("Not Found", func(t *testing.T) {
 		resp := postReleaseVehicle(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+}
+
+func TestRepairOrderGet(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsAReceivedRepairOrder(t, setup.Container.DB)
+
+		resp := getRepairOrder(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result map[string]interface{}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+		require.Equal(t, repairOrderID.String(), result["id"])
+		require.Equal(t, "received", result["status"])
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		resp := getRepairOrder(t, setup.Container.FiberApp, setup.AuthToken, uuid.New())
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Invalid UUID", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/admin/repair-orders/invalid-uuid", nil)
+		testauth.AddAuthHeader(req, setup.AuthToken)
+		resp, err := setup.Container.FiberApp.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+}
+
+func TestRepairOrderList(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success - Returns List", func(t *testing.T) {
+		testsupport.ThereIsAReceivedRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+
+		resp := listRepairOrders(t, setup.Container.FiberApp, setup.AuthToken, "", "")
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result map[string]interface{}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+		require.Contains(t, result, "data")
+
+		data, ok := result["data"].([]interface{})
+		require.True(t, ok)
+		require.Greater(t, len(data), 0)
+	})
+
+	t.Run("Success - With Pagination", func(t *testing.T) {
+		resp := listRepairOrders(t, setup.Container.FiberApp, setup.AuthToken, "2", "0")
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result map[string]interface{}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+		require.Contains(t, result, "data")
+
+		data, ok := result["data"].([]interface{})
+		require.True(t, ok)
+		require.LessOrEqual(t, len(data), 2)
+	})
+
+	t.Run("Success - Empty List", func(t *testing.T) {
+		cleanAllRepairOrders(t, setup.Container)
+
+		resp := listRepairOrders(t, setup.Container.FiberApp, setup.AuthToken, "", "")
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		var result map[string]interface{}
+		err := json.NewDecoder(resp.Body).Decode(&result)
+		require.NoError(t, err)
+		require.Contains(t, result, "data")
+
+		data, ok := result["data"].([]interface{})
+		require.True(t, ok)
+		require.Equal(t, 0, len(data))
 	})
 }
 
@@ -401,4 +672,71 @@ func expectEstimateStatusByRO(t *testing.T, container *bootstrap.Container, repa
 	)
 
 	assert.Equal(t, string(expected), status)
+}
+
+func postStartDiagnostics(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/start-diagnostics", nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func postFinishDiagnostics(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID, products, services []map[string]interface{}) *http.Response {
+	t.Helper()
+
+	body := map[string]any{
+		"products": products,
+		"services": services,
+	}
+	b, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/admin/repair-orders/"+repairOrderID.String()+"/finish-diagnostics", bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
+
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func getRepairOrder(t *testing.T, fiberApp *fiber.App, token string, repairOrderID uuid.UUID) *http.Response {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/admin/repair-orders/"+repairOrderID.String(), nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func listRepairOrders(t *testing.T, fiberApp *fiber.App, token string, limit, offset string) *http.Response {
+	t.Helper()
+	url := "/admin/repair-orders"
+	if limit != "" || offset != "" {
+		url += "?"
+		if limit != "" {
+			url += "limit=" + limit
+		}
+		if offset != "" {
+			if limit != "" {
+				url += "&"
+			}
+			url += "offset=" + offset
+		}
+	}
+	req := httptest.NewRequest("GET", url, nil)
+	testauth.AddAuthHeader(req, token)
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func cleanAllRepairOrders(t *testing.T, container *bootstrap.Container) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := container.DB.NewRaw(`DELETE FROM repair_orders`).Exec(ctx)
+	require.NoError(t, err)
 }
