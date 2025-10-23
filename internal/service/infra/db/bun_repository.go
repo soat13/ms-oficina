@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
@@ -53,7 +53,7 @@ func (repo *BunServiceRepository) Update(ctx context.Context, service *domain.Se
 
 func (repo *BunServiceRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := repo.db.NewDelete().Model(&serviceModel{ID: id}).WherePK().Exec(ctx)
-	return err
+	return bun_helper.HandleDeleteError(err)
 }
 
 func (repo *BunServiceRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Service, error) {

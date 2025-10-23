@@ -50,7 +50,6 @@ func NewHandler(
 	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(application.ErrProductNotFound)
 	errorHandler.ErrorResolver.RegisterHTTPNotFoundError(application.ErrServiceNotFound)
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrVehicleOrCustomerNotFound)
-	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrNoProductsOrServicesFound)
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrInsufficientStock)
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(application.ErrInvalidQuantity)
 	errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(estimateApp.ErrProductNotAvailable)

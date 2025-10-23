@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/uptrace/bun"
 
-	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
