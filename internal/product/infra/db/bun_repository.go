@@ -10,7 +10,7 @@ import (
 
 	app "github.com/soat13/fase-1-oficina/internal/product/application"
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
-	"github.com/soat13/fase-1-oficina/internal/shared/infra/db/bun_helper"
+	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
@@ -68,7 +68,7 @@ func (r *BunProductRepository) UpdateBatch(ctx context.Context, products []*doma
 
 func (r *BunProductRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model(&productModel{ID: id}).WherePK().Exec(ctx)
-	return err
+	return bun_helper.HandleDeleteError(err)
 }
 
 func (r *BunProductRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
