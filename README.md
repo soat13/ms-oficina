@@ -195,6 +195,7 @@ Toda a funcionalidade segue o padrão modular existente (`internal/auth/{domain,
 **Nota:** Os testes de integração criam bancos isolados automaticamente e aplicam migrações.
 
 Resultado Sonar para coverage e vulnerabilidades:
-<img width="1527" height="741" alt="Captura de tela 2025-02-18 214226" src="https://github.com/user-attachments/assets/71cb9d96-d9f5-4be1-9b3a-5d10bf538804" />
+<img width="1050" height="577" alt="image" src="https://github.com/user-attachments/assets/723ba284-9892-480c-845b-13a8367782b9" />
+
 
 
