@@ -32,4 +32,4 @@ type Approved struct {
 	Products      map[uuid.UUID]int `json:"products"`
 }
 
-func (Approved) Topic() string { return "estimate.stock.reduce.approved" }
+func (Approved) Topic() string { return "estimate.approved" }
