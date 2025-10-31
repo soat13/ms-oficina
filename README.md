@@ -106,7 +106,7 @@ A comunicação entre contextos ocorre através de **eventos de domínio** geren
 ## Subir o ambiente (com Make)
 
 1. Suba os containers:
-   - `make up`
+   - `make install`
    - Dica: se não existir `.env`, ele será criado a partir de `.env-example`.
    - Os bancos `oficina` e `sonarqube` são criados automaticamente na primeira vez.
 2. Aplique as migrações de banco:

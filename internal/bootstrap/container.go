@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
@@ -94,5 +95,18 @@ func newSQL() *sql.DB {
 func newApp() *fiber.App {
 	app := fiber.New()
 	app.Use(logger.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*", // todo: In production, set specific allowed origins
+		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
+		AllowHeaders: "*",
+		MaxAge:       3600,
+	}))
+
+	app.Use(func(c *fiber.Ctx) error {
+		if c.Method() == fiber.MethodOptions {
+			return c.SendStatus(fiber.StatusNoContent)
+		}
+		return c.Next()
+	})
 	return app
 }
