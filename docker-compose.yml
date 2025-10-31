@@ -7,7 +7,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./scripts/db/init-sonar-database.sh:/docker-entrypoint-initdb.d/init-sonar-database.sh
     ports:
       - "5432:5432"
     healthcheck:
@@ -16,6 +15,29 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+
+  db-init:
+    image: postgres:16
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+    command: >
+      bash -lc "
+        psql -h db -U \"$POSTGRES_USER\" -d postgres -v ON_ERROR_STOP=1 -c
+        \"DO $$
+         BEGIN
+           IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'sonarqube') THEN
+             EXECUTE 'CREATE DATABASE sonarqube
+                      WITH ENCODING ''UTF8'' TEMPLATE template0';
+           END IF;
+         END
+         $$;\"
+      "
+    restart: "no"
+    profiles: [ "tools" ]
 
   sonarqube:
     image: sonarqube:latest
