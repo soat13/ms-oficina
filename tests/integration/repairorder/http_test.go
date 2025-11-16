@@ -393,12 +393,19 @@ func TestRepairOrderList(t *testing.T) {
 	setup := ensureSetup(t)
 
 	t.Run("Success - Returns List", func(t *testing.T) {
-		testsupport.ThereIsAReceivedRepairOrder(t, setup.Container.DB)
-		testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		cleanAllRepairOrders(t, setup.Container)
+
 		testsupport.ThereIsAnApprovedRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsARepairOrderInExecution(t, setup.Container.DB)
+		testsupport.ThereIsAnAwaitingApproveRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsAFinishedRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsARepairOrderInDiagnostics(t, setup.Container.DB)
+		testsupport.ThereIsAReleasedRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsAReceivedRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsACanceledRepairOrder(t, setup.Container.DB)
+		testsupport.ThereIsARepairOrderInDiagnosticsFinished(t, setup.Container.DB)
 
 		resp := listRepairOrders(t, setup.Container.FiberApp, setup.AuthToken, "", "")
-
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 		var result map[string]interface{}
@@ -408,7 +415,21 @@ func TestRepairOrderList(t *testing.T) {
 
 		data, ok := result["data"].([]interface{})
 		require.True(t, ok)
-		require.Greater(t, len(data), 0)
+		assert.Len(t, data, 6)
+
+		getStatusFn := func(i int) string {
+			item, _ := data[i].(map[string]interface{})
+			status, _ := item["status"].(string)
+
+			return status
+		}
+
+		assert.Equal(t, string(repairorderShared.StatusInExecution), getStatusFn(0))
+		assert.Equal(t, string(repairorderShared.StatusApproved), getStatusFn(1))
+		assert.Equal(t, string(repairorderShared.StatusAwaitingApproval), getStatusFn(2))
+		assert.Equal(t, string(repairorderShared.StatusDiagnosticsFinished), getStatusFn(3))
+		assert.Equal(t, string(repairorderShared.StatusInDiagnostics), getStatusFn(4))
+		assert.Equal(t, string(repairorderShared.StatusReceived), getStatusFn(5))
 	})
 
 	t.Run("Success - With Pagination", func(t *testing.T) {
