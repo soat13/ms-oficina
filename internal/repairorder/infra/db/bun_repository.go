@@ -73,10 +73,33 @@ func (r *BunRepairOrderRepository) GetById(ctx context.Context, id uuid.UUID) (*
 
 func (r *BunRepairOrderRepository) List(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error) {
 	var models []repairOrderModel
+	excludedStatuses := []repairorder.Status{
+		repairorder.StatusFinished,
+		repairorder.StatusReleased,
+		repairorder.StatusCanceled,
+	}
 
 	query := r.db.NewSelect().
 		Model(&models).
-		Order("created_at DESC")
+		Where("status not in (?)", bun.In(excludedStatuses)).
+		OrderExpr(`
+			CASE status
+				WHEN ? THEN 1
+				WHEN ? THEN 2
+				WHEN ? THEN 3
+				WHEN ? THEN 4
+				WHEN ? THEN 5
+				ELSE 6
+			END
+		`,
+			repairorder.StatusInExecution,
+			repairorder.StatusApproved,
+			repairorder.StatusAwaitingApproval,
+			repairorder.StatusDiagnosticsFinished,
+			repairorder.StatusInDiagnostics,
+			repairorder.StatusReceived,
+		).
+		Order("created_at ASC")
 
 	if pager.Limit > 0 {
 		query = query.Limit(pager.Limit)

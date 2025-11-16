@@ -19,19 +19,9 @@ import (
 	passwordVO "github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
 )
 
-var (
-	OilFilterID       = uuid.MustParse("1f09479b-6074-69d0-a0d0-9a7c61ccc8bb")
-	EngineOilChangeID = uuid.MustParse("1f094799-f210-63a0-a800-e67186b3a9f6")
-)
-
-func ThereIsAFinishedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+func ThereIsAReceivedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
 	t.Helper()
-	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusFinished)
-}
-
-func ThereIsAnApprovedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
-	t.Helper()
-	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusApproved)
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusReceived)
 }
 
 func ThereIsARepairOrderInDiagnostics(t *testing.T, db *bun.DB) uuid.UUID {
@@ -39,14 +29,39 @@ func ThereIsARepairOrderInDiagnostics(t *testing.T, db *bun.DB) uuid.UUID {
 	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusInDiagnostics)
 }
 
+func ThereIsARepairOrderInDiagnosticsFinished(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusDiagnosticsFinished)
+}
+
+func ThereIsAnAwaitingApproveRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusAwaitingApproval)
+}
+
+func ThereIsAnApprovedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusApproved)
+}
+
 func ThereIsARepairOrderInExecution(t *testing.T, db *bun.DB) uuid.UUID {
 	t.Helper()
 	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusInExecution)
 }
 
-func ThereIsAReceivedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+func ThereIsAFinishedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
 	t.Helper()
-	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusReceived)
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusFinished)
+}
+
+func ThereIsAReleasedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusReleased)
+}
+
+func ThereIsACanceledRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusCanceled)
 }
 
 func ThereIsARepairOrderWithStatus(t *testing.T, db *bun.DB, status repairorder.Status) uuid.UUID {
