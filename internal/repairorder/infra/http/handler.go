@@ -126,11 +126,12 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		VehicleID:  req.VehicleID,
 	}
 
-	if err := h.createUseCase.Execute(ctx.Context(), input); err != nil {
+	output, err := h.createUseCase.Execute(ctx.Context(), input)
+	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	return ctx.SendStatus(fiber.StatusCreated)
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"id": output.RepairOrderID})
 }
 
 func (h *Handler) list(ctx *fiber.Ctx) error {
