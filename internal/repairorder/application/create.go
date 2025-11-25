@@ -7,16 +7,22 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 )
 
-type CreateInput struct {
-	CustomerID uuid.UUID
-	VehicleID  uuid.UUID
-}
+type (
+	CreateInput struct {
+		CustomerID uuid.UUID
+		VehicleID  uuid.UUID
+	}
 
-type Create struct {
-	repository     Repository
-	customerReader CustomerReader
-	vehicleReader  VehicleReader
-}
+	CreateOutput struct {
+		RepairOrderID uuid.UUID
+	}
+
+	Create struct {
+		repository     Repository
+		customerReader CustomerReader
+		vehicleReader  VehicleReader
+	}
+)
 
 func NewCreate(repository Repository, customerReader CustomerReader, vehicleReader VehicleReader) *Create {
 	return &Create{
@@ -26,17 +32,22 @@ func NewCreate(repository Repository, customerReader CustomerReader, vehicleRead
 	}
 }
 
-func (uc *Create) Execute(ctx context.Context, input CreateInput) error {
+func (uc *Create) Execute(ctx context.Context, input CreateInput) (*CreateOutput, error) {
 	if err := uc.inputValidate(ctx, input); err != nil {
-		return err
+		return nil, err
 	}
 
 	repairOrder, err := domain.NewRepairOrder(uuid.Nil, input.CustomerID, input.VehicleID, nil, nil, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return uc.repository.Create(ctx, repairOrder)
+	err = uc.repository.Create(ctx, repairOrder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateOutput{RepairOrderID: repairOrder.ID}, nil
 }
 
 func (uc *Create) inputValidate(ctx context.Context, input CreateInput) error {
