@@ -11,7 +11,6 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
 
@@ -98,49 +97,12 @@ func (c *Create) publishEvent(ctx context.Context, estimate domain.Estimate) err
 }
 
 func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input CreateInput) error {
-	products, err := c.productCatalogReader.GetByIDs(ctx, maps.Keys(input.Products))
-	if err != nil {
-		return err
-	}
-	productMap := make(map[uuid.UUID]CatalogItemView, len(products))
-	for _, p := range products {
-		productMap[p.ID] = p
-	}
-
-	for productID, qty := range input.Products {
-		if qty > 0 {
-			product, exists := productMap[productID]
-			if !exists || product.Stock < qty {
-				return ErrProductNotAvailable
-			}
-		}
-	}
-	if err := c.addItemsToEstimate(estimate, input.Products, products, domain.ProductItemType); err != nil {
+	itemHelper := NewItemHelper(c.productCatalogReader, c.serviceCatalogReader)
+	if err := itemHelper.ValidateAndAddProducts(ctx, estimate, input.Products); err != nil {
 		return err
 	}
 
-	services, err := c.serviceCatalogReader.GetByIDs(ctx, maps.Keys(input.Services))
-	if err != nil {
-		return err
-	}
-
-	return c.addItemsToEstimate(estimate, input.Services, services, domain.ServiceItemType)
-}
-
-func (c *Create) addItemsToEstimate(
-	estimate *domain.Estimate,
-	itemQuantity map[uuid.UUID]int,
-	items []CatalogItemView,
-	itemType domain.ItemType,
-) error {
-	for _, item := range items {
-		err := estimate.AddItem(item.ID, item.Name, item.Price, itemQuantity[item.ID], itemType)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return itemHelper.ValidateAndAddServices(ctx, estimate, input.Services)
 }
 
 func (c *Create) getRepairOrder(ctx context.Context, repairID uuid.UUID) (*RepairOrderView, error) {

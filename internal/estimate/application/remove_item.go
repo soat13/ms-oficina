@@ -8,8 +8,8 @@ import (
 
 type (
 	RemoveItemInput struct {
-		RepairOrderID uuid.UUID
-		ItemID        uuid.UUID
+		EstimateID uuid.UUID
+		ItemID     uuid.UUID
 	}
 
 	RemoveItem struct {
@@ -22,7 +22,7 @@ func NewRemoveItem(repository Repository) *RemoveItem {
 }
 
 func (r *RemoveItem) Execute(ctx context.Context, input RemoveItemInput) error {
-	estimate, err := r.repository.GetByRepairOrderID(ctx, input.RepairOrderID)
+	estimate, err := r.repository.GetByID(ctx, input.EstimateID)
 	if err != nil {
 		return err
 	}

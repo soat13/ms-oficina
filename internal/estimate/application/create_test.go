@@ -134,12 +134,25 @@ type mockProductCatalogReader struct {
 	products []application.CatalogItemView
 }
 
+func (m *mockProductCatalogReader) Exists(ctx context.Context, id uuid.UUID) (bool, error) {
+	return true, nil
+}
+
 func (m *mockProductCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]application.CatalogItemView, error) {
 	return m.products, nil
 }
 
 type mockServiceCatalogReader struct {
 	services []application.CatalogItemView
+}
+
+func (m *mockServiceCatalogReader) Exists(ctx context.Context, id uuid.UUID) (bool, error) {
+	for _, s := range m.services {
+		if s.ID == id {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (m *mockServiceCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]application.CatalogItemView, error) {
@@ -149,6 +162,14 @@ func (m *mockServiceCatalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID
 type mockRepository struct{}
 
 func (m *mockRepository) Save(ctx context.Context, estimate *domain.Estimate) error {
+	return nil
+}
+
+func (m *mockRepository) UpsertItem(ctx context.Context, estimateID uuid.UUID, item domain.Item) error {
+	return nil
+}
+
+func (m *mockRepository) RemoveItem(ctx context.Context, estimateID uuid.UUID, itemID uuid.UUID) error {
 	return nil
 }
 
