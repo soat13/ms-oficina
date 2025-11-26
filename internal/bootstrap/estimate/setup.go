@@ -14,7 +14,6 @@ func SetupDefault(container *bootstrap.Container) {
 }
 
 func Setup(container *bootstrap.Container) {
-
 	repairOrderReader := estimateInfraDB.NewRepairOrderReader(container.DB)
 	productCatalogReader := estimateInfraDB.NewProductCatalogReader(container.DB)
 	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(container.DB)
@@ -31,8 +30,9 @@ func Setup(container *bootstrap.Container) {
 	approve := estimateApp.NewApproveEstimate(repository, container.EventBus)
 	cancel := estimateApp.NewCancelEstimate(repository, container.EventBus)
 	reject := estimateApp.NewRejectEstimate(repository, container.EventBus)
+	removeItem := estimateApp.NewRemoveItem(repository)
 
-	estimateHttpHandler := estimateInfraHttp.NewHandler(approve, reject, container.FiberErrorHandler)
+	estimateHttpHandler := estimateInfraHttp.NewHandler(approve, reject, removeItem, container.FiberErrorHandler)
 	estimateInfraHttp.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(

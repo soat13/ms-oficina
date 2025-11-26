@@ -86,6 +86,21 @@ func (e *Estimate) AddItem(id uuid.UUID, name string, price money.Money, quantit
 	return nil
 }
 
+func (e *Estimate) RemoveItem(itemID uuid.UUID) error {
+	if e.Status != StatusAwaitingApproval {
+		return ErrCannotChangeItemsAfterApproval
+	}
+
+	_, exists := e.items[itemID]
+	if !exists {
+		return ErrItemNotFound
+	}
+
+	delete(e.items, itemID)
+	e.Touch()
+	return nil
+}
+
 func (e *Estimate) Total() money.Money {
 	total := money.Money{Cents: 0}
 	for _, item := range e.items {
@@ -115,14 +130,14 @@ func (e *Estimate) Reject() error {
 	return nil
 }
 
-func (e *Estimate) IsRejected() bool {
-	return e.Status == StatusRejected
-}
-
 func (e *Estimate) Cancel() error {
 	e.Status = StatusCanceled
 	e.Touch()
 	return nil
+}
+
+func (e *Estimate) IsRejected() bool {
+	return e.Status == StatusRejected
 }
 
 func (e *Estimate) IsCanceled() bool {
