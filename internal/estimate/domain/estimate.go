@@ -70,19 +70,27 @@ func (e *Estimate) Items() map[uuid.UUID]Item {
 }
 
 func (e *Estimate) AddItem(id uuid.UUID, name string, price money.Money, quantity int, itemType ItemType) error {
+	if e.Status != StatusAwaitingApproval {
+		return ErrCannotChangeItemsAfterApproval
+	}
 	if quantity < 1 {
 		return ErrQuantityInvalid
 	}
 
-	item := Item{
-		ID:       id,
-		Name:     name,
-		Price:    price,
-		Quantity: quantity,
-		Type:     itemType,
+	if existingItem, exists := e.items[id]; exists {
+		existingItem.Quantity += quantity
+		e.items[id] = existingItem
+	} else {
+		item := Item{
+			ID:       id,
+			Name:     name,
+			Price:    price,
+			Quantity: quantity,
+			Type:     itemType,
+		}
+		e.items[item.ID] = item
 	}
 
-	e.items[item.ID] = item
 	return nil
 }
 
@@ -94,6 +102,10 @@ func (e *Estimate) RemoveItem(itemID uuid.UUID) error {
 	_, exists := e.items[itemID]
 	if !exists {
 		return ErrItemNotFound
+	}
+
+	if len(e.items) <= 1 {
+		return ErrEstimateMustHaveAtLeastOneItem
 	}
 
 	delete(e.items, itemID)

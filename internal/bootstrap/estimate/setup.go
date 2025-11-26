@@ -30,9 +30,10 @@ func Setup(container *bootstrap.Container) {
 	approve := estimateApp.NewApproveEstimate(repository, container.EventBus)
 	cancel := estimateApp.NewCancelEstimate(repository, container.EventBus)
 	reject := estimateApp.NewRejectEstimate(repository, container.EventBus)
+	addItem := estimateApp.NewAddItem(productCatalogReader, serviceCatalogReader, repository)
 	removeItem := estimateApp.NewRemoveItem(repository)
 
-	estimateHttpHandler := estimateInfraHttp.NewHandler(approve, reject, removeItem, container.FiberErrorHandler)
+	estimateHttpHandler := estimateInfraHttp.NewHandler(approve, reject, addItem, removeItem, container.FiberErrorHandler)
 	estimateInfraHttp.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(

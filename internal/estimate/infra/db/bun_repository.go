@@ -112,36 +112,32 @@ func (r *BunRepository) Save(ctx context.Context, estimate *domain.Estimate) err
 		return err
 	}
 
-	count, err := tx.NewSelect().
+	if _, err := tx.NewDelete().
 		Model((*estimateItemModel)(nil)).
 		Where("estimate_id = ?", estimateModel.ID).
-		Count(ctx)
-
-	if err != nil {
+		Exec(ctx); err != nil {
 		return err
 	}
 
-	if count == 0 {
-		items := estimate.Items()
-		if len(items) > 0 {
-			itemRows := make([]estimateItemModel, 0, len(items))
-			now := time.Now()
-			for _, item := range items {
-				itemRows = append(itemRows, estimateItemModel{
-					ID:         uuid.New(),
-					EstimateID: estimateModel.ID,
-					ItemID:     item.ID,
-					ItemName:   item.Name,
-					ItemType:   string(item.Type),
-					PriceCents: item.Price.Cents,
-					Quantity:   item.Quantity,
-					CreatedAt:  now,
-					UpdatedAt:  now,
-				})
-			}
-			if _, err := tx.NewInsert().Model(&itemRows).Exec(ctx); err != nil {
-				return err
-			}
+	items := estimate.Items()
+	if len(items) > 0 {
+		itemRows := make([]estimateItemModel, 0, len(items))
+		now := time.Now()
+		for _, item := range items {
+			itemRows = append(itemRows, estimateItemModel{
+				ID:         uuid.New(),
+				EstimateID: estimateModel.ID,
+				ItemID:     item.ID,
+				ItemName:   item.Name,
+				ItemType:   string(item.Type),
+				PriceCents: item.Price.Cents,
+				Quantity:   item.Quantity,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			})
+		}
+		if _, err := tx.NewInsert().Model(&itemRows).Exec(ctx); err != nil {
+			return err
 		}
 	}
 

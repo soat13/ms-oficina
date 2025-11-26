@@ -28,10 +28,12 @@ type (
 	}
 
 	ProductCatalogReader interface {
+		Exists(ctx context.Context, id uuid.UUID) (bool, error)
 		GetByIDs(ctx context.Context, ids []uuid.UUID) ([]CatalogItemView, error)
 	}
 
 	ServiceCatalogReader interface {
+		Exists(ctx context.Context, id uuid.UUID) (bool, error)
 		GetByIDs(ctx context.Context, ids []uuid.UUID) ([]CatalogItemView, error)
 	}
 )

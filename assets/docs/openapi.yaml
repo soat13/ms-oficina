@@ -1308,6 +1308,138 @@ paths:
               example:
                 code: "404"
                 message: estimate not found
+  /admin/estimates/{id}/items:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+    post:
+      tags: [Estimates]
+      summary: Adicionar item ao orçamento
+      description: Adiciona um produto ou serviço ao orçamento existente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddItemRequest'
+      responses:
+        '200':
+          description: Item adicionado com sucesso.
+        '400':
+          description: ID inválido ou corpo JSON inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidId:
+                  value:
+                    code: "400"
+                    message: invalid ID
+                invalidJson:
+                  value:
+                    code: "400"
+                    message: invalid JSON body
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Orçamento não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "404"
+                message: estimate not found
+        '409':
+          description: Produto indisponível ou não é possível alterar itens após aprovação.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                productNotAvailable:
+                  value:
+                    code: "409"
+                    message: product not available
+                cannotChangeItems:
+                  value:
+                    code: "409"
+                    message: cannot change items after approval
+        '422':
+          description: Validação de negócio falhou (produto/serviço não encontrado ou quantidade inválida).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                productOrServiceNotFound:
+                  value:
+                    code: "422"
+                    message: product or service not found
+                quantityInvalid:
+                  value:
+                    code: "422"
+                    message: quantity must be greater than zero
+  /admin/estimates/{id}/items/{itemId}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceIdParam'
+      - name: itemId
+        in: path
+        required: true
+        description: ID do item (produto ou serviço) a ser removido.
+        schema:
+          type: string
+          format: uuid
+    delete:
+      tags: [Estimates]
+      summary: Remover item do orçamento
+      responses:
+        '200':
+          description: Item removido com sucesso.
+        '400':
+          description: IDs inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "400"
+                message: invalid ID
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          description: Orçamento não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "404"
+                message: estimate not found
+        '409':
+          description: Não é possível alterar itens após aprovação.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: cannot change items after approval
+        '422':
+          description: Validação de negócio falhou (item não encontrado ou orçamento precisa ter pelo menos um item).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                itemNotFound:
+                  value:
+                    code: "422"
+                    message: item not found in estimate
+                mustHaveAtLeastOneItem:
+                  value:
+                    code: "422"
+                    message: estimate must have at least one item
 components:
   securitySchemes:
     bearerAuth:
@@ -1848,3 +1980,15 @@ components:
           minItems: 1
           description: Lista de serviços necessários para o reparo.
       description: É necessário informar ao menos um produto e um serviço para finalizar o diagnóstico.
+    AddItemRequest:
+      type: object
+      required: [item_id, quantity]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+          description: ID do produto ou serviço a ser adicionado.
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantidade a ser adicionada.

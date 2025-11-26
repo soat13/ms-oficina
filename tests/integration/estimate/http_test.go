@@ -2,16 +2,17 @@ package estimate
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"time"
 
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
@@ -133,8 +134,171 @@ func TestRejectEstimate(t *testing.T) {
 	})
 }
 
-// TestCancelEstimate - Cancel é feito APENAS via evento (OnRepairOrderCanceled listener)
-// Testado em: tests/integration/repairorder/http_test.go -> TestCancelRepairOrder
+func TestAddItemToEstimate(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success - Add Product Item", func(t *testing.T) {
+		productID := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 100)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
+
+		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 2)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		expectItemQuantity(t, setup.Container, estimateID, productID, 2)
+	})
+
+	t.Run("Success - Add Service Item", func(t *testing.T) {
+		serviceID := testsupport.ThereIsAService(t, setup.Container.DB, uuid.Nil, "Alignment", 12000)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
+
+		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, serviceID, 1)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		expectItemQuantity(t, setup.Container, estimateID, serviceID, 1)
+	})
+
+	t.Run("Success - Add Same Item Twice Sums Quantity", func(t *testing.T) {
+		productID := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Brake Pad", 15000, 50)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := createEstimateWithProducts(t, setup.Container, repairOrderID, map[uuid.UUID]int{
+			productID: 2,
+		})
+
+		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 3)
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		expectItemQuantity(t, setup.Container, estimateID, productID, 5) // 2 + 3
+	})
+
+	t.Run("Estimate Not Found", func(t *testing.T) {
+		productID := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 100)
+		estimateID := uuid.New()
+
+		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 1)
+
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Insufficient Stock", func(t *testing.T) {
+		productID := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Low Stock Item", 5000, 5)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
+
+		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 10)
+
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
+	})
+
+	t.Run("Cannot Add After Approval", func(t *testing.T) {
+		productID := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 100)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
+
+		postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		time.Sleep(50 * time.Millisecond)
+
+		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 1)
+
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
+	})
+
+	t.Run("Invalid UUID", func(t *testing.T) {
+		req := httptest.NewRequest("POST", "/admin/estimates/invalid-uuid/items", nil)
+		testauth.AddAuthHeader(req, setup.AuthToken)
+		resp, err := setup.Container.FiberApp.Test(req, -1)
+
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+}
+
+func TestRemoveItemFromEstimate(t *testing.T) {
+	setup := ensureSetup(t)
+
+	t.Run("Success", func(t *testing.T) {
+		productID1 := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 100)
+		productID2 := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Brake Pad", 8000, 50)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := createEstimateWithProducts(t, setup.Container, repairOrderID, map[uuid.UUID]int{
+			productID1: 2,
+			productID2: 1,
+		})
+
+		resp := deleteRemoveItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID1)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		expectItemNotExists(t, setup.Container, estimateID, productID1)
+	})
+
+	t.Run("Estimate Not Found", func(t *testing.T) {
+		estimateID := uuid.New()
+		itemID := uuid.New()
+
+		resp := deleteRemoveItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, itemID)
+
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Item Not Found", func(t *testing.T) {
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
+		itemID := uuid.New()
+
+		resp := deleteRemoveItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, itemID)
+
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Cannot Remove Last Item", func(t *testing.T) {
+		productID := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 100)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := createEstimateWithProducts(t, setup.Container, repairOrderID, map[uuid.UUID]int{
+			productID: 1,
+		})
+
+		resp := deleteRemoveItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID)
+
+		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
+	})
+
+	t.Run("Cannot Remove After Approval", func(t *testing.T) {
+		productID1 := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Oil Filter", 5000, 100)
+		productID2 := testsupport.ThereIsAProduct(t, setup.Container.DB, uuid.Nil, "Brake Pad", 8000, 50)
+		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
+		estimateID := createEstimateWithProducts(t, setup.Container, repairOrderID, map[uuid.UUID]int{
+			productID1: 2,
+			productID2: 1,
+		})
+
+		postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
+		time.Sleep(50 * time.Millisecond)
+
+		resp := deleteRemoveItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID1)
+
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
+	})
+
+	t.Run("Invalid Estimate UUID", func(t *testing.T) {
+		req := httptest.NewRequest("DELETE", "/admin/estimates/invalid-uuid/items/"+uuid.New().String(), nil)
+		testauth.AddAuthHeader(req, setup.AuthToken)
+		resp, err := setup.Container.FiberApp.Test(req, -1)
+
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+
+	t.Run("Invalid Item UUID", func(t *testing.T) {
+		estimateID := uuid.New()
+		req := httptest.NewRequest("DELETE", "/admin/estimates/"+estimateID.String()+"/items/invalid-uuid", nil)
+		testauth.AddAuthHeader(req, setup.AuthToken)
+		resp, err := setup.Container.FiberApp.Test(req, -1)
+
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+}
 
 // -----------------------------------------------------------------------------
 // Event Flow Tests - Testing complete event chains
@@ -290,3 +454,54 @@ func expectRepairOrderStatus(t *testing.T, container *bootstrap.Container, repai
 	)
 	assert.Equal(t, string(expectedStatus), status)
 }
+
+func postAddItem(t *testing.T, fiberApp *fiber.App, token string, estimateID uuid.UUID, itemID uuid.UUID, quantity int) *http.Response {
+	t.Helper()
+
+	body := fmt.Sprintf(`{"item_id":"%s","quantity":%d}`, itemID.String(), quantity)
+	req := httptest.NewRequest("POST", "/admin/estimates/"+estimateID.String()+"/items", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	testauth.AddAuthHeader(req, token)
+
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func deleteRemoveItem(t *testing.T, fiberApp *fiber.App, token string, estimateID uuid.UUID, itemID uuid.UUID) *http.Response {
+	t.Helper()
+
+	req := httptest.NewRequest("DELETE", "/admin/estimates/"+estimateID.String()+"/items/"+itemID.String(), nil)
+	testauth.AddAuthHeader(req, token)
+
+	resp, err := fiberApp.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
+
+func expectItemQuantity(t *testing.T, container *bootstrap.Container, estimateID uuid.UUID, itemID uuid.UUID, expectedQuantity int) {
+	t.Helper()
+	ctx := context.Background()
+
+	var quantity int
+	err := container.DB.NewRaw(`
+		SELECT quantity FROM estimate_items 
+		WHERE estimate_id = ? AND item_id = ?
+	`, estimateID, itemID).Scan(ctx, &quantity)
+	require.NoError(t, err)
+	assert.Equal(t, expectedQuantity, quantity)
+}
+
+func expectItemNotExists(t *testing.T, container *bootstrap.Container, estimateID uuid.UUID, itemID uuid.UUID) {
+	t.Helper()
+	ctx := context.Background()
+
+	var count int
+	err := container.DB.NewRaw(`
+		SELECT COUNT(*) FROM estimate_items 
+		WHERE estimate_id = ? AND item_id = ?
+	`, estimateID, itemID).Scan(ctx, &count)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "Item should not exist")
+}
+

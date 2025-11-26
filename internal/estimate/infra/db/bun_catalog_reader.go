@@ -30,6 +30,13 @@ type catalogRow struct {
 	Stock *int
 }
 
+func (r *catalogReader) Exists(ctx context.Context, id uuid.UUID) (bool, error) {
+	return r.db.NewSelect().
+		TableExpr("?", bun.Ident(r.table)).
+		Where("id = ?", id).
+		Exists(ctx)
+}
+
 func (r *catalogReader) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]app.CatalogItemView, error) {
 	if len(ids) == 0 {
 		return []app.CatalogItemView{}, nil
