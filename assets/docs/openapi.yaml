@@ -99,6 +99,10 @@ paths:
       responses:
         '201':
           description: Serviço criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
         '400':
           description: Corpo JSON inválido.
           content:
@@ -257,6 +261,10 @@ paths:
       responses:
         '201':
           description: Produto criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
         '400':
           description: Corpo JSON inválido.
           content:
@@ -415,6 +423,10 @@ paths:
       responses:
         '201':
           description: Cliente criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
         '400':
           description: Corpo JSON inválido.
           content:
@@ -606,6 +618,10 @@ paths:
       responses:
         '201':
           description: Veículo criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
         '400':
           description: Corpo JSON inválido.
           content:
@@ -928,6 +944,10 @@ paths:
       responses:
         '201':
           description: Ordem de reparo criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
         '400':
           description: Corpo JSON inválido.
           content:
@@ -1388,6 +1408,14 @@ components:
         message:
           type: string
           example: invalid JSON body
+    IdResponse:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID do recurso criado.
     ValidationError:
       type: object
       required: [code, message]
