@@ -16,6 +16,10 @@ type (
 		Stock int
 	}
 
+	CreateOutput struct {
+		ProductID uuid.UUID
+	}
+
 	CreateProduct struct {
 		repo ProductRepository
 	}
@@ -25,19 +29,24 @@ func NewCreateProduct(repo ProductRepository) *CreateProduct {
 	return &CreateProduct{repo: repo}
 }
 
-func (uc *CreateProduct) Execute(ctx context.Context, in CreateInput) error {
+func (uc *CreateProduct) Execute(ctx context.Context, in CreateInput) (*CreateOutput, error) {
 	exists, err := uc.repo.ExistsByName(ctx, in.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if exists {
-		return ErrDuplicateProduct
+		return nil, ErrDuplicateProduct
 	}
 
 	product, err := domain.NewProduct(uuid.Nil, in.Name, in.Price, in.Stock)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return uc.repo.Create(ctx, product)
+	err = uc.repo.Create(ctx, product)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateOutput{ProductID: product.ID}, nil
 }

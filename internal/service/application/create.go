@@ -16,6 +16,10 @@ type (
 		Now   time.Time
 	}
 
+	CreateOutput struct {
+		ServiceID uuid.UUID
+	}
+
 	CreateService struct {
 		repo ServiceRepository
 	}
@@ -25,19 +29,24 @@ func NewCreateService(repo ServiceRepository) *CreateService {
 	return &CreateService{repo: repo}
 }
 
-func (uc *CreateService) Execute(ctx context.Context, input CreateInput) error {
+func (uc *CreateService) Execute(ctx context.Context, input CreateInput) (*CreateOutput, error) {
 	exists, err := uc.repo.ExistsByName(ctx, input.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if exists {
-		return ErrDuplicateService
+		return nil, ErrDuplicateService
 	}
 
 	service, err := domain.NewService(uuid.Nil, input.Name, input.Price, input.Now, input.Now)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return uc.repo.Create(ctx, service)
+	err = uc.repo.Create(ctx, service)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateOutput{ServiceID: service.ID}, nil
 }

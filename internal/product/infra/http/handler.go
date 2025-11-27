@@ -108,7 +108,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.createUseCase.Execute(ctx.Context(), app.CreateInput{
+	output, err := h.createUseCase.Execute(ctx.Context(), app.CreateInput{
 		Name:  body.Name,
 		Price: price,
 		Stock: body.Stock,
@@ -116,7 +116,8 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	return ctx.SendStatus(fiber.StatusCreated)
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"id": output.ProductID})
 }
 
 func (h *Handler) update(ctx *fiber.Ctx) error {

@@ -20,6 +20,10 @@ type (
 		PhoneNumber phone.PhoneNumber
 	}
 
+	CreateOutput struct {
+		CustomerID uuid.UUID
+	}
+
 	CreateCustomer struct {
 		repo CustomerRepository
 	}
@@ -29,18 +33,23 @@ func NewCreateCustomer(repo CustomerRepository) *CreateCustomer {
 	return &CreateCustomer{repo: repo}
 }
 
-func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) error {
+func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateOutput, error) {
 	err := checkIfCustomerExists(ctx, cr.repo, in.Document, in.Email)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	customer, err := domain.NewCustomer(uuid.Nil, in.Name, in.Document, in.PhoneNumber, in.Email)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return cr.repo.Create(ctx, customer)
+	err = cr.repo.Create(ctx, customer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateOutput{CustomerID: customer.ID}, nil
 }
 
 func checkIfCustomerExists(ctx context.Context, repo CustomerRepository, document document.Document, email email.Email) error {
