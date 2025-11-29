@@ -1,6 +1,8 @@
 FROM golang:1.25.1-alpine AS builder
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git ca-certificates
+
+RUN adduser -D -g '' appuser
 
 WORKDIR /app
 
@@ -13,20 +15,16 @@ COPY cmd/ cmd/
 COPY internal/ internal/
 COPY pkg/ pkg/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o api ./cmd/api/main.go
 
-FROM alpine:3.22
+FROM scratch
 
-RUN apk --no-cache add ca-certificates
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /app/api /api
 
-WORKDIR /root/
-
-COPY --from=builder /app/api .
-
-RUN adduser -D appuser
 USER appuser
 
 EXPOSE 8080
 
-CMD ["./api"]
-
+CMD ["/api"]
