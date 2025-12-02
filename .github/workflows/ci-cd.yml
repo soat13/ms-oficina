@@ -9,60 +9,8 @@ on:
       - '*'
 
 jobs:
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.1'
-          cache: true
-
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Run Unit Tests
-        run: |
-          go test -v \
-            -coverpkg=./internal/...,./pkg/... \
-            -coverprofile=unit-coverage.out \
-            ./internal/... ./pkg/...
-
-      - name: Upload Unit Coverage
-        uses: actions/upload-artifact@v5
-        with:
-          name: unit-coverage
-          path: unit-coverage.out
-          retention-days: 1
-
-  docker-build:
-    name: Docker Build
-    needs: unit-tests
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
-
-      - name: Build Docker image
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
-        with:
-          context: .
-          push: false
-          tags: oficina-api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  integration-tests:
-    name: Integration Tests & Quality
-    needs: [unit-tests, docker-build]
+  tests-and-quality:
+    name: Tests & Quality
     runs-on: ubuntu-latest
 
     env:
@@ -111,17 +59,12 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Download Unit Coverage
-        uses: actions/download-artifact@v6
-        with:
-          name: unit-coverage
-
-      - name: Run Integration Tests
+      - name: Run tests with coverage (unit + integration)
         run: |
           go test -v \
             -coverpkg=./internal/...,./pkg/... \
-            -coverprofile=integration-coverage.out \
-            ./tests/integration/...
+            -coverprofile=coverage.out \
+            ./...
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
@@ -130,11 +73,32 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Dsonar.go.coverage.reportPaths=unit-coverage.out,integration-coverage.out
+            -Dsonar.go.coverage.reportPaths=coverage.out
+
+  docker-build:
+    name: Docker Build
+    needs: tests-and-quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - name: Build Docker image
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
+        with:
+          context: .
+          push: false
+          tags: oficina-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-to-ecr:
     name: Deploy to ECR
-    needs: integration-tests
+    needs: docker-build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
