@@ -11,7 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
+	eventbusInfra "github.com/soat13/fase-1-oficina/internal/infra/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -55,7 +56,7 @@ func Build(
 	}
 
 	if EventBus == nil {
-		EventBus = eventbus.NewInMemoryBus()
+		EventBus = eventbusInfra.NewInMemoryBus()
 	}
 
 	return &Container{

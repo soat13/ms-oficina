@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	repairOrderEvents "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder/events"
 	"github.com/soat13/fase-1-oficina/pkg/maps"

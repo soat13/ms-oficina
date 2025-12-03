@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/shared/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
 )
 
 type (
