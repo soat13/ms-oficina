@@ -3,9 +3,9 @@ package estimate
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
-	estimaterListeners "github.com/soat13/fase-1-oficina/internal/estimate/application/listeners"
 	estimateInfraDB "github.com/soat13/fase-1-oficina/internal/estimate/infra/db"
 	estimateInfraHttp "github.com/soat13/fase-1-oficina/internal/estimate/infra/http"
+	"github.com/soat13/fase-1-oficina/internal/estimate/infra/listeners"
 	repairOrderEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder/events"
 )
 
@@ -38,11 +38,11 @@ func Setup(container *bootstrap.Container) {
 
 	container.EventBus.Subscribe(
 		repairOrderEvent.Canceled{}.Topic(),
-		estimaterListeners.OnRepairOrderCanceled(cancel, repository),
+		listeners.OnRepairOrderCanceled(cancel, repository),
 	)
 	container.EventBus.Subscribe(
 		repairOrderEvent.DiagnosticsFinished{}.Topic(),
-		estimaterListeners.OnDiagnosticsFinished(createEstimate),
+		listeners.OnDiagnosticsFinished(createEstimate),
 	)
 
 }

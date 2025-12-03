@@ -3,9 +3,9 @@ package product
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
-	productListeners "github.com/soat13/fase-1-oficina/internal/product/application/listeners"
 	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/db"
 	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/http"
+	"github.com/soat13/fase-1-oficina/internal/product/infra/listeners"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 )
 
@@ -39,6 +39,6 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 
 	container.EventBus.Subscribe(
 		estimateEvent.Approved{}.Topic(),
-		productListeners.OnEstimateApproved(reduceStock, container.EventBus),
+		listeners.OnEstimateApproved(reduceStock, container.EventBus),
 	)
 }
