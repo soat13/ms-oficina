@@ -2,14 +2,9 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
-	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
-
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 )
 
@@ -21,26 +16,29 @@ type (
 	}
 
 	ReduceStock struct {
-		repository ProductRepository
-		eventBus   eventbus.Bus
+		repository     ProductRepository
+		eventPublisher EventPublisher
 	}
 )
 
-func NewReduceStock(repository ProductRepository, eventbus eventbus.Bus) *ReduceStock {
+func NewReduceStock(repository ProductRepository, eventPublisher EventPublisher) *ReduceStock {
 	return &ReduceStock{
-		repository: repository,
-		eventBus:   eventbus,
+		repository:     repository,
+		eventPublisher: eventPublisher,
 	}
 }
 
 func (uc *ReduceStock) Execute(ctx context.Context, in ReduceStockInput) error {
 	if err := uc.updateStock(ctx, in); err != nil {
-		if errors.Is(err, ErrInsufficientStock) {
-			return uc.publishEvent(ctx, in)
+		if !errors.Is(err, ErrInsufficientStock) {
+
+			return err
 		}
-		return err
+
+		return uc.eventPublisher.PublishStockInsufficientDetected(ctx, in.EstimateID, in.RepairOrderID)
 	}
-	return nil
+
+	return uc.eventPublisher.PublishStockReduceConfirmed(ctx, in.EstimateID, in.RepairOrderID)
 }
 
 func (uc *ReduceStock) updateStock(ctx context.Context, in ReduceStockInput) error {
@@ -64,24 +62,4 @@ func (uc *ReduceStock) updateStock(ctx context.Context, in ReduceStockInput) err
 	}
 
 	return uc.repository.UpdateBatch(ctx, products)
-}
-
-func (uc *ReduceStock) publishEvent(ctx context.Context, in ReduceStockInput) error {
-	insufficientDetected := productEvent.StockInsufficientDetected{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		EstimateID:    in.EstimateID,
-		RepairOrderID: in.RepairOrderID,
-	}
-
-	payload, err := json.Marshal(insufficientDetected)
-	if err != nil {
-		return err
-	}
-
-	if err := uc.eventBus.Publish(ctx, insufficientDetected.Topic(), payload); err != nil {
-		return err
-	}
-
-	return nil
 }

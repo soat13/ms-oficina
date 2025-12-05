@@ -2,14 +2,11 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
@@ -42,7 +39,7 @@ type (
 		productCatalogReader ProductCatalogReader
 		serviceCatalogReader ServiceCatalogReader
 		estimateRepository   Repository
-		eventbus             eventbus.Bus
+		eventPublisher       EventPublisher
 	}
 )
 
@@ -51,14 +48,14 @@ func NewCreateEstimate(
 	productCatalogReader ProductCatalogReader,
 	serviceCatalogReader ServiceCatalogReader,
 	repository Repository,
-	eventBus eventbus.Bus,
+	eventPublisher EventPublisher,
 ) *Create {
 	return &Create{
 		repairOrderReader:    repairOrderReader,
 		productCatalogReader: productCatalogReader,
 		serviceCatalogReader: serviceCatalogReader,
 		estimateRepository:   repository,
-		eventbus:             eventBus,
+		eventPublisher:       eventPublisher,
 	}
 }
 
@@ -81,19 +78,7 @@ func (c *Create) Execute(ctx context.Context, input CreateInput) error {
 		return err
 	}
 
-	return c.publishEvent(ctx, *estimate)
-}
-
-func (c *Create) publishEvent(ctx context.Context, estimate domain.Estimate) error {
-	event := estimateEvent.Created{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		EstimateID:    estimate.ID,
-		RepairOrderID: estimate.RepairOrderID,
-	}
-
-	b, _ := json.Marshal(event)
-	return c.eventbus.Publish(ctx, event.Topic(), b)
+	return c.eventPublisher.PublishCreated(ctx, *estimate)
 }
 
 func (c *Create) addItemsFromRepairOrder(ctx context.Context, estimate *domain.Estimate, input CreateInput) error {

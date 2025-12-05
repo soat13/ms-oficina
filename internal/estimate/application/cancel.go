@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/ports/event"
 )
 
 type (
@@ -14,15 +14,12 @@ type (
 
 	Cancel struct {
 		repository Repository
-		eventBus   eventbus.Bus
+		eventBus   event.Bus
 	}
 )
 
-func NewCancelEstimate(repository Repository, eventBus eventbus.Bus) *Cancel {
-	return &Cancel{
-		repository: repository,
-		eventBus:   eventBus,
-	}
+func NewCancelEstimate(repository Repository) *Cancel {
+	return &Cancel{repository: repository}
 }
 
 func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {

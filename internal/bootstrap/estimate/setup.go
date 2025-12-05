@@ -3,10 +3,11 @@ package estimate
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
+	"github.com/soat13/fase-1-oficina/internal/estimate/infra"
 	estimateInfraDB "github.com/soat13/fase-1-oficina/internal/estimate/infra/db"
 	estimateInfraHttp "github.com/soat13/fase-1-oficina/internal/estimate/infra/http"
 	"github.com/soat13/fase-1-oficina/internal/estimate/infra/listeners"
-	repairOrderEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder/events"
+	repairOrderEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {
@@ -18,18 +19,19 @@ func Setup(container *bootstrap.Container) {
 	productCatalogReader := estimateInfraDB.NewProductCatalogReader(container.DB)
 	serviceCatalogReader := estimateInfraDB.NewServiceCatalogReader(container.DB)
 	repository := estimateInfraDB.NewBunRepository(container.DB)
+	eventPublisher := infra.NewEventPublisher(container.EventBus)
 
 	createEstimate := estimateApp.NewCreateEstimate(
 		repairOrderReader,
 		productCatalogReader,
 		serviceCatalogReader,
 		repository,
-		container.EventBus,
+		eventPublisher,
 	)
 
-	approve := estimateApp.NewApproveEstimate(repository, container.EventBus)
-	cancel := estimateApp.NewCancelEstimate(repository, container.EventBus)
-	reject := estimateApp.NewRejectEstimate(repository, container.EventBus)
+	approve := estimateApp.NewApproveEstimate(repository, eventPublisher)
+	cancel := estimateApp.NewCancelEstimate(repository)
+	reject := estimateApp.NewRejectEstimate(repository, eventPublisher)
 	addItem := estimateApp.NewAddItem(productCatalogReader, serviceCatalogReader, repository)
 	removeItem := estimateApp.NewRemoveItem(repository)
 
@@ -37,11 +39,11 @@ func Setup(container *bootstrap.Container) {
 	estimateInfraHttp.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(
-		repairOrderEvent.Canceled{}.Topic(),
+		repairOrderEvent.RepairOrderCanceled{}.Topic(),
 		listeners.OnRepairOrderCanceled(cancel, repository),
 	)
 	container.EventBus.Subscribe(
-		repairOrderEvent.DiagnosticsFinished{}.Topic(),
+		repairOrderEvent.RepairOrderDiagnosticsFinished{}.Topic(),
 		listeners.OnDiagnosticsFinished(createEstimate),
 	)
 

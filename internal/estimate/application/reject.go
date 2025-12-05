@@ -2,13 +2,8 @@ package application
 
 import (
 	"context"
-	"encoding/json"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
-	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
 )
 
 type (
@@ -17,15 +12,15 @@ type (
 	}
 
 	Reject struct {
-		repository Repository
-		eventBus   eventbus.Bus
+		repository     Repository
+		eventPublisher EventPublisher
 	}
 )
 
-func NewRejectEstimate(repository Repository, eventBus eventbus.Bus) *Reject {
+func NewRejectEstimate(repository Repository, eventPublisher EventPublisher) *Reject {
 	return &Reject{
-		repository: repository,
-		eventBus:   eventBus,
+		repository:     repository,
+		eventPublisher: eventPublisher,
 	}
 }
 
@@ -47,21 +42,5 @@ func (a *Reject) Execute(ctx context.Context, input RejectInput) error {
 		return err
 	}
 
-	return a.publishEvent(ctx, *estimate)
-}
-
-func (a *Reject) publishEvent(ctx context.Context, estimate domain.Estimate) error {
-	event := estimateEvent.Rejected{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		EstimateID:    estimate.ID,
-		RepairOrderID: estimate.RepairOrderID,
-	}
-
-	b, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-
-	return a.eventBus.Publish(ctx, event.Topic(), b)
+	return a.eventPublisher.PublishRejected(ctx, *estimate)
 }

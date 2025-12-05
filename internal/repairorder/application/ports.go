@@ -45,4 +45,14 @@ type (
 		SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error
 		GetAverageExecutionTime(ctx context.Context) (*float64, error)
 	}
+
+	EventPublisher interface {
+		PublishRepairOrderDiagnosticsFinished(
+			ctx context.Context,
+			RepairOrderID uuid.UUID,
+			products map[uuid.UUID]int,
+			services map[uuid.UUID]int,
+		) error
+		PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error
+	}
 )

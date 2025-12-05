@@ -1,4 +1,4 @@
-package estimate
+package events
 
 import (
 	"time"
@@ -6,25 +6,25 @@ import (
 	"github.com/google/uuid"
 )
 
-type Created struct {
+type EstimateCreated struct {
 	EventID       uuid.UUID `json:"event_id"`
 	OccurredAt    time.Time `json:"occurred_at"`
 	EstimateID    uuid.UUID `json:"estimate_id"`
 	RepairOrderID uuid.UUID `json:"repair_order_id"`
 }
 
-func (Created) Topic() string { return "estimate.created" }
+func (EstimateCreated) Topic() string { return "estimate.created" }
 
-type Rejected struct {
+type EstimateRejected struct {
 	EventID       uuid.UUID `json:"event_id"`
 	OccurredAt    time.Time `json:"occurred_at"`
 	EstimateID    uuid.UUID `json:"estimate_id"`
 	RepairOrderID uuid.UUID `json:"repair_order_id"`
 }
 
-func (Rejected) Topic() string { return "estimate.rejected" }
+func (EstimateRejected) Topic() string { return "estimate.rejected" }
 
-type Approved struct {
+type EstimateApproved struct {
 	EventID       uuid.UUID         `json:"event_id"`
 	OccurredAt    time.Time         `json:"occurred_at"`
 	EstimateID    uuid.UUID         `json:"estimate_id"`
@@ -32,4 +32,4 @@ type Approved struct {
 	Products      map[uuid.UUID]int `json:"products"`
 }
 
-func (Approved) Topic() string { return "estimate.approved" }
+func (EstimateApproved) Topic() string { return "estimate.approved" }
