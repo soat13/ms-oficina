@@ -6,15 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type Canceled struct {
+type RepairOrderCanceled struct {
 	EventID       uuid.UUID `json:"event_id"`
 	OccurredAt    time.Time `json:"occurred_at"`
 	RepairOrderID uuid.UUID `json:"repair_order_id"`
 }
 
-func (Canceled) Topic() string { return "repairOrder.canceled" }
+func (RepairOrderCanceled) Topic() string { return "repairOrder.canceled" }
 
-type DiagnosticsFinished struct {
+type RepairOrderDiagnosticsFinished struct {
 	EventID       uuid.UUID         `json:"event_id"`
 	OccurredAt    time.Time         `json:"occurred_at"`
 	RepairOrderID uuid.UUID         `json:"repair_order_id"`
@@ -22,4 +22,4 @@ type DiagnosticsFinished struct {
 	Services      map[uuid.UUID]int `json:"services"`
 }
 
-func (DiagnosticsFinished) Topic() string { return "repairOrder.diagnostics.finished" }
+func (RepairOrderDiagnosticsFinished) Topic() string { return "repairOrder.diagnostics.finished" }

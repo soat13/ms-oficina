@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
 	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/stretchr/testify/assert"
@@ -94,14 +93,14 @@ func TestCreateStockValidation(t *testing.T) {
 			}
 
 			mockRepository := &mockRepository{}
-			mockEventBus := &mockEventBus{}
+			eventPublisher := &mockEventPublisher{}
 
 			createUseCase := application.NewCreateEstimate(
 				mockRepairOrderReader,
 				mockProductCatalogReader,
 				mockServiceCatalogReader,
 				mockRepository,
-				mockEventBus,
+				eventPublisher,
 			)
 
 			input := application.CreateInput{
@@ -189,11 +188,16 @@ func (m *mockRepository) GetByRepairOrderID(ctx context.Context, repairOrderID u
 	return nil, nil
 }
 
-type mockEventBus struct{}
+type mockEventPublisher struct{}
 
-func (m *mockEventBus) Publish(ctx context.Context, topic string, payload []byte) error {
+func (m *mockEventPublisher) PublishApproved(ctx context.Context, estimate domain.Estimate) error {
 	return nil
 }
 
-func (m *mockEventBus) Subscribe(topic string, h eventbus.Handler) {
+func (m *mockEventPublisher) PublishRejected(ctx context.Context, estimate domain.Estimate) error {
+	return nil
+}
+
+func (m *mockEventPublisher) PublishCreated(ctx context.Context, estimate domain.Estimate) error {
+	return nil
 }

@@ -2,14 +2,9 @@ package application
 
 import (
 	"context"
-	"encoding/json"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder/events"
 )
 
 type CancelInput struct {
@@ -17,14 +12,14 @@ type CancelInput struct {
 }
 
 type Cancel struct {
-	Repository Repository
-	Bus        eventbus.Bus
+	Repository     Repository
+	eventPublisher EventPublisher
 }
 
-func NewCancel(repository Repository, bus eventbus.Bus) *Cancel {
+func NewCancel(repository Repository, eventPublisher EventPublisher) *Cancel {
 	return &Cancel{
-		Repository: repository,
-		Bus:        bus,
+		Repository:     repository,
+		eventPublisher: eventPublisher,
 	}
 }
 
@@ -50,21 +45,5 @@ func (uc *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return err
 	}
 
-	return uc.publishEvent(ctx, *repairorder)
-}
-
-func (uc *Cancel) publishEvent(ctx context.Context, repairOrder domain.RepairOrder) error {
-	event := events.Canceled{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		RepairOrderID: repairOrder.ID,
-	}
-
-	b, err := json.Marshal(event)
-
-	if err != nil {
-		return err
-	}
-
-	return uc.Bus.Publish(ctx, event.Topic(), b)
+	return uc.eventPublisher.PublishRepairOrderCanceled(ctx, repairorder.ID)
 }

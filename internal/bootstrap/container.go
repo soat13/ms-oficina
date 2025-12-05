@@ -12,7 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	eventbusInfra "github.com/soat13/fase-1-oficina/internal/infra/eventbus"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
+	"github.com/soat13/fase-1-oficina/internal/ports/event"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -24,7 +24,7 @@ type Container struct {
 	FiberApp          *fiber.App
 	FiberErrorHandler *fiberHelper.ErrorHandler
 	Validator         *validator.Validate
-	EventBus          eventbus.Bus
+	EventBus          event.Bus
 }
 
 func BuildDefault() *Container {
@@ -36,7 +36,7 @@ func Build(
 	fiberApp *fiber.App,
 	fiberErrorHandler *fiberHelper.ErrorHandler,
 	structValidator *validator.Validate,
-	EventBus eventbus.Bus,
+	EventBus event.Bus,
 ) *Container {
 
 	if fiberApp == nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
@@ -27,6 +26,11 @@ type (
 		GetByIDs(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error)
 		List(ctx context.Context, pager pagination.Pagination) ([]*domain.Product, error)
 		ExistsByName(ctx context.Context, name string) (bool, error)
+	}
+
+	EventPublisher interface {
+		PublishStockInsufficientDetected(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID) error
+		PublishStockReduceConfirmed(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID) error
 	}
 )
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	productEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
+	productEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
 func OnStockReduceConfirmed(repository application.Repository) func(ctx context.Context, _ string, payload []byte) error {

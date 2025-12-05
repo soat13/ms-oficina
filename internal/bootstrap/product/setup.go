@@ -3,10 +3,11 @@ package product
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
+	"github.com/soat13/fase-1-oficina/internal/product/infra"
 	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/db"
 	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/http"
 	"github.com/soat13/fase-1-oficina/internal/product/infra/listeners"
-	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
+	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {
@@ -18,12 +19,13 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 		repository = productDB.NewBunProductRepository(container.DB)
 	}
 
+	eventPublisher := infra.NewEventPublisher(container.EventBus)
 	createProduct := productApp.NewCreateProduct(repository)
 	updateProduct := productApp.NewUpdateProduct(repository)
 	deleteProduct := productApp.NewDeleteProduct(repository)
 	getProduct := productApp.NewGetProduct(repository)
 	listProducts := productApp.NewListProducts(repository)
-	reduceStock := productApp.NewReduceStock(repository, container.EventBus)
+	reduceStock := productApp.NewReduceStock(repository, eventPublisher)
 
 	productHandler := productHTTP.NewHandler(
 		createProduct,
@@ -38,7 +40,7 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 	productHTTP.Register(container.FiberApp, productHandler)
 
 	container.EventBus.Subscribe(
-		estimateEvent.Approved{}.Topic(),
-		listeners.OnEstimateApproved(reduceStock, container.EventBus),
+		estimateEvent.EstimateApproved{}.Topic(),
+		listeners.OnEstimateApproved(reduceStock),
 	)
 }

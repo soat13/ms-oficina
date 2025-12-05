@@ -2,13 +2,9 @@ package application
 
 import (
 	"context"
-	"encoding/json"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/ports/eventbus"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
-	repairOrderEvents "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder/events"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 )
 
@@ -20,19 +16,19 @@ type (
 	}
 
 	FinishDiagnostics struct {
-		Repository    Repository
-		EventBus      eventbus.Bus
-		ProductReader ProductReader
-		ServiceReader ServiceReader
+		repository     Repository
+		eventPublisher EventPublisher
+		productReader  ProductReader
+		serviceReader  ServiceReader
 	}
 )
 
-func NewFinishDiagnostics(repository Repository, eventBus eventbus.Bus, productReader ProductReader, serviceReader ServiceReader) *FinishDiagnostics {
+func NewFinishDiagnostics(repository Repository, eventPublisher EventPublisher, productReader ProductReader, serviceReader ServiceReader) *FinishDiagnostics {
 	return &FinishDiagnostics{
-		Repository:    repository,
-		EventBus:      eventBus,
-		ProductReader: productReader,
-		ServiceReader: serviceReader,
+		repository:     repository,
+		eventPublisher: eventPublisher,
+		productReader:  productReader,
+		serviceReader:  serviceReader,
 	}
 }
 
@@ -45,7 +41,7 @@ func (uc *FinishDiagnostics) Execute(ctx context.Context, input FinishDiagnostic
 		return err
 	}
 
-	repairorder, err := uc.Repository.GetById(ctx, input.RepairOrderID)
+	repairorder, err := uc.repository.GetById(ctx, input.RepairOrderID)
 	if err != nil {
 		return err
 	}
@@ -57,16 +53,21 @@ func (uc *FinishDiagnostics) Execute(ctx context.Context, input FinishDiagnostic
 		return err
 	}
 
-	if err := uc.Repository.SaveIfInDiagnostics(ctx, repairorder); err != nil {
+	if err := uc.repository.SaveIfInDiagnostics(ctx, repairorder); err != nil {
 		return err
 	}
 
-	return uc.publishEvent(ctx, input)
+	return uc.eventPublisher.PublishRepairOrderDiagnosticsFinished(
+		ctx,
+		input.RepairOrderID,
+		input.Products,
+		input.Services,
+	)
 }
 
 func (uc *FinishDiagnostics) validateServicesExist(ctx context.Context, services map[uuid.UUID]int) error {
 	serviceIDs := maps.Keys(services)
-	allExist, err := uc.ServiceReader.ExistByIds(ctx, serviceIDs)
+	allExist, err := uc.serviceReader.ExistByIds(ctx, serviceIDs)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func (uc *FinishDiagnostics) validateServicesExist(ctx context.Context, services
 
 func (uc *FinishDiagnostics) validateProductsAndStock(ctx context.Context, products map[uuid.UUID]int) error {
 	productIDs := maps.Keys(products)
-	productViews, err := uc.ProductReader.GetByIDs(ctx, productIDs)
+	productViews, err := uc.productReader.GetByIDs(ctx, productIDs)
 	if err != nil {
 		return err
 	}
@@ -96,17 +97,4 @@ func (uc *FinishDiagnostics) validateProductsAndStock(ctx context.Context, produ
 	}
 
 	return nil
-}
-
-func (uc *FinishDiagnostics) publishEvent(ctx context.Context, input FinishDiagnosticsInput) error {
-	event := repairOrderEvents.DiagnosticsFinished{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		RepairOrderID: input.RepairOrderID,
-		Products:      input.Products,
-		Services:      input.Services,
-	}
-
-	b, _ := json.Marshal(event)
-	return uc.EventBus.Publish(ctx, event.Topic(), b)
 }

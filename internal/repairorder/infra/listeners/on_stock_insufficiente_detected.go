@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	estimate "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
+	estimate "github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
 func OnStockInsufficientDetected(cancel *application.Cancel) func(ctx context.Context, _ string, payload []byte) error {

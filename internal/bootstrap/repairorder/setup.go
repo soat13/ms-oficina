@@ -3,11 +3,11 @@ package repairorder
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	repairOrderApp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
+	"github.com/soat13/fase-1-oficina/internal/repairorder/infra"
 	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/listeners"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/estimate"
-	product "github.com/soat13/fase-1-oficina/internal/shared/kernel/product"
+	"github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {
@@ -20,17 +20,23 @@ func Setup(container *bootstrap.Container) {
 	customerReader := repairOrderDB.NewCustomerReader(container.DB)
 	productReader := repairOrderDB.NewProductReader(container.DB)
 	serviceReader := repairOrderDB.NewServiceReader(container.DB)
+	eventPublisher := infra.NewEventPublisher(container.EventBus)
 
 	list := repairOrderApp.NewListRepairOrders(repairOrderRepository)
 	get := repairOrderApp.NewGetRepairOrder(repairOrderRepository)
 	create := repairOrderApp.NewCreate(repairOrderRepository, customerReader, vehicleReader)
 	startDiagnostics := repairOrderApp.NewStartDiagnostics(repairOrderRepository)
-	finishDiagnostics := repairOrderApp.NewFinishDiagnostics(repairOrderRepository, container.EventBus, productReader, serviceReader)
 	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
 	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
 	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
 	getAverageExecutionTime := repairOrderApp.NewGetAverageExecutionTime(repairOrderRepository)
-	cancel := repairOrderApp.NewCancel(repairOrderRepository, container.EventBus)
+	cancel := repairOrderApp.NewCancel(repairOrderRepository, eventPublisher)
+	finishDiagnostics := repairOrderApp.NewFinishDiagnostics(
+		repairOrderRepository,
+		eventPublisher,
+		productReader,
+		serviceReader,
+	)
 
 	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(
 		list,
@@ -48,14 +54,14 @@ func Setup(container *bootstrap.Container) {
 	)
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)
 
-	container.EventBus.Subscribe(estimate.Created{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
-	container.EventBus.Subscribe(estimate.Rejected{}.Topic(), listeners.OnEstimateRejected(cancel))
+	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
+	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), listeners.OnEstimateRejected(cancel))
 	container.EventBus.Subscribe(
-		product.StockInsufficientDetected{}.Topic(),
+		events.StockInsufficientDetected{}.Topic(),
 		listeners.OnStockInsufficientDetected(cancel),
 	)
 	container.EventBus.Subscribe(
-		product.StockReduceConfirmed{}.Topic(),
+		events.StockReduceConfirmed{}.Topic(),
 		listeners.OnStockReduceConfirmed(repairOrderRepository),
 	)
 }
