@@ -8,10 +8,8 @@ import (
 
 	jwtlib "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-
 	"github.com/soat13/fase-1-oficina/internal/auth/application"
 	authDomain "github.com/soat13/fase-1-oficina/internal/auth/domain"
-	userDomain "github.com/soat13/fase-1-oficina/internal/user/domain"
 )
 
 const (
@@ -53,13 +51,12 @@ func NewTokenService(secret string, expiration time.Duration) (application.Token
 	}, nil
 }
 
-func (s *Service) Generate(_ context.Context, user *userDomain.User) (authDomain.Token, error) {
+func (s *Service) Generate(_ context.Context, user *application.UserView) (authDomain.Token, error) {
 	now := s.now()
 	expiresAt := now.Add(s.expiration)
 
 	claims := authClaims{
 		UserID: user.ID.String(),
-		Email:  user.Email.String(),
 		Roles:  user.Roles.Strings(),
 		RegisteredClaims: jwtlib.RegisteredClaims{
 			Issuer:    s.issuer,

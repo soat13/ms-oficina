@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
@@ -17,7 +17,7 @@ type (
 		PhoneNumber *phone.PhoneNumber
 		Email       *email.Email
 		Password    *password.Password
-		Roles       *role.Roles
+		Roles       *authz.Roles
 	}
 
 	UpdateUser struct {

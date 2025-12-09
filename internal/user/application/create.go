@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/internal/user/domain"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
 	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
@@ -20,7 +20,7 @@ type (
 		PhoneNumber phone.PhoneNumber
 		Email       email.Email
 		Password    password.Password
-		Roles       role.Roles
+		Roles       authz.Roles
 	}
 
 	CreateUser struct {

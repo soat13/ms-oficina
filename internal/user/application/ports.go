@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/internal/user/domain"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
@@ -19,7 +19,7 @@ type (
 		Document    document.Document
 		Email       email.Email
 		PhoneNumber phone.PhoneNumber
-		Roles       role.Roles
+		Roles       authz.Roles
 	}
 
 	UserRepository interface {

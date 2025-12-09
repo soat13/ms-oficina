@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-
 	authApp "github.com/soat13/fase-1-oficina/internal/auth/application"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/db"
 	authHTTP "github.com/soat13/fase-1-oficina/internal/auth/infra/http"
 	authJWT "github.com/soat13/fase-1-oficina/internal/auth/infra/jwt"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	userDB "github.com/soat13/fase-1-oficina/internal/user/infra/db"
 )
 
 type Config struct {
@@ -72,8 +71,8 @@ func Setup(container *bootstrap.Container, cfg Config) {
 		log.Fatalf("failed to build token service: %v", err)
 	}
 
-	userRepo := userDB.NewBunUserRepository(container.DB)
-	authenticate := authApp.NewAuthenticateUser(userRepo, tokenService)
+	userReader := db.NewBunUserReader(container.DB)
+	authenticate := authApp.NewAuthenticateUser(userReader, tokenService)
 	handler := authHTTP.NewHandler(authenticate, container.Validator, container.FiberErrorHandler)
 
 	middleware := authHTTP.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes, cfg.PublicRoutes)

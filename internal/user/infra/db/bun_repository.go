@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	roleVO "github.com/soat13/fase-1-oficina/internal/user/domain/role"
+	roleVO "github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"

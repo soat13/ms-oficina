@@ -3,11 +3,7 @@ package application
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	authDomain "github.com/soat13/fase-1-oficina/internal/auth/domain"
-	userDomain "github.com/soat13/fase-1-oficina/internal/user/domain"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 )
 
@@ -19,14 +15,7 @@ type (
 
 	AuthenticateOutput struct {
 		Token authDomain.Token
-		User  AuthenticatedUserView
-	}
-
-	AuthenticatedUserView struct {
-		ID    uuid.UUID
-		Name  string
-		Email string
-		Roles role.Roles
+		User  UserView
 	}
 
 	AuthenticateUser struct {
@@ -47,6 +36,7 @@ func (uc *AuthenticateUser) Execute(ctx context.Context, in AuthenticateInput) (
 	if err != nil {
 		return AuthenticateOutput{}, err
 	}
+
 	if user == nil || !user.Password.Matches(in.Password) {
 		return AuthenticateOutput{}, ErrInvalidCredentials
 	}
@@ -56,17 +46,5 @@ func (uc *AuthenticateUser) Execute(ctx context.Context, in AuthenticateInput) (
 		return AuthenticateOutput{}, err
 	}
 
-	return AuthenticateOutput{
-		Token: token,
-		User:  newAuthenticatedUserView(user),
-	}, nil
-}
-
-func newAuthenticatedUserView(user *userDomain.User) AuthenticatedUserView {
-	return AuthenticatedUserView{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email.String(),
-		Roles: user.Roles,
-	}
+	return AuthenticateOutput{Token: token, User: *user}, nil
 }
