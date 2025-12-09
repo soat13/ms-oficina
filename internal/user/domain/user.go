@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	uuidPkg "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
@@ -21,11 +21,11 @@ type User struct {
 	Email       email.Email
 	PhoneNumber phone.PhoneNumber
 	Password    password.Password
-	Roles       role.Roles
+	Roles       authz.Roles
 	entity.Timestamps
 }
 
-func NewUser(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email, password password.Password, roles role.Roles) (*User, error) {
+func NewUser(id uuid.UUID, name string, document document.Document, phoneNumber phone.PhoneNumber, email email.Email, password password.Password, roles authz.Roles) (*User, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, ErrInvalidUserName
@@ -71,7 +71,7 @@ func (user *User) ChangePassword(password password.Password) {
 	user.Touch()
 }
 
-func (user *User) ChangeRoles(roles role.Roles) error {
+func (user *User) ChangeRoles(roles authz.Roles) error {
 	user.Roles = roles
 	user.Touch()
 	return nil

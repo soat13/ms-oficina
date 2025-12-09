@@ -5,15 +5,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 )
 
-func mustNewRoles(values []string) role.Roles {
-	roles, _ := role.NewRoles(values)
+func mustNewRoles(values []string) authz.Roles {
+	roles, _ := authz.NewRoles(values)
 	return roles
 }
 
@@ -24,7 +24,7 @@ func TestNewUser(t *testing.T) {
 	validPhone, _ := phone.New("11987654321")
 	validEmail, _ := email.New("test@example.com")
 	validPassword, _ := password.New("password123")
-	validRoles, _ := role.NewRoles([]string{"attendant"})
+	validRoles, _ := authz.NewRoles([]string{"attendant"})
 
 	tests := []struct {
 		name        string
@@ -34,7 +34,7 @@ func TestNewUser(t *testing.T) {
 		phoneNumber phone.PhoneNumber
 		email       email.Email
 		password    password.Password
-		roles       role.Roles
+		roles       authz.Roles
 		now         time.Time
 		wantErr     error
 	}{
@@ -106,7 +106,7 @@ func TestUserChangeName(t *testing.T) {
 	phone, _ := phone.New("11987654321")
 	em, _ := email.New("test@example.com")
 	pwd, _ := password.New("password123")
-	roles, _ := role.NewRoles([]string{"manager"})
+	roles, _ := authz.NewRoles([]string{"manager"})
 
 	user, _ := NewUser(uuid.Nil, "Old Name", doc, phone, em, pwd, roles)
 	err := user.ChangeName("New Name")
@@ -130,7 +130,7 @@ func TestUserChangePhoneNumber(t *testing.T) {
 	newPhone, _ := phone.New("11987654322")
 	em, _ := email.New("test@example.com")
 	pwd, _ := password.New("password123")
-	roles, _ := role.NewRoles([]string{"mechanic"})
+	roles, _ := authz.NewRoles([]string{"mechanic"})
 
 	user, _ := NewUser(uuid.Nil, "Test User", doc, oldPhone, em, pwd, roles)
 	user.ChangePhoneNumber(newPhone)
@@ -146,7 +146,7 @@ func TestUserChangeEmail(t *testing.T) {
 	oldEmail, _ := email.New("old@example.com")
 	newEmail, _ := email.New("new@example.com")
 	pwd, _ := password.New("password123")
-	roles, _ := role.NewRoles([]string{"attendant"})
+	roles, _ := authz.NewRoles([]string{"attendant"})
 
 	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, oldEmail, pwd, roles)
 	user.ChangeEmail(newEmail)
@@ -162,7 +162,7 @@ func TestUserChangePassword(t *testing.T) {
 	em, _ := email.New("test@example.com")
 	oldPwd, _ := password.New("oldpassword")
 	newPwd, _ := password.New("newpassword")
-	roles, _ := role.NewRoles([]string{"mechanic"})
+	roles, _ := authz.NewRoles([]string{"mechanic"})
 
 	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, em, oldPwd, roles)
 	user.ChangePassword(newPwd)
@@ -177,13 +177,13 @@ func TestUserChangeRoles(t *testing.T) {
 	phone, _ := phone.New("11987654321")
 	em, _ := email.New("test@example.com")
 	pwd, _ := password.New("password123")
-	initialRoles, _ := role.NewRoles([]string{"attendant"})
+	initialRoles, _ := authz.NewRoles([]string{"attendant"})
 
 	user, _ := NewUser(uuid.Nil, "Test User", doc, phone, em, pwd, initialRoles)
 
 	tests := []struct {
 		name     string
-		newRoles role.Roles
+		newRoles authz.Roles
 		wantErr  error
 	}{
 		{
@@ -198,7 +198,7 @@ func TestUserChangeRoles(t *testing.T) {
 		},
 		{
 			name:     "empty roles",
-			newRoles: role.Roles{},
+			newRoles: authz.Roles{},
 			wantErr:  nil,
 		},
 	}

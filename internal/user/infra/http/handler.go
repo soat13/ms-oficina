@@ -4,11 +4,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	app "github.com/soat13/fase-1-oficina/internal/user/application"
 	"github.com/soat13/fase-1-oficina/internal/user/domain"
-	"github.com/soat13/fase-1-oficina/internal/user/domain/role"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
@@ -50,8 +50,8 @@ func NewHandler(
 	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateEmail)
 	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateDocument)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidUserName)
-	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(role.ErrInvalidRole)
-	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(role.ErrRolesRequired)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(authz.ErrInvalidRole)
+	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(authz.ErrRolesRequired)
 
 	return handler
 }
@@ -135,7 +135,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	rolesVO, err := role.NewRoles(body.Roles)
+	rolesVO, err := authz.NewRoles(body.Roles)
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -196,9 +196,9 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		passwordVO = &vo
 	}
 
-	var rolesVO *role.Roles
+	var rolesVO *authz.Roles
 	if body.Roles != nil {
-		vo, err := role.NewRoles(*body.Roles)
+		vo, err := authz.NewRoles(*body.Roles)
 		if err != nil {
 			return h.errorHandler.Handle(ctx, err)
 		}
