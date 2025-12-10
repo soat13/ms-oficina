@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 )
 
 type RepairOrderView struct {

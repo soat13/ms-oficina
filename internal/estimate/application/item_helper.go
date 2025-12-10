@@ -28,6 +28,7 @@ func (h *itemHelper) ValidateAndAddProducts(ctx context.Context, estimate *domai
 	if err != nil {
 		return err
 	}
+
 	productMap := make(map[uuid.UUID]CatalogItemView, len(products))
 	for _, p := range products {
 		productMap[p.ID] = p

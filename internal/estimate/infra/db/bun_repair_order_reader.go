@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/uptrace/bun"
 
 	estimateApplication "github.com/soat13/fase-1-oficina/internal/estimate/application"

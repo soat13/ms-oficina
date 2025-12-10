@@ -6,11 +6,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 
 	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 )

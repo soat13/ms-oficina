@@ -2,27 +2,27 @@ package customer
 
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	customerApp "github.com/soat13/fase-1-oficina/internal/customer/application"
-	customerDB "github.com/soat13/fase-1-oficina/internal/customer/infra/db"
-	customerHTTP "github.com/soat13/fase-1-oficina/internal/customer/infra/http"
+	"github.com/soat13/fase-1-oficina/internal/customer/application"
+	"github.com/soat13/fase-1-oficina/internal/customer/infra/db"
+	"github.com/soat13/fase-1-oficina/internal/customer/infra/http"
 )
 
 func SetupDefault(container *bootstrap.Container) {
 	Setup(container, nil)
 }
 
-func Setup(container *bootstrap.Container, repository customerApp.CustomerRepository) {
+func Setup(container *bootstrap.Container, repository application.CustomerRepository) {
 	if repository == nil {
-		repository = customerDB.NewBunCustomerRepository(container.DB)
+		repository = db.NewBunCustomerRepository(container.DB)
 	}
 
-	createCustomer := customerApp.NewCreateCustomer(repository)
-	updateCustomer := customerApp.NewUpdateCustomer(repository)
-	deleteCustomer := customerApp.NewDeleteCustomer(repository)
-	getCustomer := customerApp.NewGetCustomer(repository)
-	listCustomers := customerApp.NewListCustomers(repository)
+	createCustomer := application.NewCreateCustomer(repository)
+	updateCustomer := application.NewUpdateCustomer(repository)
+	deleteCustomer := application.NewDeleteCustomer(repository)
+	getCustomer := application.NewGetCustomer(repository)
+	listCustomers := application.NewListCustomers(repository)
 
-	customerHandler := customerHTTP.NewHandler(
+	customerHandler := http.NewHandler(
 		createCustomer,
 		updateCustomer,
 		deleteCustomer,
@@ -32,5 +32,5 @@ func Setup(container *bootstrap.Container, repository customerApp.CustomerReposi
 		container.FiberErrorHandler,
 	)
 
-	customerHTTP.Register(container.FiberApp, customerHandler)
+	http.Register(container.FiberApp, customerHandler)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
-	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
+	stringHelper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
@@ -53,7 +53,7 @@ func (cr *CreateCustomer) Execute(ctx context.Context, in CreateInput) (*CreateO
 }
 
 func checkIfCustomerExists(ctx context.Context, repo CustomerRepository, document document.Document, email email.Email) error {
-	existsDoc, err := repo.ExistsByDocument(ctx, string_helper.OnlyNumbers(document.Value))
+	existsDoc, err := repo.ExistsByDocument(ctx, stringHelper.OnlyNumbers(document.Value))
 	if err != nil {
 		return err
 	}

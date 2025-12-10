@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/stretchr/testify/assert"
 )

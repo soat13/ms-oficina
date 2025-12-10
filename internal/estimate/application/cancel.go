@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/ports/event"
 )
 
 type (
@@ -14,7 +13,6 @@ type (
 
 	Cancel struct {
 		repository Repository
-		eventBus   event.Bus
 	}
 )
 

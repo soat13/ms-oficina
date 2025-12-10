@@ -14,7 +14,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
 	estimatDomain "github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	repairorderShared "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	repairorderShared "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/soat13/fase-1-oficina/tests/testsupport"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
 	"github.com/stretchr/testify/assert"

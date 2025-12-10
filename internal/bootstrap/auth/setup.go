@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	authApp "github.com/soat13/fase-1-oficina/internal/auth/application"
+	"github.com/soat13/fase-1-oficina/internal/auth/application"
 	"github.com/soat13/fase-1-oficina/internal/auth/infra/db"
-	authHTTP "github.com/soat13/fase-1-oficina/internal/auth/infra/http"
-	authJWT "github.com/soat13/fase-1-oficina/internal/auth/infra/jwt"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/http"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/jwt"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 )
 
@@ -17,7 +17,7 @@ type Config struct {
 	Secret            string
 	TokenTTL          time.Duration
 	ProtectedPrefixes []string
-	PublicRoutes      []authHTTP.PublicRoute
+	PublicRoutes      []http.PublicRoute
 }
 
 func SetupDefault(container *bootstrap.Container) {
@@ -25,7 +25,7 @@ func SetupDefault(container *bootstrap.Container) {
 		Secret:            os.Getenv("JWT_SECRET"),
 		TokenTTL:          parseDuration(os.Getenv("JWT_EXPIRATION")),
 		ProtectedPrefixes: []string{"/"},
-		PublicRoutes: []authHTTP.PublicRoute{
+		PublicRoutes: []http.PublicRoute{
 			{
 				Method: fiber.MethodPost,
 				Path:   "/auth/login",
@@ -58,7 +58,7 @@ func Setup(container *bootstrap.Container, cfg Config) {
 		cfg.ProtectedPrefixes = []string{"/"}
 	}
 	if len(cfg.PublicRoutes) == 0 {
-		cfg.PublicRoutes = []authHTTP.PublicRoute{
+		cfg.PublicRoutes = []http.PublicRoute{
 			{
 				Method: fiber.MethodPost,
 				Path:   "/auth/login",
@@ -66,19 +66,19 @@ func Setup(container *bootstrap.Container, cfg Config) {
 		}
 	}
 
-	tokenService, err := authJWT.NewTokenService(cfg.Secret, cfg.TokenTTL)
+	tokenService, err := jwt.NewTokenService(cfg.Secret, cfg.TokenTTL)
 	if err != nil {
 		log.Fatalf("failed to build token service: %v", err)
 	}
 
 	userReader := db.NewBunUserReader(container.DB)
-	authenticate := authApp.NewAuthenticateUser(userReader, tokenService)
-	handler := authHTTP.NewHandler(authenticate, container.Validator, container.FiberErrorHandler)
+	authenticate := application.NewAuthenticateUser(userReader, tokenService)
+	handler := http.NewHandler(authenticate, container.Validator, container.FiberErrorHandler)
 
-	middleware := authHTTP.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes, cfg.PublicRoutes)
+	middleware := http.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes, cfg.PublicRoutes)
 	container.FiberApp.Use(middleware.Handle)
 
-	authHTTP.Register(container.FiberApp, handler)
+	http.Register(container.FiberApp, handler)
 }
 
 func parseDuration(value string) time.Duration {

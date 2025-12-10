@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
+	"github.com/soat13/fase-1-oficina/pkg/pagination"
 )
 
 type (

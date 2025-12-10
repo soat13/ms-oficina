@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 )
 
 type FinishExecutionInput struct {

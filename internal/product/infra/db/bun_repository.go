@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/pkg/pagination"
 	"github.com/uptrace/bun"
 
 	app "github.com/soat13/fase-1-oficina/internal/product/application"
@@ -14,7 +15,6 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
-	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
 type productModel struct {

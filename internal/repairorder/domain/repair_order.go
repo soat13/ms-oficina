@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	uuidHelper "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 )
 
