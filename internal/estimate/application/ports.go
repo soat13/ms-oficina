@@ -4,21 +4,15 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	estimateDomain "github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
+	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
+	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
 
 type (
-	RepairOrderStatus string
-
 	RepairOrderView struct {
 		ID     uuid.UUID
 		Status repairorder.Status
-	}
-
-	RepairOrderReader interface {
-		GetByID(ctx context.Context, id uuid.UUID) (*RepairOrderView, error)
 	}
 
 	CatalogItemView struct {
@@ -26,6 +20,10 @@ type (
 		Name  string
 		Price money.Money
 		Stock int
+	}
+
+	RepairOrderReader interface {
+		GetByID(ctx context.Context, id uuid.UUID) (*RepairOrderView, error)
 	}
 
 	ProductCatalogReader interface {
@@ -39,8 +37,16 @@ type (
 	}
 
 	EventPublisher interface {
-		PublishApproved(ctx context.Context, estimate estimateDomain.Estimate) error
-		PublishRejected(ctx context.Context, estimate estimateDomain.Estimate) error
-		PublishCreated(ctx context.Context, estimate estimateDomain.Estimate) error
+		PublishApproved(ctx context.Context, estimate domain.Estimate) error
+		PublishRejected(ctx context.Context, estimate domain.Estimate) error
+		PublishCreated(ctx context.Context, estimate domain.Estimate) error
+	}
+
+	Repository interface {
+		GetByID(ctx context.Context, id uuid.UUID) (*domain.Estimate, error)
+		GetByRepairOrderID(ctx context.Context, repairOrderID uuid.UUID) (*domain.Estimate, error)
+		Save(ctx context.Context, estimate *domain.Estimate) error
+		SaveIfAwaitingStock(ctx context.Context, estimate *domain.Estimate) error
+		SaveIfAwaitingApproval(ctx context.Context, estimate *domain.Estimate) error
 	}
 )

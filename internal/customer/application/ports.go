@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
-	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
+	"github.com/soat13/fase-1-oficina/pkg/pagination"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"

@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
-	"github.com/soat13/fase-1-oficina/internal/shared/kernel/repairorder"
 )
 
 func TestNewRepairOrder(t *testing.T) {

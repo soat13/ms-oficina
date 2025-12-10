@@ -2,8 +2,8 @@ package fiber
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/soat13/fase-1-oficina/pkg/pagination"
 	string "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
-	"github.com/soat13/fase-1-oficina/pkg/utils/pagination"
 )
 
 func NewPagination(ctx *fiber.Ctx, defaultLimit, defaultOffset int) *pagination.Pagination {
