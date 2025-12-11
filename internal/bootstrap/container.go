@@ -11,9 +11,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	eventbusInfra "github.com/soat13/fase-1-oficina/internal/infra/eventbus"
 	"github.com/soat13/fase-1-oficina/internal/ports/event"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
+	"github.com/soat13/fase-1-oficina/pkg/event/bus"
+	helper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
@@ -22,7 +22,7 @@ type Container struct {
 	SQL               *sql.DB
 	DB                *bun.DB
 	FiberApp          *fiber.App
-	FiberErrorHandler *fiberHelper.ErrorHandler
+	FiberErrorHandler *helper.ErrorHandler
 	Validator         *validator.Validate
 	EventBus          event.Bus
 }
@@ -34,7 +34,7 @@ func BuildDefault() *Container {
 func Build(
 	bunDB *bun.DB,
 	fiberApp *fiber.App,
-	fiberErrorHandler *fiberHelper.ErrorHandler,
+	fiberErrorHandler *helper.ErrorHandler,
 	structValidator *validator.Validate,
 	EventBus event.Bus,
 ) *Container {
@@ -48,7 +48,7 @@ func Build(
 	}
 
 	if fiberErrorHandler == nil {
-		fiberErrorHandler = fiberHelper.NewErrorHandler(NewErrorResolver(), structValidator)
+		fiberErrorHandler = helper.NewErrorHandler(NewErrorResolver(), structValidator)
 	}
 
 	if bunDB == nil {
@@ -56,7 +56,7 @@ func Build(
 	}
 
 	if EventBus == nil {
-		EventBus = eventbusInfra.NewInMemoryBus()
+		EventBus = bus.NewInMemoryBus()
 	}
 
 	return &Container{

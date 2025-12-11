@@ -4,31 +4,30 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-
-	app "github.com/soat13/fase-1-oficina/internal/product/application"
+	"github.com/soat13/fase-1-oficina/internal/product/application"
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
-	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
 
 type Handler struct {
-	createUseCase *app.CreateProduct
-	updateUseCase *app.UpdateProduct
-	deleteUseCase *app.DeleteProduct
-	getUseCase    *app.GetProduct
-	listUseCase   *app.ListProducts
+	createUseCase *application.CreateProduct
+	updateUseCase *application.UpdateProduct
+	deleteUseCase *application.DeleteProduct
+	getUseCase    *application.GetProduct
+	listUseCase   *application.ListProducts
 	validator     *validator.Validate
 	errorHandler  *fiberHelper.ErrorHandler
 }
 
 func NewHandler(
-	create *app.CreateProduct,
-	update *app.UpdateProduct,
-	delete *app.DeleteProduct,
-	get *app.GetProduct,
-	list *app.ListProducts,
+	create *application.CreateProduct,
+	update *application.UpdateProduct,
+	delete *application.DeleteProduct,
+	get *application.GetProduct,
+	list *application.ListProducts,
 	validator *validator.Validate,
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
@@ -42,8 +41,8 @@ func NewHandler(
 		errorHandler:  errorHandler,
 	}
 
-	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrProductNotFound)
-	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicateProduct)
+	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(application.ErrProductNotFound)
+	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(application.ErrDuplicateProduct)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidProductName)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidProductPrice)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidProductStock)
@@ -59,8 +58,6 @@ func Register(app *fiber.App, h *Handler) {
 	grp.Get("/:id", h.getByID)
 	grp.Get("/", h.list)
 }
-
-// -------- DTOs --------
 
 type createBody struct {
 	Name  string `json:"name"  validate:"required,min=3"`
@@ -81,9 +78,7 @@ type productJSON struct {
 	Stock int       `json:"stock"`
 }
 
-// -------- Helpers JSON --------
-
-func toJSON(v app.ProductView) productJSON {
+func toJSON(v application.ProductView) productJSON {
 	return productJSON{
 		ID:    v.ID,
 		Name:  v.Name,
@@ -92,12 +87,10 @@ func toJSON(v app.ProductView) productJSON {
 	}
 }
 
-// -------- Handlers --------
-
 func (h *Handler) create(ctx *fiber.Ctx) error {
 	var body createBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
+		return h.errorHandler.Handle(ctx, errors.ErrInvalidJSON)
 	}
 	if err := h.validator.Struct(body); err != nil {
 		return h.errorHandler.Handle(ctx, err)
@@ -108,7 +101,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	output, err := h.createUseCase.Execute(ctx.Context(), app.CreateInput{
+	output, err := h.createUseCase.Execute(ctx.Context(), application.CreateInput{
 		Name:  body.Name,
 		Price: price,
 		Stock: body.Stock,
@@ -128,7 +121,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 
 	var body updateBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
+		return h.errorHandler.Handle(ctx, errors.ErrInvalidJSON)
 	}
 	if err := h.validator.Struct(body); err != nil {
 		return h.errorHandler.Handle(ctx, err)
@@ -139,7 +132,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.updateUseCase.Execute(ctx.Context(), app.UpdateInput{
+	err = h.updateUseCase.Execute(ctx.Context(), application.UpdateInput{
 		ID:    id,
 		Name:  body.Name,
 		Price: pricePtr,
@@ -156,7 +149,7 @@ func (h *Handler) delete(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	if err := h.deleteUseCase.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
+	if err := h.deleteUseCase.Execute(ctx.Context(), application.DeleteInput{ID: id}); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusNoContent)
@@ -167,7 +160,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	out, err := h.getUseCase.Execute(ctx.Context(), app.GetInput{ID: id})
+	out, err := h.getUseCase.Execute(ctx.Context(), application.GetInput{ID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -177,7 +170,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 func (h *Handler) list(ctx *fiber.Ctx) error {
 	pager := fiberHelper.NewPagination(ctx, 50, 0)
 
-	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Pager: *pager})
+	out, err := h.listUseCase.Execute(ctx.Context(), application.ListInput{Pager: *pager})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
