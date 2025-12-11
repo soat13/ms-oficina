@@ -6,15 +6,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/pagination"
-	"github.com/uptrace/bun"
-
-	app "github.com/soat13/fase-1-oficina/internal/product/application"
+	"github.com/soat13/fase-1-oficina/internal/product/application"
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
 	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
+	"github.com/soat13/fase-1-oficina/pkg/pagination"
+	"github.com/uptrace/bun"
 )
 
 type productModel struct {
@@ -32,7 +31,7 @@ type BunProductRepository struct {
 	db *bun.DB
 }
 
-func NewBunProductRepository(db *bun.DB) app.ProductRepository {
+func NewBunProductRepository(db *bun.DB) application.ProductRepository {
 	return &BunProductRepository{db: db}
 }
 

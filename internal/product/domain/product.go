@@ -5,10 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/soat13/fase-1-oficina/pkg/entity"
 	"github.com/soat13/fase-1-oficina/pkg/money"
-	uuidPkg "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
+	uuidHelper "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
 )
 
 type Product struct {
@@ -32,7 +31,7 @@ func NewProduct(id uuid.UUID, name string, price money.Money, stock int) (*Produ
 	}
 
 	product := &Product{
-		ID:    uuidPkg.IDOrNew(id),
+		ID:    uuidHelper.IDOrNew(id),
 		Name:  name,
 		Price: price,
 		Stock: stock,
