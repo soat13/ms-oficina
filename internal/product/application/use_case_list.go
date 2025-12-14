@@ -17,11 +17,11 @@ type (
 	}
 
 	ListProducts struct {
-		repo ProductRepository
+		repo Repository
 	}
 )
 
-func NewListProducts(repo ProductRepository) *ListProducts {
+func NewListProducts(repo Repository) *ListProducts {
 	return &ListProducts{repo: repo}
 }
 

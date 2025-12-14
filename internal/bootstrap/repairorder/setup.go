@@ -2,11 +2,10 @@ package repairorder
 
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	repairOrderApp "github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/infra"
+	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
+	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/event"
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/listeners"
 	"github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
@@ -15,24 +14,24 @@ func SetupDefault(container *bootstrap.Container) {
 }
 
 func Setup(container *bootstrap.Container) {
-	repairOrderRepository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
+	repository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
 	vehicleReader := repairOrderDB.NewVehicleReader(container.DB)
 	customerReader := repairOrderDB.NewCustomerReader(container.DB)
 	productReader := repairOrderDB.NewProductReader(container.DB)
 	serviceReader := repairOrderDB.NewServiceReader(container.DB)
-	eventPublisher := infra.NewEventPublisher(container.EventBus)
+	eventPublisher := event.NewEventPublisher(container.EventBus)
 
-	list := repairOrderApp.NewListRepairOrders(repairOrderRepository)
-	get := repairOrderApp.NewGetRepairOrder(repairOrderRepository)
-	create := repairOrderApp.NewCreate(repairOrderRepository, customerReader, vehicleReader)
-	startDiagnostics := repairOrderApp.NewStartDiagnostics(repairOrderRepository)
-	startExecution := repairOrderApp.NewStartExecution(repairOrderRepository)
-	finishExecution := repairOrderApp.NewFinishExecution(repairOrderRepository)
-	releaseVehicle := repairOrderApp.NewReleaseVehicle(repairOrderRepository)
-	getAverageExecutionTime := repairOrderApp.NewGetAverageExecutionTime(repairOrderRepository)
-	cancel := repairOrderApp.NewCancel(repairOrderRepository, eventPublisher)
-	finishDiagnostics := repairOrderApp.NewFinishDiagnostics(
-		repairOrderRepository,
+	list := application.NewListRepairOrders(repository)
+	get := application.NewGetRepairOrder(repository)
+	create := application.NewCreate(repository, customerReader, vehicleReader)
+	startDiagnostics := application.NewStartDiagnostics(repository)
+	startExecution := application.NewStartExecution(repository)
+	finishExecution := application.NewFinishExecution(repository)
+	releaseVehicle := application.NewReleaseVehicle(repository)
+	getAverageExecutionTime := application.NewGetAverageExecutionTime(repository)
+	cancel := application.NewCancel(repository, eventPublisher)
+	finishDiagnostics := application.NewFinishDiagnostics(
+		repository,
 		eventPublisher,
 		productReader,
 		serviceReader,
@@ -54,14 +53,19 @@ func Setup(container *bootstrap.Container) {
 	)
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)
 
-	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), listeners.OnEstimateCreated(repairOrderRepository))
-	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), listeners.OnEstimateRejected(cancel))
+	handleEstimateCreated := application.NewHandleEstimateCreated(repository)
+	handleEstimateRejected := application.NewHandleEstimateRejected(cancel)
+	handleStockInsufficient := application.NewHandleStockInsufficient(cancel)
+	handleStockReductionConfirmed := application.NewHandleStockReductionConfirmed(repository)
+
+	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), event.OnEstimateCreated(handleEstimateCreated))
+	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), event.OnEstimateRejected(handleEstimateRejected))
 	container.EventBus.Subscribe(
 		events.StockInsufficientDetected{}.Topic(),
-		listeners.OnStockInsufficientDetected(cancel),
+		event.OnStockInsufficientDetected(handleStockInsufficient),
 	)
 	container.EventBus.Subscribe(
-		events.StockReduceConfirmed{}.Topic(),
-		listeners.OnStockReduceConfirmed(repairOrderRepository),
+		events.StockReductionConfirmed{}.Topic(),
+		event.OnStockReduceConfirmed(handleStockReductionConfirmed),
 	)
 }

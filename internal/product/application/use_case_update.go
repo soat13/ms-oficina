@@ -16,11 +16,11 @@ type (
 	}
 
 	UpdateProduct struct {
-		repo ProductRepository
+		repo Repository
 	}
 )
 
-func NewUpdateProduct(repo ProductRepository) *UpdateProduct {
+func NewUpdateProduct(repo Repository) *UpdateProduct {
 	return &UpdateProduct{repo: repo}
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 )
@@ -21,11 +20,11 @@ type (
 	}
 
 	CreateProduct struct {
-		repo ProductRepository
+		repo Repository
 	}
 )
 
-func NewCreateProduct(repo ProductRepository) *CreateProduct {
+func NewCreateProduct(repo Repository) *CreateProduct {
 	return &CreateProduct{repo: repo}
 }
 

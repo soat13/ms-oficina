@@ -31,7 +31,7 @@ type BunProductRepository struct {
 	db *bun.DB
 }
 
-func NewBunProductRepository(db *bun.DB) application.ProductRepository {
+func NewBunProductRepository(db *bun.DB) application.Repository {
 	return &BunProductRepository{db: db}
 }
 
