@@ -1,4 +1,4 @@
-package infra
+package event
 
 import (
 	"context"
@@ -41,7 +41,7 @@ func (e *EventPublisher) PublishStockReduceConfirmed(
 	estimateID uuid.UUID,
 	repairOrderID uuid.UUID,
 ) error {
-	stockReduceConfirmed := estimateEvent.StockReduceConfirmed{
+	stockReduceConfirmed := estimateEvent.StockReductionConfirmed{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimateID,

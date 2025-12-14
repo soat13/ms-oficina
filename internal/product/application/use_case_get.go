@@ -16,11 +16,11 @@ type (
 	}
 
 	GetProduct struct {
-		repo ProductRepository
+		repo Repository
 	}
 )
 
-func NewGetProduct(repo ProductRepository) *GetProduct {
+func NewGetProduct(repo Repository) *GetProduct {
 	return &GetProduct{repo: repo}
 }
 

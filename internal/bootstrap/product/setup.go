@@ -2,11 +2,11 @@ package product
 
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
+	"github.com/soat13/fase-1-oficina/internal/product/application"
 	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
-	"github.com/soat13/fase-1-oficina/internal/product/infra"
 	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/db"
+	"github.com/soat13/fase-1-oficina/internal/product/infra/event"
 	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/http"
-	"github.com/soat13/fase-1-oficina/internal/product/infra/listeners"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
@@ -14,18 +14,19 @@ func SetupDefault(container *bootstrap.Container) {
 	Setup(container, nil)
 }
 
-func Setup(container *bootstrap.Container, repository productApp.ProductRepository) {
+func Setup(container *bootstrap.Container, repository productApp.Repository) {
 	if repository == nil {
 		repository = productDB.NewBunProductRepository(container.DB)
 	}
 
-	eventPublisher := infra.NewEventPublisher(container.EventBus)
-	createProduct := productApp.NewCreateProduct(repository)
-	updateProduct := productApp.NewUpdateProduct(repository)
-	deleteProduct := productApp.NewDeleteProduct(repository)
-	getProduct := productApp.NewGetProduct(repository)
-	listProducts := productApp.NewListProducts(repository)
-	reduceStock := productApp.NewReduceStock(repository, eventPublisher)
+	eventPublisher := event.NewEventPublisher(container.EventBus)
+	createProduct := application.NewCreateProduct(repository)
+	updateProduct := application.NewUpdateProduct(repository)
+	deleteProduct := application.NewDeleteProduct(repository)
+	getProduct := application.NewGetProduct(repository)
+	listProducts := application.NewListProducts(repository)
+	reduceStock := application.NewReduceStock(repository, eventPublisher)
+	handleEstimateApproved := application.NewHandleEstimateApproved(reduceStock)
 
 	productHandler := productHTTP.NewHandler(
 		createProduct,
@@ -41,6 +42,6 @@ func Setup(container *bootstrap.Container, repository productApp.ProductReposito
 
 	container.EventBus.Subscribe(
 		estimateEvent.EstimateApproved{}.Topic(),
-		listeners.OnEstimateApproved(reduceStock),
+		event.OnEstimateApproved(handleEstimateApproved),
 	)
 }

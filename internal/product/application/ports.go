@@ -17,7 +17,7 @@ type (
 		Stock int
 	}
 
-	ProductRepository interface {
+	Repository interface {
 		Create(ctx context.Context, product *domain.Product) error
 		Update(ctx context.Context, product *domain.Product) error
 		UpdateBatch(ctx context.Context, products []*domain.Product) error

@@ -39,7 +39,10 @@ func (uc *UpdateService) Execute(ctx context.Context, in UpdateInput) error {
 	}
 
 	if in.Price != nil {
-		service.ChangePrice(*in.Price)
+		err := service.ChangePrice(*in.Price)
+		if err != nil {
+			return err
+		}
 	}
 
 	return uc.repo.Update(ctx, service)

@@ -16,12 +16,12 @@ type (
 	}
 
 	ReduceStock struct {
-		repository     ProductRepository
+		repository     Repository
 		eventPublisher EventPublisher
 	}
 )
 
-func NewReduceStock(repository ProductRepository, eventPublisher EventPublisher) *ReduceStock {
+func NewReduceStock(repository Repository, eventPublisher EventPublisher) *ReduceStock {
 	return &ReduceStock{
 		repository:     repository,
 		eventPublisher: eventPublisher,

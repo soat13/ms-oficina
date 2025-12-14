@@ -6,11 +6,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-
 	estimateApp "github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 )
@@ -19,7 +18,7 @@ type (
 	Handler struct {
 		listUseCase                    *application.ListRepairOrders
 		getUseCase                     *application.GetRepairOrder
-		startExecUseCase               *application.StartExecution
+		startExecutionUseCase          *application.StartExecution
 		startDiagnosticsUseCase        *application.StartDiagnostics
 		finishDiagnosticsUseCase       *application.FinishDiagnostics
 		finishExecutionUseCase         *application.FinishExecution
@@ -38,7 +37,7 @@ func NewHandler(
 	createUseCase *application.Create,
 	startDiagnosticsUseCase *application.StartDiagnostics,
 	finishDiagnosticsUseCase *application.FinishDiagnostics,
-	startExecUseCase *application.StartExecution,
+	startExecutionUseCase *application.StartExecution,
 	finishExecutionUseCase *application.FinishExecution,
 	releaseVehicleUseCase *application.ReleaseVehicle,
 	getAverageExecutionTimeUseCase *application.GetAverageExecutionTime,
@@ -59,7 +58,7 @@ func NewHandler(
 		getUseCase:                     getUseCase,
 		startDiagnosticsUseCase:        startDiagnosticsUseCase,
 		finishDiagnosticsUseCase:       finishDiagnosticsUseCase,
-		startExecUseCase:               startExecUseCase,
+		startExecutionUseCase:          startExecutionUseCase,
 		finishExecutionUseCase:         finishExecutionUseCase,
 		releaseVehicleUseCase:          releaseVehicleUseCase,
 		createUseCase:                  createUseCase,
@@ -214,7 +213,7 @@ func (h *Handler) startExecution(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.startExecUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.startExecutionUseCase.Execute(ctx.Context(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
