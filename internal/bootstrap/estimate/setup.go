@@ -3,10 +3,9 @@ package estimate
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/estimate/application"
-	"github.com/soat13/fase-1-oficina/internal/estimate/infra"
 	"github.com/soat13/fase-1-oficina/internal/estimate/infra/db"
+	"github.com/soat13/fase-1-oficina/internal/estimate/infra/event"
 	"github.com/soat13/fase-1-oficina/internal/estimate/infra/http"
-	"github.com/soat13/fase-1-oficina/internal/estimate/infra/listeners"
 	"github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
@@ -19,7 +18,7 @@ func Setup(container *bootstrap.Container) {
 	productCatalogReader := db.NewProductCatalogReader(container.DB)
 	serviceCatalogReader := db.NewServiceCatalogReader(container.DB)
 	repository := db.NewBunRepository(container.DB)
-	eventPublisher := infra.NewEventPublisher(container.EventBus)
+	eventPublisher := event.NewEventPublisher(container.EventBus)
 
 	createEstimate := application.NewCreateEstimate(
 		repairOrderReader,
@@ -34,17 +33,19 @@ func Setup(container *bootstrap.Container) {
 	reject := application.NewRejectEstimate(repository, eventPublisher)
 	addItem := application.NewAddItem(productCatalogReader, serviceCatalogReader, repository)
 	removeItem := application.NewRemoveItem(repository)
+	handleDiagnosticsFinished := application.NewHandleDiagnosticsFinished(*createEstimate)
+	handleRepairOrderCanceled := application.NewHandleRepairOrderCanceled(*cancel, repository)
 
 	estimateHttpHandler := http.NewHandler(approve, reject, addItem, removeItem, container.FiberErrorHandler)
 	http.Register(container.FiberApp, estimateHttpHandler)
 
 	container.EventBus.Subscribe(
 		events.RepairOrderCanceled{}.Topic(),
-		listeners.OnRepairOrderCanceled(cancel, repository),
+		event.OnRepairOrderCanceled(handleRepairOrderCanceled),
 	)
 	container.EventBus.Subscribe(
 		events.RepairOrderDiagnosticsFinished{}.Topic(),
-		listeners.OnDiagnosticsFinished(createEstimate),
+		event.OnDiagnosticsFinished(handleDiagnosticsFinished),
 	)
 
 }
