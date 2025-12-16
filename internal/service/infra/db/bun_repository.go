@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/service/application"
+	"github.com/soat13/fase-1-oficina/internal/service/domain"
 	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/money"
 	"github.com/soat13/fase-1-oficina/pkg/pagination"
 	"github.com/uptrace/bun"
-
-	app "github.com/soat13/fase-1-oficina/internal/service/application"
-	"github.com/soat13/fase-1-oficina/internal/service/domain"
 )
 
 type serviceModel struct {
@@ -31,7 +30,7 @@ type BunServiceRepository struct {
 	db *bun.DB
 }
 
-func NewBunServiceRepository(db *bun.DB) app.ServiceRepository {
+func NewBunServiceRepository(db *bun.DB) application.Repository {
 	return &BunServiceRepository{db: db}
 }
 

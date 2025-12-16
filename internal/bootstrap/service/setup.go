@@ -11,7 +11,7 @@ func SetupDefault(container *bootstrap.Container) {
 	Setup(container, nil)
 }
 
-func Setup(container *bootstrap.Container, repository serviceApp.ServiceRepository) {
+func Setup(container *bootstrap.Container, repository serviceApp.Repository) {
 	if repository == nil {
 		repository = serviceDB.NewBunServiceRepository(container.DB)
 	}

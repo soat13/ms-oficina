@@ -17,11 +17,11 @@ type (
 	}
 
 	ListServices struct {
-		repo ServiceRepository
+		repo Repository
 	}
 )
 
-func NewListServices(repo ServiceRepository) *ListServices {
+func NewListServices(repo Repository) *ListServices {
 	return &ListServices{repo: repo}
 }
 

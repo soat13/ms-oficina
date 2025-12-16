@@ -16,7 +16,7 @@ type (
 		Price money.Money
 	}
 
-	ServiceRepository interface {
+	Repository interface {
 		Create(ctx context.Context, s *domain.Service) error
 		Update(ctx context.Context, s *domain.Service) error
 		Delete(ctx context.Context, id uuid.UUID) error
