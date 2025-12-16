@@ -21,11 +21,11 @@ type (
 	}
 
 	UpdateUser struct {
-		repo UserRepository
+		repo Repository
 	}
 )
 
-func NewUpdateUser(repo UserRepository) *UpdateUser {
+func NewUpdateUser(repo Repository) *UpdateUser {
 	return &UpdateUser{repo: repo}
 }
 

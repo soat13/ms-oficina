@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/internal/user/domain"
-	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
+	stringhelper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
@@ -24,11 +24,11 @@ type (
 	}
 
 	CreateUser struct {
-		repo UserRepository
+		repo Repository
 	}
 )
 
-func NewCreateUser(repo UserRepository) *CreateUser {
+func NewCreateUser(repo Repository) *CreateUser {
 	return &CreateUser{repo: repo}
 }
 
@@ -46,8 +46,8 @@ func (uc *CreateUser) Execute(ctx context.Context, in CreateInput) error {
 	return uc.repo.Create(ctx, user)
 }
 
-func checkIfUserExists(ctx context.Context, repo UserRepository, document document.Document, email email.Email) error {
-	existsDoc, err := repo.ExistsByDocument(ctx, string_helper.OnlyNumbers(document.Value))
+func checkIfUserExists(ctx context.Context, repo Repository, document document.Document, email email.Email) error {
+	existsDoc, err := repo.ExistsByDocument(ctx, stringhelper.OnlyNumbers(document.Value))
 	if err != nil {
 		return err
 	}

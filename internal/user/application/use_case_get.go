@@ -16,11 +16,11 @@ type (
 	}
 
 	GetUser struct {
-		repo UserRepository
+		repo Repository
 	}
 )
 
-func NewGetUser(repo UserRepository) *GetUser {
+func NewGetUser(repo Repository) *GetUser {
 	return &GetUser{repo: repo}
 }
 

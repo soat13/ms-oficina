@@ -3,13 +3,13 @@ package phone
 import (
 	"strings"
 
-	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
+	stringHelper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
 )
 
 type PhoneNumber string
 
 func New(v string) (PhoneNumber, error) {
-	value := string_helper.OnlyNumbers(strings.TrimSpace(v))
+	value := stringHelper.OnlyNumbers(strings.TrimSpace(v))
 	phone := PhoneNumber(value)
 
 	if !phone.isValid() {
