@@ -21,11 +21,11 @@ type (
 	}
 
 	CreateService struct {
-		repo ServiceRepository
+		repo Repository
 	}
 )
 
-func NewCreateService(repo ServiceRepository) *CreateService {
+func NewCreateService(repo Repository) *CreateService {
 	return &CreateService{repo: repo}
 }
 

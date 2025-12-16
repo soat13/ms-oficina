@@ -15,11 +15,11 @@ type (
 	}
 
 	UpdateService struct {
-		repo ServiceRepository
+		repo Repository
 	}
 )
 
-func NewUpdateService(repo ServiceRepository) *UpdateService {
+func NewUpdateService(repo Repository) *UpdateService {
 	return &UpdateService{repo: repo}
 }
 

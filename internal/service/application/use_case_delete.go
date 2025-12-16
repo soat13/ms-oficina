@@ -12,11 +12,11 @@ type (
 	}
 
 	DeleteService struct {
-		repo ServiceRepository
+		repo Repository
 	}
 )
 
-func NewDeleteService(repo ServiceRepository) *DeleteService {
+func NewDeleteService(repo Repository) *DeleteService {
 	return &DeleteService{repo: repo}
 }
 
