@@ -22,7 +22,7 @@ type (
 		Roles       authz.Roles
 	}
 
-	UserRepository interface {
+	Repository interface {
 		Create(ctx context.Context, u *domain.User) error
 		Update(ctx context.Context, u *domain.User) error
 		Delete(ctx context.Context, id uuid.UUID) error

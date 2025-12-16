@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/paemuri/brdoc"
-	string_helper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
+	stringHelper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
 )
 
 type (
@@ -22,7 +22,7 @@ const (
 )
 
 func New(v string) (Document, error) {
-	value := string_helper.OnlyNumbers(strings.TrimSpace(v))
+	value := stringHelper.OnlyNumbers(strings.TrimSpace(v))
 	docType := getDocumentType(value)
 	document := Document{
 		Value:        value,

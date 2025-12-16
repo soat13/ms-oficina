@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	roleVO "github.com/soat13/fase-1-oficina/internal/shared/authz"
+	"github.com/soat13/fase-1-oficina/internal/shared/authz"
+	"github.com/soat13/fase-1-oficina/internal/user/application"
+	"github.com/soat13/fase-1-oficina/internal/user/domain"
 	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/pagination"
@@ -14,9 +16,6 @@ import (
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
 	"github.com/uptrace/bun"
-
-	app "github.com/soat13/fase-1-oficina/internal/user/application"
-	"github.com/soat13/fase-1-oficina/internal/user/domain"
 )
 
 type userModel struct {
@@ -38,7 +37,7 @@ type BunUserRepository struct {
 	db *bun.DB
 }
 
-func NewBunUserRepository(db *bun.DB) app.UserRepository {
+func NewBunUserRepository(db *bun.DB) application.Repository {
 	return &BunUserRepository{db: db}
 }
 
@@ -141,7 +140,7 @@ func toDomain(model *userModel) *domain.User {
 	phoneNumber, _ := phone.New(model.PhoneNumber)
 	em, _ := email.New(model.Email)
 	pwd, _ := password.FromHash(model.Password)
-	roles, _ := roleVO.NewRoles(model.Roles)
+	roles, _ := authz.NewRoles(model.Roles)
 
 	user, err := domain.NewUser(model.ID, model.Name, doc, phoneNumber, em, pwd, roles)
 	if err != nil {
