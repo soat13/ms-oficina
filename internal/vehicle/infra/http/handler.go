@@ -4,9 +4,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-
-	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	app "github.com/soat13/fase-1-oficina/internal/vehicle/application"
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
+	"github.com/soat13/fase-1-oficina/internal/vehicle/application"
 	"github.com/soat13/fase-1-oficina/internal/vehicle/domain"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
@@ -14,23 +13,23 @@ import (
 )
 
 type Handler struct {
-	createUseCase         *app.CreateVehicle
-	updateUseCase         *app.UpdateVehicle
-	deleteUseCase         *app.DeleteVehicle
-	getUseCase            *app.GetVehicle
-	listUseCase           *app.ListVehicles
-	listByCustomerUseCase *app.ListVehiclesByCustomer
+	createUseCase         *application.CreateVehicle
+	updateUseCase         *application.UpdateVehicle
+	deleteUseCase         *application.DeleteVehicle
+	getUseCase            *application.GetVehicle
+	listUseCase           *application.ListVehicles
+	listByCustomerUseCase *application.ListVehiclesByCustomer
 	validate              *validator.Validate
 	errorHandler          *fiberHelper.ErrorHandler
 }
 
 func NewHandler(
-	create *app.CreateVehicle,
-	update *app.UpdateVehicle,
-	delete *app.DeleteVehicle,
-	get *app.GetVehicle,
-	list *app.ListVehicles,
-	listByCustomer *app.ListVehiclesByCustomer,
+	create *application.CreateVehicle,
+	update *application.UpdateVehicle,
+	delete *application.DeleteVehicle,
+	get *application.GetVehicle,
+	list *application.ListVehicles,
+	listByCustomer *application.ListVehiclesByCustomer,
 	errorHandler *fiberHelper.ErrorHandler,
 ) *Handler {
 	validate := validator.New()
@@ -45,8 +44,8 @@ func NewHandler(
 		errorHandler:          errorHandler,
 	}
 
-	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(app.ErrVehicleNotFound)
-	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(app.ErrDuplicatePlate)
+	handler.errorHandler.ErrorResolver.RegisterHTTPNotFoundError(application.ErrVehicleNotFound)
+	handler.errorHandler.ErrorResolver.RegisterHTTPConflictError(application.ErrDuplicatePlate)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidVehiclePlate)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidVehicleBrand)
 	handler.errorHandler.ErrorResolver.RegisterHTTPUnprocessableError(domain.ErrInvalidVehicleModel)
@@ -64,12 +63,9 @@ func Register(app *fiber.App, h *Handler) {
 	grp.Get("/:id", h.getByID)
 	grp.Get("/", h.list)
 
-	// Customer-specific vehicle routes
 	customerGrp := app.Group("/admin/customers/:customerId/vehicles")
 	customerGrp.Get("/", h.listByCustomer)
 }
-
-// -------- DTOs --------
 
 type createBody struct {
 	CustomerID uuid.UUID `json:"customer_id" validate:"required"`
@@ -95,9 +91,7 @@ type vehicleJSON struct {
 	Year       int       `json:"year"`
 }
 
-// -------- Helpers JSON --------
-
-func toJSON(v app.VehicleView) vehicleJSON {
+func toJSON(v application.VehicleView) vehicleJSON {
 	return vehicleJSON{
 		ID:         v.ID,
 		CustomerID: v.CustomerID,
@@ -108,18 +102,16 @@ func toJSON(v app.VehicleView) vehicleJSON {
 	}
 }
 
-// -------- Handlers --------
-
 func (h *Handler) create(ctx *fiber.Ctx) error {
 	var body createBody
 	if err := ctx.BodyParser(&body); err != nil {
-		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
+		return h.errorHandler.Handle(ctx, errors.ErrInvalidJSON)
 	}
 	if err := h.validate.Struct(body); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	output, err := h.createUseCase.Execute(ctx.Context(), app.CreateInput{
+	output, err := h.createUseCase.Execute(ctx.Context(), application.CreateInput{
 		CustomerID: body.CustomerID,
 		Plate:      body.Plate,
 		Brand:      body.Brand,
@@ -142,7 +134,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 	var body updateBody
 
 	if err := ctx.BodyParser(&body); err != nil {
-		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidJSON)
+		return h.errorHandler.Handle(ctx, errors.ErrInvalidJSON)
 	}
 
 	var plateVo plate.Plate
@@ -158,7 +150,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.updateUseCase.Execute(ctx.Context(), app.UpdateInput{
+	err = h.updateUseCase.Execute(ctx.Context(), application.UpdateInput{
 		ID:    id,
 		Plate: &plateVo,
 		Brand: body.Brand,
@@ -176,7 +168,7 @@ func (h *Handler) delete(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	if err := h.deleteUseCase.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
+	if err := h.deleteUseCase.Execute(ctx.Context(), application.DeleteInput{ID: id}); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusNoContent)
@@ -187,7 +179,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	out, err := h.getUseCase.Execute(ctx.Context(), app.GetInput{ID: id})
+	out, err := h.getUseCase.Execute(ctx.Context(), application.GetInput{ID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -197,7 +189,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 func (h *Handler) list(ctx *fiber.Ctx) error {
 	pager := fiberHelper.NewPagination(ctx, 50, 0)
 
-	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Pager: *pager})
+	out, err := h.listUseCase.Execute(ctx.Context(), application.ListInput{Pager: *pager})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -213,7 +205,7 @@ func (h *Handler) listByCustomer(ctx *fiber.Ctx) error {
 
 	pager := fiberHelper.NewPagination(ctx, 50, 0)
 
-	out, err := h.listByCustomerUseCase.Execute(ctx.Context(), app.ListByCustomerInput{
+	out, err := h.listByCustomerUseCase.Execute(ctx.Context(), application.ListByCustomerInput{
 		CustomerID: customerID,
 		Pager:      *pager,
 	})
