@@ -2,7 +2,7 @@ package fiber
 
 import (
 	"github.com/google/uuid"
-	sharedError "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 )
 
 type ItemLinePayload struct {
@@ -15,7 +15,7 @@ func ParseItemQuantities(raw []ItemLinePayload) (map[uuid.UUID]int, error) {
 	for _, it := range raw {
 		id, err := uuid.Parse(it.ID)
 		if err != nil {
-			return nil, sharedError.ErrInvalidID
+			return nil, errors.ErrInvalidID
 		}
 
 		out[id] = it.Quantity

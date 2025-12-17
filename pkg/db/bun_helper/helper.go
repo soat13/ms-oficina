@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var ErrResourceInUse = errors.New("Cannot delete resource because it is in use.")
+var ErrResourceInUse = errors.New("cannot delete resource because it is in use")
 
 func HandleDeleteError(err error) error {
 	if err == nil {

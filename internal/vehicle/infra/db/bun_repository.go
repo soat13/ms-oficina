@@ -5,14 +5,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/fase-1-oficina/internal/vehicle/application"
+	"github.com/soat13/fase-1-oficina/internal/vehicle/domain"
 	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	"github.com/soat13/fase-1-oficina/pkg/maps"
 	"github.com/soat13/fase-1-oficina/pkg/pagination"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/plate"
 	"github.com/uptrace/bun"
-
-	app "github.com/soat13/fase-1-oficina/internal/vehicle/application"
-	"github.com/soat13/fase-1-oficina/internal/vehicle/domain"
 )
 
 type vehicleModel struct {
@@ -32,7 +31,7 @@ type BunVehicleRepository struct {
 	db *bun.DB
 }
 
-func NewBunVehicleRepository(db *bun.DB) app.VehicleRepository {
+func NewBunVehicleRepository(db *bun.DB) application.VehicleRepository {
 	return &BunVehicleRepository{db: db}
 }
 
