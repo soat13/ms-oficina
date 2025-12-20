@@ -4,9 +4,12 @@
 
 Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de atendimento, desde a entrada do veículo até a entrega ao cliente. A aplicação gerencia clientes, veículos, catálogos de serviços e produtos, orçamentos e ordens de serviço, oferecendo controle centralizado das operações da oficina.
 
----
+### Links Úteis
 
-## Funcionalidades Principais
+- GitHub: https://github.com/soat13/fase-1-oficina
+- Miro: https://miro.com/app/board/uXjVJLyIcr8=
+
+### Funcionalidades Principais
 
 - **Gestão de Clientes e Veículos** — Cadastro e relacionamento entre clientes e seus automóveis
 - **Catálogos** — Serviços técnicos e produtos com controle de estoque
@@ -17,8 +20,6 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 
 A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, com organização por contextos de domínio independentes.
 
----
-
 ## Fluxos Principais
 
 - **Repair Order — fluxo end-to-end**  
@@ -28,14 +29,10 @@ A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquite
 > Payloads, schemas e exemplos de request/response estão documentados no **Swagger/OpenAPI**.  
 > Os documentos de fluxo focam exclusivamente na **ordem de chamadas e regras de negócio**.
 
----
-
 ## Documentação Técnica
 
-- Arquitetura e decisões técnicas: [`docs/architecture.md`](docs/architecture.md)
 - Glossário de domínio (termos, roles e status): [`docs/domain-glossary.md`](docs/domain-glossary.md)
-
----
+- Arquitetura e decisões técnicas: [`docs/architecture.md`](docs/architecture.md)
 
 ## Aspectos Técnicos
 
@@ -54,14 +51,10 @@ Diagramas e detalhes arquiteturais: [`docs/architecture.md`](docs/architecture.m
 - **Containerização**: Docker + Docker Compose
 - **Banco de Dados**: PostgreSQL — Escolhido por ser um SGBD relacional maduro e confiável, adequado para garantir integridade transacional em operações críticas como criação de Ordens de Serviço, aprovação de orçamentos e controle de estoque. O modelo relacional facilita a consistência entre entidades fortemente relacionadas e oferece suporte nativo a transações ACID, constraints e índices, essenciais para a confiabilidade e evolução do sistema.
 
----
-
 ## Requisitos
 
 - Docker e Docker Compose
 - make (opcional, recomendado)
-
----
 
 ## Executando o Projeto
 
@@ -86,15 +79,11 @@ Diagramas e detalhes arquiteturais: [`docs/architecture.md`](docs/architecture.m
 4. Rodar a API:
     - `docker compose exec app-dev go run ./cmd/api`
 
----
-
 ## Swagger / OpenAPI
 
 - UI: http://localhost:8080/docs
 - Spec: http://localhost:8080/openapi.yaml
 - Arquivo no repositório: `assets/docs/openapi.yaml`
-
----
 
 ## Autenticação
 
@@ -103,8 +92,6 @@ A API utiliza **JWT** para proteger as rotas administrativas (`/admin/**`).
 - Login: `POST /auth/login`
 - Header: `Authorization: Bearer <token>`
 
----
-
 ## Testes
 
 - `make test` — executa testes unitários e de integração
@@ -112,10 +99,3 @@ A API utiliza **JWT** para proteger as rotas administrativas (`/admin/**`).
 - `make sonar` — executa análise no SonarQube
 
 > Os testes de integração criam bancos isolados e aplicam migrações automaticamente.
-
----
-
-## Links Úteis
-
-- GitHub: https://github.com/soat13/fase-1-oficina
-- Miro: https://miro.com/app/board/uXjVJLyIcr8=
