@@ -139,3 +139,16 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/oficina-api:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  trigger-infra-workflow:
+    name: Trigger Infra Workflow
+    needs: deploy-to-ecr
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Send trigger
+        uses: peter-evans/repository-dispatch@87c5425cae5ba8b5bc7da27674076c78588babf3 # v4.0.1
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: soat13/oficina-infra
+          event-type: deploy-application
