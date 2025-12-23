@@ -17,10 +17,15 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
+	"github.com/soat13/fase-1-oficina/scripts/db"
 )
 
 func main() {
 	loadEnv()
+
+	if err := db.RunMigrations(os.Getenv("PG_DSN")); err != nil {
+		log.Printf("Erro ao executar migrations: %v", err)
+	}
 
 	container := bootstrap.BuildDefault()
 	defer container.Close()
