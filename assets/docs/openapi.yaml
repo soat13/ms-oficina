@@ -7,8 +7,8 @@ info:
 
     Utilize `POST /auth/login` para obter um token JWT e, em seguida, informe `Bearer <token>` no cabeçalho `Authorization` ao chamar as rotas protegidas. No Swagger UI, use o botão **Authorize** para registrar o token.
 servers:
-  - url: http://localhost:8080
-    description: Ambiente local (PORT=8080)
+  - url: /
+    description: Servidor atual 
 security:
   - bearerAuth: []
 tags:
