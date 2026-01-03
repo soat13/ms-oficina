@@ -48,7 +48,7 @@ func Build(
 	}
 
 	if fiberErrorHandler == nil {
-		fiberErrorHandler = helper.NewErrorHandler(NewErrorResolver(), structValidator)
+		fiberErrorHandler = helper.NewErrorHandler(*NewErrorResolver(), structValidator)
 	}
 
 	if bunDB == nil {
