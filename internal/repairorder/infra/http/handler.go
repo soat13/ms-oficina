@@ -31,6 +31,11 @@ type (
 	}
 )
 
+type ItemLinePayload struct {
+	ID       string `json:"id"       validate:"required,uuid"`
+	Quantity int    `json:"quantity" validate:"required,min=1"`
+}
+
 func NewHandler(
 	listUseCase *application.ListRepairOrders,
 	getUseCase *application.GetRepairOrder,
@@ -94,8 +99,8 @@ type (
 	}
 
 	finishDiagnosticsBody struct {
-		Products []fiberHelper.ItemLinePayload `json:"products" validate:"required,min=1,dive"`
-		Services []fiberHelper.ItemLinePayload `json:"services" validate:"required,min=1,dive"`
+		Products []ItemLinePayload `json:"products" validate:"required,min=1,dive"`
+		Services []ItemLinePayload `json:"services" validate:"required,min=1,dive"`
 	}
 )
 
@@ -284,12 +289,12 @@ func (h *Handler) getAverageExecutionTime(ctx *fiber.Ctx) error {
 }
 
 func getFinishDiagnosticsInput(repairOrderID uuid.UUID, body finishDiagnosticsBody) (*application.FinishDiagnosticsInput, error) {
-	productsQty, err := fiberHelper.ParseItemQuantities(body.Products)
+	productsQty, err := parseItemQuantities(body.Products)
 	if err != nil {
 		return nil, err
 	}
 
-	servicesQty, err := fiberHelper.ParseItemQuantities(body.Services)
+	servicesQty, err := parseItemQuantities(body.Services)
 	if err != nil {
 		return nil, err
 	}
@@ -299,4 +304,17 @@ func getFinishDiagnosticsInput(repairOrderID uuid.UUID, body finishDiagnosticsBo
 		Products:      productsQty,
 		Services:      servicesQty,
 	}, nil
+}
+
+func parseItemQuantities(raw []ItemLinePayload) (map[uuid.UUID]int, error) {
+	out := make(map[uuid.UUID]int, len(raw))
+	for _, it := range raw {
+		id, err := uuid.Parse(it.ID)
+		if err != nil {
+			return nil, sharedErrors.ErrInvalidID
+		}
+
+		out[id] = it.Quantity
+	}
+	return out, nil
 }

@@ -15,21 +15,17 @@ import (
 )
 
 type ErrorHandler struct {
-	ErrorResolver        *errorHelper.Resolver
+	ErrorResolver        errorHelper.Resolver
 	validationTranslator ut.Translator
 }
 
-func NewErrorHandler(errorResolver *errorHelper.Resolver, validator *validator.Validate) *ErrorHandler {
+func NewErrorHandler(errorResolver errorHelper.Resolver, validator *validator.Validate) *ErrorHandler {
 
-	if errorResolver == nil {
-		errorResolver = errorHelper.NewErrorResolver()
-	}
-
-	uni := ut.New(enLocale.New(), enLocale.New())
-	translator, _ := uni.GetTranslator("enTranslator")
+	universalTranslator := ut.New(enLocale.New(), enLocale.New())
+	translator, _ := universalTranslator.GetTranslator("enTranslator")
 	_ = enTranslator.RegisterDefaultTranslations(validator, translator)
 
-	translator, _ = uni.GetTranslator("enTranslator")
+	translator, _ = universalTranslator.GetTranslator("enTranslator")
 
 	return &ErrorHandler{
 		ErrorResolver:        errorResolver,
@@ -49,7 +45,7 @@ func (e *ErrorHandler) Handle(ctx *fiber.Ctx, err error) error {
 	}
 
 	if errorInfo, success := e.ErrorResolver.Resolve(err); success {
-		return ctx.Status(StatusCodeFromErrorInfo(errorInfo.PrivateCode)).JSON(jsonFromErrorInfo(errorInfo))
+		return ctx.Status(statusCodeFromErrorInfo(errorInfo.PrivateCode)).JSON(jsonFromErrorInfo(errorInfo))
 	}
 
 	log.Error().
@@ -64,7 +60,7 @@ func (e *ErrorHandler) Handle(ctx *fiber.Ctx, err error) error {
 	})
 }
 
-func StatusCodeFromErrorInfo(status string) int {
+func statusCodeFromErrorInfo(status string) int {
 	code, err := strconv.Atoi(status)
 	if err != nil {
 		return fiber.StatusInternalServerError

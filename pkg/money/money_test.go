@@ -1,8 +1,9 @@
 package money
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -22,5 +23,16 @@ func TestNew(t *testing.T) {
 	t.Run("should create money with zero cents", func(t *testing.T) {
 		money := Money{}
 		require.Equal(t, Money{Cents: 0}, money)
+	})
+}
+
+func TestAdd(t *testing.T) {
+	t.Parallel()
+
+	t.Run("should add two money values", func(t *testing.T) {
+		money1, _ := New(1500)
+		money2, _ := New(2500)
+		result := money1.Add(money2)
+		require.Equal(t, Money{Cents: 4000}, result)
 	})
 }

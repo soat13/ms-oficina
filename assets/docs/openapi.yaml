@@ -3,7 +3,7 @@ info:
   title: Oficina API
   version: 1.0.0
   description: |-
-    API da Oficina (Fase 1).
+    API da Oficina.
 
     Utilize `POST /auth/login` para obter um token JWT e, em seguida, informe `Bearer <token>` no cabeçalho `Authorization` ao chamar as rotas protegidas. No Swagger UI, use o botão **Authorize** para registrar o token.
 servers:
