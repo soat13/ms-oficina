@@ -1,11 +1,15 @@
 package email
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 type Email string
 
 func New(value string) (Email, error) {
-	email := Email(value)
+	normalized := strings.TrimSpace(strings.ToLower(value))
+	email := Email(normalized)
 	if !email.IsValid() {
 		return Email(""), ErrInvalidEmail
 	}

@@ -99,12 +99,11 @@ func extractBearerToken(header string) (string, error) {
 	if len(parts) != 2 {
 		return "", authDomain.ErrInvalidToken
 	}
+
 	if !strings.EqualFold(parts[0], "Bearer") {
 		return "", authDomain.ErrInvalidToken
 	}
-	if strings.TrimSpace(parts[1]) == "" {
-		return "", authDomain.ErrInvalidToken
-	}
+
 	return parts[1], nil
 }
 
