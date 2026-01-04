@@ -3,6 +3,7 @@ module github.com/soat13/fase-1-oficina
 go 1.25.1
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/go-faker/faker/v4 v4.7.0
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1

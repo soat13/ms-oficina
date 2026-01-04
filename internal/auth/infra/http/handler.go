@@ -39,7 +39,7 @@ func Register(app *fiber.App, h *Handler) {
 }
 
 type loginBody struct {
-	Email    string `json:"email"    validate:"required,email"`
+	Email    string `json:"email"    validate:"required"`
 	Password string `json:"password" validate:"required,min=8"`
 }
 
@@ -53,7 +53,6 @@ type authenticatedUserJSON struct {
 type loginResponse struct {
 	AccessToken string                `json:"access_token"`
 	TokenType   string                `json:"token_type"`
-	ExpiresIn   int64                 `json:"expires_in"`
 	ExpiresAt   time.Time             `json:"expires_at"`
 	User        authenticatedUserJSON `json:"user"`
 }
@@ -80,15 +79,9 @@ func (h *Handler) login(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	expiresIn := int64(time.Until(out.Token.ExpiresAt).Seconds())
-	if expiresIn < 0 {
-		expiresIn = 0
-	}
-
 	resp := loginResponse{
 		AccessToken: out.Token.Value,
 		TokenType:   "Bearer",
-		ExpiresIn:   expiresIn,
 		ExpiresAt:   out.Token.ExpiresAt,
 		User: authenticatedUserJSON{
 			ID:    out.User.ID,
