@@ -66,7 +66,7 @@ A arquitetura separa claramente:
 │    internal/*/infra/out/event/publisher.go                                   │
 │                                                                              │
 │  • Token / Authentication Adapter                                            │
-│    internal/auth/infra/jwt/*                                                 │
+│    internal/auth/infra/out/jwt/*                                                 │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 ```
@@ -156,7 +156,7 @@ A lógica de reação a eventos (regras e orquestração) permanece na camada `a
     - Implementa o port de publicação de eventos
     - Utiliza o event bus definido em `pkg/event`
 
-- **Autenticação (JWT)**: `internal/auth/infra/jwt`
+- **Autenticação (JWT)**: `internal/auth/infra/out/jwt`
     - Implementa geração e validação de tokens
 
 Esses adapters implementam os ports definidos na camada `application`.

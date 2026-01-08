@@ -3,8 +3,8 @@ package vehicle
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	vehicleApp "github.com/soat13/fase-1-oficina/internal/vehicle/application"
-	vehicleDB "github.com/soat13/fase-1-oficina/internal/vehicle/infra/db"
-	vehicleHTTP "github.com/soat13/fase-1-oficina/internal/vehicle/infra/http"
+	vehicleHTTP "github.com/soat13/fase-1-oficina/internal/vehicle/infra/in/http"
+	vehicleDB "github.com/soat13/fase-1-oficina/internal/vehicle/infra/out/db"
 )
 
 func SetupDefault(container *bootstrap.Container) {

@@ -3,8 +3,8 @@ package user
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	userApp "github.com/soat13/fase-1-oficina/internal/user/application"
-	userDB "github.com/soat13/fase-1-oficina/internal/user/infra/db"
-	userHTTP "github.com/soat13/fase-1-oficina/internal/user/infra/http"
+	userHTTP "github.com/soat13/fase-1-oficina/internal/user/infra/in/http"
+	userDB "github.com/soat13/fase-1-oficina/internal/user/infra/out/db"
 )
 
 func SetupDefault(container *bootstrap.Container) {

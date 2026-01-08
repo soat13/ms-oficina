@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/auth/application/mocks"
 	"github.com/soat13/fase-1-oficina/internal/auth/domain"
-	"github.com/soat13/fase-1-oficina/internal/auth/infra/http"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/in/http"
 	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/stretchr/testify/require"
