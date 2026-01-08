@@ -19,20 +19,20 @@ type (
 	}
 
 	AuthenticateUser struct {
-		users  UserReader
-		tokens TokenService
+		userReader   UserReader
+		tokenService TokenService
 	}
 )
 
-func NewAuthenticateUser(users UserReader, tokens TokenService) *AuthenticateUser {
+func NewAuthenticateUser(userReader UserReader, tokenService TokenService) *AuthenticateUser {
 	return &AuthenticateUser{
-		users:  users,
-		tokens: tokens,
+		userReader:   userReader,
+		tokenService: tokenService,
 	}
 }
 
 func (uc *AuthenticateUser) Execute(ctx context.Context, in AuthenticateInput) (AuthenticateOutput, error) {
-	user, err := uc.users.GetByEmail(ctx, in.Email.String())
+	user, err := uc.userReader.GetByEmail(ctx, in.Email.String())
 	if err != nil {
 		return AuthenticateOutput{}, err
 	}
@@ -41,7 +41,7 @@ func (uc *AuthenticateUser) Execute(ctx context.Context, in AuthenticateInput) (
 		return AuthenticateOutput{}, ErrInvalidCredentials
 	}
 
-	token, err := uc.tokens.Generate(ctx, user)
+	token, err := uc.tokenService.Generate(ctx, user)
 	if err != nil {
 		return AuthenticateOutput{}, err
 	}

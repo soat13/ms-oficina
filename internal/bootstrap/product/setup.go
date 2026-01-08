@@ -4,9 +4,10 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/product/application"
 	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
-	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/db"
-	"github.com/soat13/fase-1-oficina/internal/product/infra/event"
-	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/http"
+	"github.com/soat13/fase-1-oficina/internal/product/infra/in/event"
+	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/in/http"
+	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/out/db"
+	eventOut "github.com/soat13/fase-1-oficina/internal/product/infra/out/event"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
@@ -19,7 +20,7 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 		repository = productDB.NewBunProductRepository(container.DB)
 	}
 
-	eventPublisher := event.NewEventPublisher(container.EventBus)
+	eventPublisher := eventOut.NewEventPublisher(container.EventBus)
 	createProduct := application.NewCreateProduct(repository)
 	updateProduct := application.NewUpdateProduct(repository)
 	deleteProduct := application.NewDeleteProduct(repository)

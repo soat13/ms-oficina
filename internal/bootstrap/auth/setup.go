@@ -7,9 +7,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/soat13/fase-1-oficina/internal/auth/application"
-	"github.com/soat13/fase-1-oficina/internal/auth/infra/db"
-	"github.com/soat13/fase-1-oficina/internal/auth/infra/http"
-	"github.com/soat13/fase-1-oficina/internal/auth/infra/jwt"
+	http2 "github.com/soat13/fase-1-oficina/internal/auth/infra/in/http"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/out/db"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/out/jwt"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 )
 
@@ -17,7 +17,7 @@ type Config struct {
 	Secret            string
 	TokenTTL          time.Duration
 	ProtectedPrefixes []string
-	PublicRoutes      []http.PublicRoute
+	PublicRoutes      []http2.PublicRoute
 }
 
 func SetupDefault(container *bootstrap.Container) {
@@ -25,7 +25,7 @@ func SetupDefault(container *bootstrap.Container) {
 		Secret:            os.Getenv("JWT_SECRET"),
 		TokenTTL:          parseDuration(os.Getenv("JWT_EXPIRATION")),
 		ProtectedPrefixes: []string{"/"},
-		PublicRoutes: []http.PublicRoute{
+		PublicRoutes: []http2.PublicRoute{
 			{
 				Method: fiber.MethodPost,
 				Path:   "/auth/login",
@@ -58,7 +58,7 @@ func Setup(container *bootstrap.Container, cfg Config) {
 		cfg.ProtectedPrefixes = []string{"/"}
 	}
 	if len(cfg.PublicRoutes) == 0 {
-		cfg.PublicRoutes = []http.PublicRoute{
+		cfg.PublicRoutes = []http2.PublicRoute{
 			{
 				Method: fiber.MethodPost,
 				Path:   "/auth/login",
@@ -73,12 +73,12 @@ func Setup(container *bootstrap.Container, cfg Config) {
 
 	userReader := db.NewBunUserReader(container.DB)
 	authenticate := application.NewAuthenticateUser(userReader, tokenService)
-	handler := http.NewHandler(authenticate, container.Validator, container.FiberErrorHandler)
+	handler := http2.NewHandler(authenticate, container.Validator, container.FiberErrorHandler)
 
-	middleware := http.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes, cfg.PublicRoutes)
+	middleware := http2.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes, cfg.PublicRoutes)
 	container.FiberApp.Use(middleware.Handle)
 
-	http.Register(container.FiberApp, handler)
+	http2.Register(container.FiberApp, handler)
 }
 
 func parseDuration(value string) time.Duration {

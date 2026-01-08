@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/soat13/fase-1-oficina/internal/auth/infra/db"
+	"github.com/soat13/fase-1-oficina/internal/auth/infra/out/db"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
