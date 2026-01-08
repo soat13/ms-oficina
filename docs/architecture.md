@@ -66,7 +66,7 @@ A arquitetura separa claramente:
 │    internal/*/infra/out/event/publisher.go                                   │
 │                                                                              │
 │  • Token / Authentication Adapter                                            │
-│    internal/auth/infra/out/jwt/*                                                 │
+│    internal/auth/infra/out/jwt/*                                             │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 ```
