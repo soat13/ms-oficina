@@ -1,18 +1,18 @@
-package bus_test
+package messaging_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/soat13/fase-1-oficina/pkg/event/bus"
+	"github.com/soat13/fase-1-oficina/internal/shared/infra/out/messaging"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInMemoryBus_Publish(t *testing.T) {
 	t.Run("returns handler error when a handler fails", func(t *testing.T) {
 		ctx := context.Background()
-		b := bus.NewInMemoryBus()
+		b := messaging.NewInMemoryBus()
 
 		handlerErr := errors.New("handler failed")
 
@@ -26,7 +26,7 @@ func TestInMemoryBus_Publish(t *testing.T) {
 
 	t.Run("calls handlers in order and stops on first error", func(t *testing.T) {
 		ctx := context.Background()
-		b := bus.NewInMemoryBus()
+		b := messaging.NewInMemoryBus()
 
 		calls := 0
 		handlerErr := errors.New("boom")
@@ -51,7 +51,7 @@ func TestInMemoryBus_Publish(t *testing.T) {
 
 	t.Run("returns nil when there are no handlers for topic", func(t *testing.T) {
 		ctx := context.Background()
-		b := bus.NewInMemoryBus()
+		b := messaging.NewInMemoryBus()
 
 		err := b.Publish(ctx, "no.handlers", []byte("payload"))
 		require.NoError(t, err)

@@ -3,16 +3,15 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-
 	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 )
 
 type (
 	addItemBody struct {
-		ItemID   string `json:"item_id"       validate:"required,uuid"`
+		ItemID   string `json:"item_id" validate:"required,uuid"`
 		Quantity int    `json:"quantity" validate:"required,min=1"`
 	}
 
