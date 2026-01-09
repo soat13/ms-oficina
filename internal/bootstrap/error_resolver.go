@@ -5,6 +5,7 @@ import (
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
 	errorHelper "github.com/soat13/fase-1-oficina/pkg/error"
+	"github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 )
 
@@ -12,6 +13,7 @@ func NewErrorResolver() *errorHelper.Resolver {
 	errorResolver := errorHelper.NewErrorResolver()
 
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidID)
+	errorResolver.RegisterHTTPBadRequestError(fiber.ErrInvalidID)
 	errorResolver.RegisterHTTPBadRequestError(errors.ErrInvalidJSON)
 	errorResolver.RegisterHTTPConflictError(errors.ErrInvalidStatusTransaction)
 	errorResolver.RegisterHTTPConflictError(bun_helper.ErrResourceInUse)

@@ -5,17 +5,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/ports/event"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
-	eventPublisher "github.com/soat13/fase-1-oficina/pkg/event"
+	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 )
 
 type EventPublisher struct {
-	bus event.Bus
+	bus messaging.Bus
 }
 
-func NewEventPublisher(bus event.Bus) application.EventPublisher {
+func NewEventPublisher(bus messaging.Bus) application.EventPublisher {
 	return &EventPublisher{
 		bus: bus,
 	}
@@ -35,7 +34,7 @@ func (e *EventPublisher) PublishRepairOrderDiagnosticsFinished(
 		Services:      services,
 	}
 
-	return eventPublisher.Publish(ctx, e.bus, orderDiagnosticsFinished)
+	return messaging.Publish(ctx, e.bus, orderDiagnosticsFinished)
 }
 
 func (e *EventPublisher) PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error {
@@ -45,5 +44,5 @@ func (e *EventPublisher) PublishRepairOrderCanceled(ctx context.Context, RepairO
 		RepairOrderID: RepairOrderID,
 	}
 
-	return eventPublisher.Publish(ctx, e.bus, orderDiagnosticsFinished)
+	return messaging.Publish(ctx, e.bus, orderDiagnosticsFinished)
 }

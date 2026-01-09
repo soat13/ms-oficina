@@ -1,10 +1,10 @@
-package event_test
+package messaging_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/soat13/fase-1-oficina/pkg/event"
+	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,7 +19,7 @@ func TestPublish(t *testing.T) {
 		ctx := context.Background()
 		invalidEvent := badEvent{C: make(chan int)}
 
-		err := event.Publish(ctx, nil, invalidEvent)
+		err := messaging.Publish(ctx, nil, invalidEvent)
 		require.Error(t, err)
 	})
 }

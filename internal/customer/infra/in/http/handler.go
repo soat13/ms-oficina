@@ -4,7 +4,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"

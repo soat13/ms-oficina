@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/soat13/fase-1-oficina/internal/ports/event"
-	"github.com/soat13/fase-1-oficina/pkg/event/bus"
+	infraMessaging "github.com/soat13/fase-1-oficina/internal/shared/infra/out/messaging"
+	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 	helper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -24,7 +24,7 @@ type Container struct {
 	FiberApp          *fiber.App
 	FiberErrorHandler *helper.ErrorHandler
 	Validator         *validator.Validate
-	EventBus          event.Bus
+	EventBus          messaging.Bus
 }
 
 func BuildDefault() *Container {
@@ -36,7 +36,7 @@ func Build(
 	fiberApp *fiber.App,
 	fiberErrorHandler *helper.ErrorHandler,
 	structValidator *validator.Validate,
-	EventBus event.Bus,
+	EventBus messaging.Bus,
 ) *Container {
 
 	if fiberApp == nil {
@@ -56,7 +56,7 @@ func Build(
 	}
 
 	if EventBus == nil {
-		EventBus = bus.NewInMemoryBus()
+		EventBus = infraMessaging.NewInMemoryBus()
 	}
 
 	return &Container{
