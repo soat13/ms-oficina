@@ -72,7 +72,26 @@ Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/a
 - Docker e Docker Compose
 - make (opcional, recomendado)
 
-> **Nota sobre CI/CD**: A pipeline deste repositório trigga automaticamente a pipeline do repositório de infraestrutura, onde a infra está montada com Terraform e Kubernetes.
+## Pipeline
+
+O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jobs:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                      GitHub Actions - Aplicação (oficina)                       │
+│                                                                                 │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
+│  │   SonarCloud │───▶│     Build    │──▶ │     Push     │──▶ │   Trigger    │   │
+│  │     Scan     │    │    Docker    │    │     ECR      │    │    Infra     │   │
+│  └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘   │
+│   • Security           • Tests              • Tag Image                         │
+│   • Code Quality       • Coverage           • Amazon ECR                        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+1. **tests-and-quality** — Testes unitários/integração + SonarCloud
+2. **docker-build** — Build da imagem Docker
+3. **deploy-to-ecr** — Push para Amazon ECR (apenas branch `main`)
+4. **trigger-infra-workflow** — Trigga pipeline do repositório de infraestrutura  [repositório de infraestrutura](https://github.com/soat13/oficina-infra), onde a infra é provisionada com **Terraform** e o deploy é feito no **Kubernetes (EKS)** (apenas branch `main`)
 
 ## Executando o Projeto
 
