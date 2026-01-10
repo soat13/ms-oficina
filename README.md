@@ -6,7 +6,7 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 
 ### Links Úteis
 
-- GitHub: https://github.com/soat13/fase-1-oficina
+- GitHub: https://github.com/soat13/oficina
 - Miro: https://miro.com/app/board/uXjVJLyIcr8=
 
 ### Funcionalidades Principais
@@ -55,6 +55,8 @@ Diagramas e detalhes arquiteturais: [`docs/architecture.md`](docs/architecture.m
 
 - Docker e Docker Compose
 - make (opcional, recomendado)
+
+> **Nota sobre CI/CD**: A pipeline deste repositório trigga automaticamente a pipeline do repositório de infraestrutura, onde a infra está montada com Terraform e Kubernetes.
 
 ## Executando o Projeto
 
