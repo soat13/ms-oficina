@@ -81,7 +81,7 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 │                      GitHub Actions - Aplicação (oficina)                       │
 │                                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
-│  │   SonarCloud │───▶│     Build    │──▶ │     Push     │──▶ │   Trigger    │   │
+│  │   SonarCloud │───▶│     Build    │──▶│     Push     │──▶│   Trigger    │   │
 │  │     Scan     │    │    Docker    │    │     ECR      │    │    Infra     │   │
 │  └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘   │
 │   • Security           • Tests              • Tag Image                         │
