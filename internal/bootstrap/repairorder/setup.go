@@ -3,9 +3,10 @@ package repairorder
 import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	repairOrderDB "github.com/soat13/fase-1-oficina/internal/repairorder/infra/db"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/event"
-	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/http"
+	eventIn "github.com/soat13/fase-1-oficina/internal/repairorder/infra/in/event"
+	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/in/http"
+	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/db"
+	eventOut "github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/event"
 	"github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
@@ -14,12 +15,12 @@ func SetupDefault(container *bootstrap.Container) {
 }
 
 func Setup(container *bootstrap.Container) {
-	repository := repairOrderDB.NewBunRepairOrderRepository(container.DB)
-	vehicleReader := repairOrderDB.NewVehicleReader(container.DB)
-	customerReader := repairOrderDB.NewCustomerReader(container.DB)
-	productReader := repairOrderDB.NewProductReader(container.DB)
-	serviceReader := repairOrderDB.NewServiceReader(container.DB)
-	eventPublisher := event.NewEventPublisher(container.EventBus)
+	repository := db.NewBunRepairOrderRepository(container.DB)
+	vehicleReader := db.NewVehicleReader(container.DB)
+	customerReader := db.NewCustomerReader(container.DB)
+	productReader := db.NewProductReader(container.DB)
+	serviceReader := db.NewServiceReader(container.DB)
+	eventPublisher := eventOut.NewEventPublisher(container.EventBus)
 
 	list := application.NewListRepairOrders(repository)
 	get := application.NewGetRepairOrder(repository)
@@ -58,14 +59,14 @@ func Setup(container *bootstrap.Container) {
 	handleStockInsufficient := application.NewHandleStockInsufficient(cancel)
 	handleStockReductionConfirmed := application.NewHandleStockReductionConfirmed(repository)
 
-	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), event.OnEstimateCreated(handleEstimateCreated))
-	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), event.OnEstimateRejected(handleEstimateRejected))
+	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), eventIn.OnEstimateCreated(handleEstimateCreated))
+	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), eventIn.OnEstimateRejected(handleEstimateRejected))
 	container.EventBus.Subscribe(
 		events.StockInsufficientDetected{}.Topic(),
-		event.OnStockInsufficientDetected(handleStockInsufficient),
+		eventIn.OnStockInsufficientDetected(handleStockInsufficient),
 	)
 	container.EventBus.Subscribe(
 		events.StockReductionConfirmed{}.Topic(),
-		event.OnStockReduceConfirmed(handleStockReductionConfirmed),
+		eventIn.OnStockReduceConfirmed(handleStockReductionConfirmed),
 	)
 }

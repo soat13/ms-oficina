@@ -38,7 +38,23 @@ A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquite
 
 A API é construída em **Go**, seguindo princípios de **DDD** e **Arquitetura Hexagonal**, organizada por contextos de domínio independentes.
 
-Diagramas e detalhes arquiteturais: [`docs/architecture.md`](docs/architecture.md)
+### Arquitetura
+
+O projeto adota **Arquitetura Hexagonal (Ports & Adapters)** combinada com **DDD**, organizado por contextos de domínio independentes.
+
+Cada contexto é estruturado em:
+
+- **Domain** (`domain/`) — Entidades, value objects e regras de negócio puras, sem dependências externas
+- **Application** (`application/`) — Casos de uso que representam as operações do sistema (pontos de entrada) e ports (interfaces) para dependências externas
+- **Infrastructure** (`infra/`) — Adapters concretos:
+    - **Inbound**: handlers HTTP e listeners de eventos
+    - **Outbound**: repositórios (Bun/Postgres), publicação de eventos, JWT e integrações externas
+
+Os casos de uso são invocados por adapters de entrada e acessam recursos externos exclusivamente via **ports**, garantindo baixo acoplamento e inversão de dependência.
+
+A comunicação entre contextos ocorre por **eventos de domínio**, publicados e consumidos através de um event bus em memória, preservando o desacoplamento entre bounded contexts.
+
+Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/architecture.md`](docs/architecture.md)
 
 ### Stack Tecnológica
 

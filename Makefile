@@ -77,13 +77,9 @@ mockgen-install:
 
 mock: mockgen-install
 	$(DOCKER_EXEC) sh -lc '$(MOCKGEN) \
-    	  -source=internal/estimate/application/repository.go \
-    	  -destination=internal/estimate/mocks/repository_mock.go \
+    	  -source=internal/auth/application/ports.go \
+    	  -destination=internal/auth/application/mocks/ports_mock.go \
     	  -package=mocks'
-	$(DOCKER_EXEC) sh -lc '$(MOCKGEN) \
-		  -source=internal/shared/eventbus/bus.go \
-		  -destination=internal/shared/eventbus/mocks/bus_mock.go \
-		  -package=mocks'
 
 # -------------------------------
 # SonarQube Analysis
