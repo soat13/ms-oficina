@@ -135,4 +135,4 @@ A API utiliza **JWT** para proteger as rotas administrativas (`/admin/**`).
 - `make test-coverage` — gera relatório de cobertura
 - `make sonar` — executa análise no SonarQube
 
-> Os testes de integração criam bancos isolados e aplicam migrações automaticamente.
+> Os testes de integração criam bancos isolados e aplicam migrações automaticamente
