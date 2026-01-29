@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: fiap
+data:
+  MIGRATIONS_DIR: "scripts/db/migrations"
+  PORT: "8080"
