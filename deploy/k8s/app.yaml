@@ -16,7 +16,7 @@ spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 3
       containers:
-        - image: 711290133650.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+        - image: 910734739355.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
           imagePullPolicy: Always
           name: oficina-api
           ports:
