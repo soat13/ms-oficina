@@ -77,21 +77,25 @@ Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/a
 O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jobs:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                      GitHub Actions - Aplicação (oficina)                       │
-│                                                                                 │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
-│  │   SonarCloud │──▶│     Build    │───▶│     Push     │──▶│   Trigger    │   │
-│  │     Scan     │    │    Docker    │    │     ECR      │    │    Infra     │   │
-│  └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘   │
-│   • Security           • Tests              • Tag Image                         │
-│   • Code Quality       • Coverage           • Amazon ECR                        │
-└─────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                      GitHub Actions - Aplicação (oficina)                                   │
+│                                                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐               │
+│  │   SonarCloud │──▶│     Build    │───▶│     Push     │──▶│   Deploy     │               │
+│  │     Scan     │    │    Docker    │    │     ECR      │    │   K8s/EKS    │               │
+│  └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘               │
+│   • Security           • Tests              • Tag Image         • Apply Manifests           │
+│   • Code Quality       • Coverage           • Amazon ECR        • Rolling Update            │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 1. **tests-and-quality** — Testes unitários/integração + SonarCloud
 2. **docker-build** — Build da imagem Docker
 3. **deploy-to-ecr** — Push para Amazon ECR (apenas branch `main`)
-4. **trigger-infra-workflow** — Trigga pipeline do repositório de infraestrutura  [oficina-infra](https://github.com/soat13/oficina-infra), onde a infra é provisionada com **Terraform** e o deploy é feito no **Kubernetes (EKS)** (apenas branch `main`)
+4. **k8s-deploy** — Deploy automático no Kubernetes (EKS) aplicando os manifests localizados em `deploy/k8s/` (apenas branch `main`)
+   - Obtém outputs do Terraform do estado armazenado no S3
+   - Configura kubectl para conectar ao cluster EKS
+   - Aplica todos os recursos Kubernetes necessários
+   - Executa rolling update do deployment
 
 ## Executando o Projeto
 
@@ -136,3 +140,18 @@ A API utiliza **JWT** para proteger as rotas administrativas (`/admin/**`).
 - `make sonar` — executa análise no SonarQube
 
 > Os testes de integração criam bancos isolados e aplicam migrações automaticamente
+
+## Deploy no Kubernetes
+
+A aplicação é deployada automaticamente no **Amazon EKS** através do pipeline CI/CD. Os manifests Kubernetes estão localizados em `deploy/k8s/`:
+
+### Manifests Disponíveis
+
+- **namespace.yaml** — Cria o namespace `fiap` para isolamento dos recursos
+- **serviceaccount.yaml** — Service account para o pod da aplicação
+- **configmap.yaml** — Configurações não sensíveis (MIGRATIONS_DIR, PORT)
+- **secrets.yaml** — Dados sensíveis (JWT_SECRET, credenciais do PostgreSQL, PG_DSN)
+- **app.yaml** — Deployment da aplicação com 2 réplicas iniciais
+- **services.yaml** — Service do tipo LoadBalancer expondo a aplicação externamente na porta 3000
+- **hpa.yaml** — Horizontal Pod Autoscaler configurado para escalar de 1 a 10 réplicas baseado em CPU (target: 50%)
+- **metric-server.yaml** — Metrics Server necessário para o HPA funcionar corretamente
