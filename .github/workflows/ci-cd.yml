@@ -3,7 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      # TODO: Change to main when ready
+      - 'feat/analytics'
   pull_request:
     branches:
       - '*'
@@ -99,7 +100,7 @@ jobs:
     name: Deploy to ECR
     needs: docker-build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # TODO: Change to main when ready
     
     steps:
       - name: Checkout code
@@ -163,9 +164,9 @@ jobs:
       - name: Fetch Terraform Outputs
         id: tf_outputs
         run: |
-          aws s3 cp s3://soatfiap-3/state/oficina-infra/terraform.tfstate infra.tfstate
+          aws s3 cp s3://soatfiap-4/state/oficina-infra/terraform.tfstate infra.tfstate
           
-          aws s3 cp s3://soatfiap-3/state/oficina-db/terraform.tfstate db.tfstate
+          aws s3 cp s3://soatfiap-4/state/oficina-db/terraform.tfstate db.tfstate
           CLUSTER_NAME=$(jq -r '.outputs.cluster_name.value' infra.tfstate)
           RDS_ENDPOINT=$(jq -r '.outputs.rds_address.value' db.tfstate)
           RDS_PORT=$(jq -r '.outputs.rds_port.value' db.tfstate)
