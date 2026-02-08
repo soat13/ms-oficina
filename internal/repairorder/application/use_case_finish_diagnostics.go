@@ -16,19 +16,21 @@ type (
 	}
 
 	FinishDiagnostics struct {
-		repository     Repository
-		eventPublisher EventPublisher
-		productReader  ProductReader
-		serviceReader  ServiceReader
+		repository       Repository
+		eventPublisher   EventPublisher
+		productReader    ProductReader
+		serviceReader    ServiceReader
+		metricsPublisher MetricsPublisher
 	}
 )
 
-func NewFinishDiagnostics(repository Repository, eventPublisher EventPublisher, productReader ProductReader, serviceReader ServiceReader) *FinishDiagnostics {
+func NewFinishDiagnostics(repository Repository, eventPublisher EventPublisher, productReader ProductReader, serviceReader ServiceReader, metricsPublisher MetricsPublisher) *FinishDiagnostics {
 	return &FinishDiagnostics{
-		repository:     repository,
-		eventPublisher: eventPublisher,
-		productReader:  productReader,
-		serviceReader:  serviceReader,
+		repository:       repository,
+		eventPublisher:   eventPublisher,
+		productReader:    productReader,
+		serviceReader:    serviceReader,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -56,6 +58,8 @@ func (uc *FinishDiagnostics) Execute(ctx context.Context, input FinishDiagnostic
 	if err := uc.repository.SaveIfInDiagnostics(ctx, repairorder); err != nil {
 		return err
 	}
+
+	uc.metricsPublisher.IncRepairOrderStatusChange("in_diagnostics", "diagnostics_finished")
 
 	return uc.eventPublisher.PublishRepairOrderDiagnosticsFinished(
 		ctx,

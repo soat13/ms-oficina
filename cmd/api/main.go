@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
 	"github.com/soat13/fase-1-oficina/assets/docs"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
@@ -17,6 +17,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
+	"github.com/soat13/fase-1-oficina/pkg/observability"
 	"github.com/soat13/fase-1-oficina/scripts/db"
 )
 
@@ -24,19 +25,19 @@ func main() {
 	loadEnv()
 
 	if err := db.RunMigrations(os.Getenv("PG_DSN")); err != nil {
-		log.Printf("Erro ao executar migrations: %v", err)
+		log.Warn().Err(err).Msg("failed to run database migrations")
 	}
 
 	container := bootstrap.BuildDefault()
 	defer container.Close()
 
-	// -----------------------------------------------------------------------------
-	// HTTP server setup
-	// -----------------------------------------------------------------------------
-	fiberApp := container.FiberApp
+	obs := observability.Setup(container.FiberApp, container.DB)
+	defer observability.Shutdown(obs)
+
+	container.Metrics = obs.Metrics
 
 	authBootstrap.SetupDefault(container)
-	docs.Register(fiberApp)
+	docs.Register(container.FiberApp)
 	estimate.SetupDefault(container)
 	repairorder.SetupDefault(container)
 	product.SetupDefault(container)
@@ -51,8 +52,8 @@ func main() {
 	port := os.Getenv("PORT")
 	printUsefulLinks(port)
 
-	if err := fiberApp.Listen(":" + port); err != nil {
-		log.Fatal(err)
+	if err := container.FiberApp.Listen(":" + port); err != nil {
+		log.Fatal().Err(err).Msg("failed to start HTTP server")
 	}
 }
 
@@ -66,6 +67,6 @@ func printUsefulLinks(port string) {
 
 func loadEnv() {
 	if err := godotenv.Load(); err != nil {
-		log.Println("⚠️  .env não encontrado, usando variáveis de ambiente do sistema")
+		log.Warn().Msg(".env not found — using system environment variables")
 	}
 }

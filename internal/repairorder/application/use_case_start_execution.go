@@ -12,12 +12,14 @@ type StartExecutionInput struct {
 }
 
 type StartExecution struct {
-	Repository Repository
+	Repository       Repository
+	metricsPublisher MetricsPublisher
 }
 
-func NewStartExecution(repository Repository) *StartExecution {
+func NewStartExecution(repository Repository, metricsPublisher MetricsPublisher) *StartExecution {
 	return &StartExecution{
-		Repository: repository,
+		Repository:       repository,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -35,5 +37,11 @@ func (uc *StartExecution) Execute(ctx context.Context, input StartExecutionInput
 		return err
 	}
 
-	return uc.Repository.SaveIfApproved(ctx, repairorder)
+	if err := uc.Repository.SaveIfApproved(ctx, repairorder); err != nil {
+		return err
+	}
+
+	uc.metricsPublisher.IncRepairOrderStatusChange("approved", "in_execution")
+
+	return nil
 }

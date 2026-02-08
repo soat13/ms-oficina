@@ -18,17 +18,19 @@ type (
 	}
 
 	Create struct {
-		repository     Repository
-		customerReader CustomerReader
-		vehicleReader  VehicleReader
+		repository       Repository
+		customerReader   CustomerReader
+		vehicleReader    VehicleReader
+		metricsPublisher MetricsPublisher
 	}
 )
 
-func NewCreate(repository Repository, customerReader CustomerReader, vehicleReader VehicleReader) *Create {
+func NewCreate(repository Repository, customerReader CustomerReader, vehicleReader VehicleReader, metricsPublisher MetricsPublisher) *Create {
 	return &Create{
-		repository:     repository,
-		customerReader: customerReader,
-		vehicleReader:  vehicleReader,
+		repository:       repository,
+		customerReader:   customerReader,
+		vehicleReader:    vehicleReader,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -46,6 +48,8 @@ func (uc *Create) Execute(ctx context.Context, input CreateInput) (*CreateOutput
 	if err != nil {
 		return nil, err
 	}
+
+	uc.metricsPublisher.IncRepairOrderCreated()
 
 	return &CreateOutput{RepairOrderID: repairOrder.ID}, nil
 }

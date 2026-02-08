@@ -12,14 +12,16 @@ type CancelInput struct {
 }
 
 type Cancel struct {
-	Repository     Repository
-	eventPublisher EventPublisher
+	Repository       Repository
+	eventPublisher   EventPublisher
+	metricsPublisher MetricsPublisher
 }
 
-func NewCancel(repository Repository, eventPublisher EventPublisher) *Cancel {
+func NewCancel(repository Repository, eventPublisher EventPublisher, metricsPublisher MetricsPublisher) *Cancel {
 	return &Cancel{
-		Repository:     repository,
-		eventPublisher: eventPublisher,
+		Repository:       repository,
+		eventPublisher:   eventPublisher,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -44,6 +46,8 @@ func (uc *Cancel) Execute(ctx context.Context, input CancelInput) error {
 	if err := uc.Repository.SaveCancellation(ctx, repairorder); err != nil {
 		return err
 	}
+
+	uc.metricsPublisher.IncRepairOrderCanceled()
 
 	return uc.eventPublisher.PublishRepairOrderCanceled(ctx, repairorder.ID)
 }

@@ -12,12 +12,14 @@ type FinishExecutionInput struct {
 }
 
 type FinishExecution struct {
-	Repository Repository
+	Repository       Repository
+	metricsPublisher MetricsPublisher
 }
 
-func NewFinishExecution(repository Repository) *FinishExecution {
+func NewFinishExecution(repository Repository, metricsPublisher MetricsPublisher) *FinishExecution {
 	return &FinishExecution{
-		Repository: repository,
+		Repository:       repository,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -35,5 +37,11 @@ func (uc *FinishExecution) Execute(ctx context.Context, input FinishExecutionInp
 		return err
 	}
 
-	return uc.Repository.SaveIfInExecution(ctx, repairorder)
+	if err := uc.Repository.SaveIfInExecution(ctx, repairorder); err != nil {
+		return err
+	}
+
+	uc.metricsPublisher.IncRepairOrderStatusChange("in_execution", "finished")
+
+	return nil
 }

@@ -7,6 +7,7 @@ import (
 	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/in/http"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/db"
 	eventOut "github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/event"
+	metricsOut "github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/metrics"
 	"github.com/soat13/fase-1-oficina/internal/shared/events"
 )
 
@@ -21,21 +22,23 @@ func Setup(container *bootstrap.Container) {
 	productReader := db.NewProductReader(container.DB)
 	serviceReader := db.NewServiceReader(container.DB)
 	eventPublisher := eventOut.NewEventPublisher(container.EventBus)
+	metricsPublisher := metricsOut.NewPublisher(container.Metrics)
 
 	list := application.NewListRepairOrders(repository)
 	get := application.NewGetRepairOrder(repository)
-	create := application.NewCreate(repository, customerReader, vehicleReader)
-	startDiagnostics := application.NewStartDiagnostics(repository)
-	startExecution := application.NewStartExecution(repository)
-	finishExecution := application.NewFinishExecution(repository)
-	releaseVehicle := application.NewReleaseVehicle(repository)
+	create := application.NewCreate(repository, customerReader, vehicleReader, metricsPublisher)
+	startDiagnostics := application.NewStartDiagnostics(repository, metricsPublisher)
+	startExecution := application.NewStartExecution(repository, metricsPublisher)
+	finishExecution := application.NewFinishExecution(repository, metricsPublisher)
+	releaseVehicle := application.NewReleaseVehicle(repository, metricsPublisher)
 	getAverageExecutionTime := application.NewGetAverageExecutionTime(repository)
-	cancel := application.NewCancel(repository, eventPublisher)
+	cancel := application.NewCancel(repository, eventPublisher, metricsPublisher)
 	finishDiagnostics := application.NewFinishDiagnostics(
 		repository,
 		eventPublisher,
 		productReader,
 		serviceReader,
+		metricsPublisher,
 	)
 
 	repairOrderHTTPHandler := repairOrderHTTP.NewHandler(
