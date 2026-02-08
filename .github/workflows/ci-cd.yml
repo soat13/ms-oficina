@@ -3,8 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      # TODO: Change to main when ready
-      - 'feat/analytics'
+      - main
   pull_request:
     branches:
       - '*'
@@ -100,7 +99,7 @@ jobs:
     name: Deploy to ECR
     needs: docker-build
     runs-on: ubuntu-latest
-    # TODO: Change to main when ready
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code

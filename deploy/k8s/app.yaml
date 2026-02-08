@@ -3,6 +3,11 @@ kind: Deployment
 metadata:
   name: oficina
   namespace: fiap
+  labels:
+    app: oficina
+    tags.datadoghq.com/env: "development"
+    tags.datadoghq.com/service: "oficina-api"
+    tags.datadoghq.com/version: "1.0.0"
 spec:
   replicas: 2
   selector:
@@ -12,9 +17,18 @@ spec:
     metadata:
       labels:
         app: oficina
+        tags.datadoghq.com/env: "development"
+        tags.datadoghq.com/service: "oficina-api"
+        tags.datadoghq.com/version: "1.0.0"
+      annotations:
+        ad.datadoghq.com/oficina-api.logs: '[{"source":"go","service":"oficina-api"}]'
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 3
+      volumes:
+        - name: apmsocketpath
+          hostPath:
+            path: /var/run/datadog/
       containers:
         - image: 910734739355.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
           imagePullPolicy: Always
@@ -26,6 +40,30 @@ spec:
                 name: app-sc
             - configMapRef:
                 name: app-config
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_TRACE_AGENT_URL
+              value: "unix:///var/run/datadog/apm.socket"
+            - name: DD_LOGS_INJECTION
+              value: "true"
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']  
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
+          volumeMounts:
+            - name: apmsocketpath
+              mountPath: /var/run/datadog
           resources:
             limits:
               cpu: 50m
@@ -33,3 +71,19 @@ spec:
             requests:
               cpu: 20m
               memory: 20Mi
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3

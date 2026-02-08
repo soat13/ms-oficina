@@ -9,11 +9,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	infraMessaging "github.com/soat13/fase-1-oficina/internal/shared/infra/out/messaging"
 	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 	helper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
+	"github.com/soat13/fase-1-oficina/pkg/observability"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
@@ -25,6 +25,7 @@ type Container struct {
 	FiberErrorHandler *helper.ErrorHandler
 	Validator         *validator.Validate
 	EventBus          messaging.Bus
+	Metrics           *observability.Metrics
 }
 
 func BuildDefault() *Container {
@@ -95,7 +96,6 @@ func newSQL() *sql.DB {
 
 func newApp() *fiber.App {
 	app := fiber.New()
-	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // todo: In production, set specific allowed origins
 		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",

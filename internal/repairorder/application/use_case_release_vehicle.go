@@ -12,12 +12,14 @@ type ReleaseVehicleInput struct {
 }
 
 type ReleaseVehicle struct {
-	Repository Repository
+	Repository       Repository
+	metricsPublisher MetricsPublisher
 }
 
-func NewReleaseVehicle(repository Repository) *ReleaseVehicle {
+func NewReleaseVehicle(repository Repository, metricsPublisher MetricsPublisher) *ReleaseVehicle {
 	return &ReleaseVehicle{
-		Repository: repository,
+		Repository:       repository,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -35,5 +37,11 @@ func (uc *ReleaseVehicle) Execute(ctx context.Context, input ReleaseVehicleInput
 		return err
 	}
 
-	return uc.Repository.SaveIfFinished(ctx, repairorder)
+	if err := uc.Repository.SaveIfFinished(ctx, repairorder); err != nil {
+		return err
+	}
+
+	uc.metricsPublisher.IncRepairOrderStatusChange("finished", "released")
+
+	return nil
 }

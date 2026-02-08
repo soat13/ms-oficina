@@ -54,4 +54,10 @@ type (
 		) error
 		PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error
 	}
+
+	MetricsPublisher interface {
+		IncRepairOrderCreated()
+		IncRepairOrderStatusChange(fromStatus, toStatus string)
+		IncRepairOrderCanceled()
+	}
 )

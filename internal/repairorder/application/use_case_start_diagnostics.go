@@ -12,12 +12,14 @@ type StartDiagnosticsInput struct {
 }
 
 type StartDiagnostics struct {
-	Repository Repository
+	Repository       Repository
+	metricsPublisher MetricsPublisher
 }
 
-func NewStartDiagnostics(repository Repository) *StartDiagnostics {
+func NewStartDiagnostics(repository Repository, metricsPublisher MetricsPublisher) *StartDiagnostics {
 	return &StartDiagnostics{
-		Repository: repository,
+		Repository:       repository,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -34,5 +36,11 @@ func (uc *StartDiagnostics) Execute(ctx context.Context, input StartDiagnosticsI
 		return err
 	}
 
-	return uc.Repository.SaveIfReceived(ctx, repairorder)
+	if err := uc.Repository.SaveIfReceived(ctx, repairorder); err != nil {
+		return err
+	}
+
+	uc.metricsPublisher.IncRepairOrderStatusChange("received", "in_diagnostics")
+
+	return nil
 }
