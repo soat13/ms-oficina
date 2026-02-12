@@ -57,10 +57,10 @@ func Setup(container *bootstrap.Container) {
 	)
 	repairOrderHTTP.Register(container.FiberApp, repairOrderHTTPHandler)
 
-	handleEstimateCreated := application.NewHandleEstimateCreated(repository)
+	handleEstimateCreated := application.NewHandleEstimateCreated(repository, metricsPublisher)
 	handleEstimateRejected := application.NewHandleEstimateRejected(cancel)
 	handleStockInsufficient := application.NewHandleStockInsufficient(cancel)
-	handleStockReductionConfirmed := application.NewHandleStockReductionConfirmed(repository)
+	handleStockReductionConfirmed := application.NewHandleStockReductionConfirmed(repository, metricsPublisher)
 
 	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), eventIn.OnEstimateCreated(handleEstimateCreated))
 	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), eventIn.OnEstimateRejected(handleEstimateRejected))

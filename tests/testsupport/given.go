@@ -262,7 +262,6 @@ func GenerateCPF() string {
 		cpf[i] = rand.Intn(10)
 	}
 
-	// first digit
 	sum := 0
 	for i, j := 0, 10; i < 9; i, j = i+1, j-1 {
 		sum += cpf[i] * j
@@ -272,7 +271,6 @@ func GenerateCPF() string {
 		d1 = 0
 	}
 
-	// second digit
 	sum = 0
 	for i, j := 0, 11; i < 9; i, j = i+1, j-1 {
 		sum += cpf[i] * j
@@ -300,7 +298,6 @@ func GenerateCNPJ() string {
 	weights1 := []int{5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}
 	weights2 := []int{6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}
 
-	// first digit
 	sum := 0
 	for i := 0; i < 12; i++ {
 		sum += cnpj[i] * weights1[i]
@@ -312,7 +309,6 @@ func GenerateCNPJ() string {
 		d1 = 11 - d1
 	}
 
-	// secondo digit
 	sum = 0
 	for i := 0; i < 12; i++ {
 		sum += cnpj[i] * weights2[i]

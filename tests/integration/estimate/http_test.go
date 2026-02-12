@@ -32,19 +32,15 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 	t.Helper()
 
 	return testsupport.SetupHTTP(t, func(app *fiber.App, container *bootstrap.Container) {
-		// Setup all modules to test complete event flows
-		product.SetupDefault(container)     // Registers reduce_stock listener
-		repairorder.SetupDefault(container) // Registers approval/cancel listeners
-		estimate.SetupDefault(container)    // Registers estimate listeners
+		product.SetupDefault(container)
+		repairorder.SetupDefault(container)
+		estimate.SetupDefault(container)
 	})
 }
 
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
-
-// TestCreateEstimate - Create é executado APENAS via evento (OnDiagnosticsFinished listener)
-// Testado em: tests/integration/repairorder/http_test.go -> TestFinishDiagnostics
 
 func TestApproveEstimate(t *testing.T) {
 	setup := ensureSetup(t)
@@ -169,7 +165,7 @@ func TestAddItemToEstimate(t *testing.T) {
 		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 3)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		expectItemQuantity(t, setup.Container, estimateID, productID, 5) // 2 + 3
+		expectItemQuantity(t, setup.Container, estimateID, productID, 5)
 	})
 
 	t.Run("Estimate Not Found", func(t *testing.T) {
@@ -325,8 +321,8 @@ func TestApproveEstimate_EventFlow(t *testing.T) {
 
 		expectEstimateStatus(t, setup.Container, estimateID, estimateDomain.StatusApproved)
 
-		expectProductStock(t, setup.Container, productID1, 98) // 100 - 2
-		expectProductStock(t, setup.Container, productID2, 49) // 50 - 1
+		expectProductStock(t, setup.Container, productID1, 98)
+		expectProductStock(t, setup.Container, productID2, 49)
 
 		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusApproved)
 	})
@@ -337,7 +333,7 @@ func TestApproveEstimate_EventFlow(t *testing.T) {
 		repairOrderID := testsupport.ThereIsARepairOrderWithStatus(t, setup.Container.DB, repairorderShared.StatusAwaitingApproval)
 
 		estimateID := createEstimateWithProducts(t, setup.Container, repairOrderID, map[uuid.UUID]int{
-			productID: 10, // Only 5 available
+			productID: 10,
 		})
 
 		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
@@ -350,7 +346,7 @@ func TestApproveEstimate_EventFlow(t *testing.T) {
 		require.NoError(t, setup.Container.DB.NewRaw(`SELECT status FROM estimates WHERE id = ?`, estimateID).Scan(ctx, &estimateStatus))
 		require.Contains(t, []string{string(estimateDomain.StatusApproved), string(estimateDomain.StatusCanceled)}, estimateStatus)
 
-		expectProductStock(t, setup.Container, productID, 5) // Should remain unchanged
+		expectProductStock(t, setup.Container, productID, 5)
 
 		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusCanceled)
 	})
