@@ -30,3 +30,17 @@ func (p *MetricsPublisher) IncRepairOrderCanceled() {
 	}
 	p.metrics.IncRepairOrderCanceled()
 }
+
+func (p *MetricsPublisher) RecordRepairOrderExecutionTime(minutes float64) {
+	if p == nil || p.metrics == nil {
+		return
+	}
+	p.metrics.RecordRepairOrderExecutionTime(minutes)
+}
+
+func (p *MetricsPublisher) IncIntegrationError(integration, operation string) {
+	if p == nil || p.metrics == nil {
+		return
+	}
+	p.metrics.IncIntegrationError(integration, operation)
+}

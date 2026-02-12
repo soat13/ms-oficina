@@ -7,12 +7,14 @@ import (
 )
 
 type HandleEstimateCreated struct {
-	repository Repository
+	repository       Repository
+	metricsPublisher MetricsPublisher
 }
 
-func NewHandleEstimateCreated(repository Repository) HandleEstimateCreated {
+func NewHandleEstimateCreated(repository Repository, metricsPublisher MetricsPublisher) HandleEstimateCreated {
 	return HandleEstimateCreated{
-		repository: repository,
+		repository:       repository,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -27,5 +29,11 @@ func (h *HandleEstimateCreated) Execute(ctx context.Context, evt events.Estimate
 		return err
 	}
 
-	return h.repository.SaveIfDiagnosticsFinished(ctx, repairOrder)
+	if err := h.repository.SaveIfDiagnosticsFinished(ctx, repairOrder); err != nil {
+		return err
+	}
+
+	h.metricsPublisher.IncRepairOrderStatusChange("diagnostics_finished", "awaiting_approval")
+
+	return nil
 }

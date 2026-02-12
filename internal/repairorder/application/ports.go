@@ -59,5 +59,7 @@ type (
 		IncRepairOrderCreated()
 		IncRepairOrderStatusChange(fromStatus, toStatus string)
 		IncRepairOrderCanceled()
+		RecordRepairOrderExecutionTime(minutes float64)
+		IncIntegrationError(integration, operation string)
 	}
 )

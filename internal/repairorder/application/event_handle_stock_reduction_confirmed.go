@@ -7,12 +7,14 @@ import (
 )
 
 type HandleStockReductionConfirmed struct {
-	repository Repository
+	repository       Repository
+	metricsPublisher MetricsPublisher
 }
 
-func NewHandleStockReductionConfirmed(repository Repository) HandleStockReductionConfirmed {
+func NewHandleStockReductionConfirmed(repository Repository, metricsPublisher MetricsPublisher) HandleStockReductionConfirmed {
 	return HandleStockReductionConfirmed{
-		repository: repository,
+		repository:       repository,
+		metricsPublisher: metricsPublisher,
 	}
 }
 
@@ -26,5 +28,11 @@ func (h *HandleStockReductionConfirmed) Execute(ctx context.Context, evt events.
 		return err
 	}
 
-	return h.repository.SaveIfInAwaitingApproval(ctx, repairOrder)
+	if err := h.repository.SaveIfInAwaitingApproval(ctx, repairOrder); err != nil {
+		return err
+	}
+
+	h.metricsPublisher.IncRepairOrderStatusChange("awaiting_approval", "approved")
+
+	return nil
 }
