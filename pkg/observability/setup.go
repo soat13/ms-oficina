@@ -3,6 +3,7 @@ package observability
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
+	fibertrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gofiber/fiber.v2"
 )
 
 type Components struct {
@@ -22,7 +23,8 @@ func Setup(app *fiber.App, db DBPinger) *Components {
 		log.Warn().Err(err).Msg("Metrics client unavailable")
 	}
 
-	app.Use(TracingMiddleware(ddCfg.ServiceName))
+	app.Use(RequestIDMiddleware())
+	app.Use(fibertrace.Middleware(fibertrace.WithServiceName(ddCfg.ServiceName)))
 	app.Use(RequestLoggingMiddleware())
 	app.Use(MetricsMiddleware(metrics))
 
