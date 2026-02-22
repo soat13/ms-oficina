@@ -7,55 +7,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 const RequestIDHeader = "X-Request-ID"
 
-func TracingMiddleware(serviceName string) fiber.Handler {
+func RequestIDMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		requestID := c.Get(RequestIDHeader)
 		if requestID == "" {
 			requestID = uuid.New().String()
 		}
 		c.Set(RequestIDHeader, requestID)
-
-		resourceName := fmt.Sprintf("%s %s", c.Method(), c.Route().Path)
-
-		opts := []tracer.StartSpanOption{
-			tracer.ResourceName(resourceName),
-			tracer.SpanType(ext.SpanTypeWeb),
-			tracer.Tag(ext.HTTPMethod, c.Method()),
-			tracer.Tag(ext.HTTPURL, c.OriginalURL()),
-			tracer.Tag("http.request_id", requestID),
-			tracer.ServiceName(serviceName),
-		}
-
-		if spanCtx, err := tracer.Extract(newFiberHeaderCarrier(c)); err == nil {
-			opts = append(opts, tracer.ChildOf(spanCtx))
-		}
-
-		span, ctx := tracer.StartSpanFromContext(c.UserContext(), "http.request", opts...)
-		defer span.Finish()
-
-		c.SetUserContext(ctx)
-
-		err := c.Next()
-
-		statusCode := c.Response().StatusCode()
-		span.SetTag(ext.HTTPCode, statusCode)
-
-		if statusCode >= 500 {
-			span.SetTag(ext.Error, true)
-			span.SetTag("error.message", fmt.Sprintf("HTTP %d", statusCode))
-		}
-		if err != nil {
-			span.SetTag(ext.Error, true)
-			span.SetTag("error.message", err.Error())
-		}
-
-		return err
+		return c.Next()
 	}
 }
 
@@ -133,27 +96,4 @@ func MetricsMiddleware(metrics *Metrics) fiber.Handler {
 
 func isRepairOrderRoute(route string) bool {
 	return strings.Contains(route, "repair-orders")
-}
-
-type fiberHeaderCarrier struct {
-	ctx *fiber.Ctx
-}
-
-func newFiberHeaderCarrier(c *fiber.Ctx) *fiberHeaderCarrier {
-	return &fiberHeaderCarrier{ctx: c}
-}
-
-func (c *fiberHeaderCarrier) Set(key, val string) {
-	c.ctx.Request().Header.Set(key, val)
-}
-
-func (c *fiberHeaderCarrier) ForeachKey(handler func(key, val string) error) error {
-	var iterErr error
-	c.ctx.Request().Header.VisitAll(func(key, value []byte) {
-		if iterErr != nil {
-			return
-		}
-		iterErr = handler(string(key), string(value))
-	})
-	return iterErr
 }

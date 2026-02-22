@@ -63,10 +63,10 @@ func TestRequestLoggingMiddleware(t *testing.T) {
 	})
 }
 
-func TestTracingMiddleware(t *testing.T) {
+func TestRequestIDMiddleware(t *testing.T) {
 	t.Run("should set request ID header when missing", func(t *testing.T) {
 		app := fiber.New()
-		app.Use(TracingMiddleware("test-service"))
+		app.Use(RequestIDMiddleware())
 		app.Get("/test", func(c *fiber.Ctx) error {
 			return c.SendString("ok")
 		})
@@ -81,7 +81,7 @@ func TestTracingMiddleware(t *testing.T) {
 
 	t.Run("should preserve existing request ID", func(t *testing.T) {
 		app := fiber.New()
-		app.Use(TracingMiddleware("test-service"))
+		app.Use(RequestIDMiddleware())
 		app.Get("/test", func(c *fiber.Ctx) error {
 			return c.SendString("ok")
 		})
@@ -93,42 +93,4 @@ func TestTracingMiddleware(t *testing.T) {
 
 		assert.Equal(t, "my-custom-id", resp.Header.Get(RequestIDHeader))
 	})
-
-	t.Run("should tag errors on 5xx", func(t *testing.T) {
-		app := fiber.New()
-		app.Use(TracingMiddleware("test-service"))
-		app.Get("/fail", func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusInternalServerError).SendString("error")
-		})
-
-		req, _ := http.NewRequest(http.MethodGet, "/fail", nil)
-		resp, err := app.Test(req, -1)
-		require.NoError(t, err)
-
-		assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
-	})
-}
-
-func TestFiberHeaderCarrier(t *testing.T) {
-	app := fiber.New()
-	app.Get("/test", func(c *fiber.Ctx) error {
-		carrier := newFiberHeaderCarrier(c)
-
-		carrier.Set("X-Test", "value")
-
-		var keys []string
-		err := carrier.ForeachKey(func(key, val string) error {
-			keys = append(keys, key)
-			return nil
-		})
-		assert.NoError(t, err)
-		assert.NotEmpty(t, keys)
-
-		return c.SendString("ok")
-	})
-
-	req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("X-Existing", "header")
-	_, err := app.Test(req, -1)
-	require.NoError(t, err)
 }
