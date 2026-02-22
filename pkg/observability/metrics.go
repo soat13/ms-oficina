@@ -54,7 +54,9 @@ func (m *Metrics) RecordHTTPRequest(method, route string, statusCode int, durati
 		fmt.Sprintf("status_code:%d", statusCode),
 		fmt.Sprintf("status_class:%dxx", statusCode/100),
 	}
-	_ = m.client.Timing("http.request.duration", duration, tags, 1)
+
+	ms := float64(duration.Microseconds()) / 1000.0
+	_ = m.client.Histogram("http.request.duration", ms, tags, 1)
 	_ = m.client.Incr("http.request.count", tags, 1)
 }
 
@@ -78,14 +80,6 @@ func (m *Metrics) IncRepairOrderStatusChange(fromStatus, toStatus string) {
 		"to_status:" + toStatus,
 	}
 	_ = m.client.Incr("repair_order.status_change", tags, 1)
-}
-
-func (m *Metrics) RecordRepairOrderStatusDuration(status string, duration time.Duration) {
-	if m == nil || m.client == nil {
-		return
-	}
-	tags := []string{"status:" + status}
-	_ = m.client.Timing("repair_order.status_duration", duration, tags, 1)
 }
 
 func (m *Metrics) RecordRepairOrderExecutionTime(minutes float64) {
