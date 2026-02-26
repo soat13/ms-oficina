@@ -99,7 +99,7 @@ func (s *Service) Validate(_ context.Context, token string) (authDomain.Claims, 
 		return authDomain.Claims{}, authDomain.ErrInvalidToken
 	}
 
-	userID, err := uuid.Parse(claims.UserID)
+	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
 		return authDomain.Claims{}, authDomain.ErrInvalidToken
 	}
