@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"github.com/soat13/fase-1-oficina/internal/shared/events"
 )
@@ -33,6 +34,9 @@ func (h *HandleStockReductionConfirmed) Execute(ctx context.Context, evt events.
 	}
 
 	h.metricsPublisher.IncRepairOrderStatusChange("awaiting_approval", "approved")
+	if repairOrder.Timestamps != nil {
+		h.metricsPublisher.RecordRepairOrderPhaseDuration("awaiting_approval", time.Since(repairOrder.UpdatedAt).Minutes())
+	}
 
 	return nil
 }
