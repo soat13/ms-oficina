@@ -31,6 +31,13 @@ func (p *MetricsPublisher) IncRepairOrderCanceled() {
 	p.metrics.IncRepairOrderCanceled()
 }
 
+func (p *MetricsPublisher) RecordRepairOrderPhaseDuration(phase string, minutes float64) {
+	if p == nil || p.metrics == nil {
+		return
+	}
+	p.metrics.RecordRepairOrderPhaseDuration(phase, minutes)
+}
+
 func (p *MetricsPublisher) RecordRepairOrderExecutionTime(minutes float64) {
 	if p == nil || p.metrics == nil {
 		return

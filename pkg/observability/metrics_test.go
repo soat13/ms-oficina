@@ -19,6 +19,7 @@ func TestMetrics_NilSafety(t *testing.T) {
 		assert.NotPanics(t, func() { m.RecordHTTPRequest("GET", "/test", 200, time.Millisecond) })
 		assert.NotPanics(t, func() { m.IncRepairOrderCreated() })
 		assert.NotPanics(t, func() { m.IncRepairOrderStatusChange("a", "b") })
+		assert.NotPanics(t, func() { m.RecordRepairOrderPhaseDuration("in_diagnostics", 5.0) })
 		assert.NotPanics(t, func() { m.RecordRepairOrderExecutionTime(10.0) })
 		assert.NotPanics(t, func() { m.IncRepairOrderError("op", "type") })
 		assert.NotPanics(t, func() { m.IncRepairOrderCanceled() })
@@ -30,6 +31,7 @@ func TestMetrics_NilSafety(t *testing.T) {
 		assert.NotPanics(t, func() { m.RecordHTTPRequest("GET", "/test", 200, time.Millisecond) })
 		assert.NotPanics(t, func() { m.IncRepairOrderCreated() })
 		assert.NotPanics(t, func() { m.IncRepairOrderStatusChange("a", "b") })
+		assert.NotPanics(t, func() { m.RecordRepairOrderPhaseDuration("in_execution", 15.0) })
 		assert.NotPanics(t, func() { m.RecordRepairOrderExecutionTime(10.0) })
 		assert.NotPanics(t, func() { m.IncRepairOrderError("op", "type") })
 		assert.NotPanics(t, func() { m.IncRepairOrderCanceled() })
@@ -66,6 +68,7 @@ func TestMetrics_RepairOrderMetrics(t *testing.T) {
 
 	assert.NotPanics(t, func() { m.IncRepairOrderCreated() })
 	assert.NotPanics(t, func() { m.IncRepairOrderStatusChange("received", "in_diagnostics") })
+	assert.NotPanics(t, func() { m.RecordRepairOrderPhaseDuration("in_diagnostics", 12.5) })
 	assert.NotPanics(t, func() { m.RecordRepairOrderExecutionTime(30.5) })
 	assert.NotPanics(t, func() { m.IncRepairOrderError("create", "validation") })
 	assert.NotPanics(t, func() { m.IncRepairOrderCanceled() })

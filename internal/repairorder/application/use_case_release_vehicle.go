@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
@@ -42,6 +43,9 @@ func (uc *ReleaseVehicle) Execute(ctx context.Context, input ReleaseVehicleInput
 	}
 
 	uc.metricsPublisher.IncRepairOrderStatusChange("finished", "released")
+	if repairorder.Timestamps != nil {
+		uc.metricsPublisher.RecordRepairOrderPhaseDuration("finished", time.Since(repairorder.UpdatedAt).Minutes())
+	}
 
 	return nil
 }

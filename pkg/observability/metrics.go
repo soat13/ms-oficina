@@ -80,6 +80,14 @@ func (m *Metrics) IncRepairOrderStatusChange(fromStatus, toStatus string) {
 	_ = m.client.Incr("repair_order.status_change", tags, 1)
 }
 
+func (m *Metrics) RecordRepairOrderPhaseDuration(phase string, minutes float64) {
+	if m == nil || m.client == nil {
+		return
+	}
+	tags := []string{"phase:" + phase}
+	_ = m.client.Histogram("repair_order.phase_duration_minutes", minutes, tags, 1)
+}
+
 func (m *Metrics) RecordRepairOrderExecutionTime(minutes float64) {
 	if m == nil || m.client == nil {
 		return

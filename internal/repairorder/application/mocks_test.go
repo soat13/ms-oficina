@@ -111,6 +111,7 @@ type mockMetricsPublisher struct {
 	lastFromStatus      string
 	lastToStatus        string
 	executionTime       float64
+	phaseDurations      map[string]float64
 	integrationErrors   int
 }
 
@@ -120,6 +121,12 @@ func (m *mockMetricsPublisher) IncRepairOrderStatusChange(from, to string) {
 	m.statusChangeCalled++
 	m.lastFromStatus = from
 	m.lastToStatus = to
+}
+func (m *mockMetricsPublisher) RecordRepairOrderPhaseDuration(phase string, minutes float64) {
+	if m.phaseDurations == nil {
+		m.phaseDurations = make(map[string]float64)
+	}
+	m.phaseDurations[phase] = minutes
 }
 func (m *mockMetricsPublisher) RecordRepairOrderExecutionTime(minutes float64) {
 	m.executionTime = minutes
