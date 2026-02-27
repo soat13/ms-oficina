@@ -54,9 +54,7 @@ func (m *Metrics) RecordHTTPRequest(method, route string, statusCode int, durati
 		fmt.Sprintf("status_code:%d", statusCode),
 		fmt.Sprintf("status_class:%dxx", statusCode/100),
 	}
-
-	ms := float64(duration.Microseconds()) / 1000.0
-	_ = m.client.Histogram("http.request.duration", ms, tags, 1)
+	_ = m.client.Timing("http.request.duration", duration, tags, 1)
 	_ = m.client.Incr("http.request.count", tags, 1)
 }
 
