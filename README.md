@@ -33,6 +33,8 @@ A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquite
 
 - Glossário de domínio (termos, roles e status): [`docs/domain-glossary.md`](docs/domain-glossary.md)
 - Arquitetura e decisões técnicas: [`docs/architecture.md`](docs/architecture.md)
+- Modelo Entidade-Relacionamento (DER): [`docs/der.md`](docs/der.md)
+
 
 ## Aspectos Técnicos
 
