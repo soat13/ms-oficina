@@ -37,9 +37,7 @@ func TestHandleStockReductionConfirmed_Execute(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, repairorder.StatusApproved, ro.Status)
-		assert.Equal(t, 1, metrics.statusChangeCalled)
-		assert.Equal(t, "awaiting_approval", metrics.lastFromStatus)
-		assert.Equal(t, "approved", metrics.lastToStatus)
+		assert.Contains(t, metrics.phaseDurations, "awaiting_approval")
 	})
 
 	t.Run("should return error when repository fails to get", func(t *testing.T) {

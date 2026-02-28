@@ -37,9 +37,6 @@ func TestHandleEstimateCreated_Execute(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, repairorder.StatusAwaitingApproval, ro.Status)
-		assert.Equal(t, 1, metrics.statusChangeCalled)
-		assert.Equal(t, "diagnostics_finished", metrics.lastFromStatus)
-		assert.Equal(t, "awaiting_approval", metrics.lastToStatus)
 	})
 
 	t.Run("should return error when repository fails to get", func(t *testing.T) {

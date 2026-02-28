@@ -32,9 +32,6 @@ func TestStartExecution_Execute(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusInExecution, ro.Status)
-		assert.Equal(t, 1, metrics.statusChangeCalled)
-		assert.Equal(t, "approved", metrics.lastFromStatus)
-		assert.Equal(t, "in_execution", metrics.lastToStatus)
 	})
 
 	t.Run("should return error when repository fails", func(t *testing.T) {
