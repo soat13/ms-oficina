@@ -42,13 +42,8 @@ func (uc *FinishExecution) Execute(ctx context.Context, input FinishExecutionInp
 		return err
 	}
 
-	uc.metricsPublisher.IncRepairOrderStatusChange("in_execution", "finished")
 	if repairorder.Timestamps != nil {
 		uc.metricsPublisher.RecordRepairOrderPhaseDuration("in_execution", time.Since(repairorder.UpdatedAt).Minutes())
-	}
-
-	if repairorder.ExecutionTimeMinutes != nil {
-		uc.metricsPublisher.RecordRepairOrderExecutionTime(float64(*repairorder.ExecutionTimeMinutes))
 	}
 
 	return nil

@@ -40,7 +40,5 @@ func (uc *StartDiagnostics) Execute(ctx context.Context, input StartDiagnosticsI
 		return err
 	}
 
-	uc.metricsPublisher.IncRepairOrderStatusChange("received", "in_diagnostics")
-
 	return nil
 }

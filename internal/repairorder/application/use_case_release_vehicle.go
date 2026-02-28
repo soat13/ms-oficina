@@ -42,7 +42,6 @@ func (uc *ReleaseVehicle) Execute(ctx context.Context, input ReleaseVehicleInput
 		return err
 	}
 
-	uc.metricsPublisher.IncRepairOrderStatusChange("finished", "released")
 	if repairorder.Timestamps != nil {
 		uc.metricsPublisher.RecordRepairOrderPhaseDuration("finished", time.Since(repairorder.UpdatedAt).Minutes())
 	}

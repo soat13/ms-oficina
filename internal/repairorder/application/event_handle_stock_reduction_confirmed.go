@@ -33,7 +33,6 @@ func (h *HandleStockReductionConfirmed) Execute(ctx context.Context, evt events.
 		return err
 	}
 
-	h.metricsPublisher.IncRepairOrderStatusChange("awaiting_approval", "approved")
 	if repairOrder.Timestamps != nil {
 		h.metricsPublisher.RecordRepairOrderPhaseDuration("awaiting_approval", time.Since(repairOrder.UpdatedAt).Minutes())
 	}
