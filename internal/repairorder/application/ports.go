@@ -56,11 +56,6 @@ type (
 	}
 
 	MetricsPublisher interface {
-		IncRepairOrderCreated()
-		IncRepairOrderStatusChange(fromStatus, toStatus string)
-		IncRepairOrderCanceled()
 		RecordRepairOrderPhaseDuration(phase string, minutes float64)
-		RecordRepairOrderExecutionTime(minutes float64)
-		IncIntegrationError(integration, operation string)
 	}
 )

@@ -1,7 +1,6 @@
 package observability
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -78,13 +77,6 @@ func MetricsMiddleware(metrics *Metrics) fiber.Handler {
 		route := c.Route().Path
 
 		metrics.RecordHTTPRequest(c.Method(), route, statusCode, duration)
-
-		if statusCode >= 400 && isRepairOrderRoute(route) {
-			metrics.IncRepairOrderError(
-				c.Method()+" "+route,
-				fmt.Sprintf("http_%d", statusCode),
-			)
-		}
 
 		return err
 	}

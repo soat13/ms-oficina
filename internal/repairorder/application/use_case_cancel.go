@@ -47,7 +47,5 @@ func (uc *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return err
 	}
 
-	uc.metricsPublisher.IncRepairOrderCanceled()
-
 	return uc.eventPublisher.PublishRepairOrderCanceled(ctx, repairorder.ID)
 }

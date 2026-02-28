@@ -49,8 +49,6 @@ func (uc *Create) Execute(ctx context.Context, input CreateInput) (*CreateOutput
 		return nil, err
 	}
 
-	uc.metricsPublisher.IncRepairOrderCreated()
-
 	return &CreateOutput{RepairOrderID: repairOrder.ID}, nil
 }
 

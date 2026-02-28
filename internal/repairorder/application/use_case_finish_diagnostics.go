@@ -60,7 +60,6 @@ func (uc *FinishDiagnostics) Execute(ctx context.Context, input FinishDiagnostic
 		return err
 	}
 
-	uc.metricsPublisher.IncRepairOrderStatusChange("in_diagnostics", "diagnostics_finished")
 	if repairorder.Timestamps != nil {
 		uc.metricsPublisher.RecordRepairOrderPhaseDuration("in_diagnostics", time.Since(repairorder.UpdatedAt).Minutes())
 	}

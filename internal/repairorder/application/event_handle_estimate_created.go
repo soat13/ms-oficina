@@ -33,7 +33,5 @@ func (h *HandleEstimateCreated) Execute(ctx context.Context, evt events.Estimate
 		return err
 	}
 
-	h.metricsPublisher.IncRepairOrderStatusChange("diagnostics_finished", "awaiting_approval")
-
 	return nil
 }
