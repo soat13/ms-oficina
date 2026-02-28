@@ -29,22 +29,38 @@ func TestParseLogLevel(t *testing.T) {
 }
 
 func TestSetupLogger(t *testing.T) {
+	cfg := Config{
+		ServiceName: "test-svc",
+		Environment: "test",
+		Version:     "0.0.1",
+	}
+
 	t.Run("should not panic in development", func(t *testing.T) {
 		t.Setenv("APP_ENV", "development")
 		t.Setenv("LOG_LEVEL", "debug")
-		assert.NotPanics(t, func() { SetupLogger() })
+		t.Setenv("DD_LOGS_INJECTION", "")
+		assert.NotPanics(t, func() { SetupLogger(cfg) })
 	})
 
 	t.Run("should not panic in production", func(t *testing.T) {
 		t.Setenv("APP_ENV", "production")
 		t.Setenv("LOG_LEVEL", "info")
-		assert.NotPanics(t, func() { SetupLogger() })
+		t.Setenv("DD_LOGS_INJECTION", "")
+		assert.NotPanics(t, func() { SetupLogger(cfg) })
 	})
 
 	t.Run("should not panic with empty env", func(t *testing.T) {
 		t.Setenv("APP_ENV", "")
 		t.Setenv("LOG_LEVEL", "")
-		assert.NotPanics(t, func() { SetupLogger() })
+		t.Setenv("DD_LOGS_INJECTION", "")
+		assert.NotPanics(t, func() { SetupLogger(cfg) })
+	})
+
+	t.Run("should not panic with DD_LOGS_INJECTION enabled", func(t *testing.T) {
+		t.Setenv("APP_ENV", "development")
+		t.Setenv("LOG_LEVEL", "info")
+		t.Setenv("DD_LOGS_INJECTION", "true")
+		assert.NotPanics(t, func() { SetupLogger(cfg) })
 	})
 }
 
