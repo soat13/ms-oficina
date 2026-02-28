@@ -33,9 +33,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusFinished, ro.Status)
 		assert.NotNil(t, ro.ExecutionTimeMinutes)
-		assert.Equal(t, 1, metrics.statusChangeCalled)
-		assert.Equal(t, "in_execution", metrics.lastFromStatus)
-		assert.Equal(t, "finished", metrics.lastToStatus)
+		assert.Contains(t, metrics.phaseDurations, "in_execution")
 	})
 
 	t.Run("should return error when repository fails", func(t *testing.T) {

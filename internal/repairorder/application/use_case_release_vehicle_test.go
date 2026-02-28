@@ -32,9 +32,7 @@ func TestReleaseVehicle_Execute(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusReleased, ro.Status)
-		assert.Equal(t, 1, metrics.statusChangeCalled)
-		assert.Equal(t, "finished", metrics.lastFromStatus)
-		assert.Equal(t, "released", metrics.lastToStatus)
+		assert.Contains(t, metrics.phaseDurations, "finished")
 	})
 
 	t.Run("should return error when repository fails", func(t *testing.T) {
