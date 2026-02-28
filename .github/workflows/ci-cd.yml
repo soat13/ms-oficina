@@ -99,6 +99,7 @@ jobs:
     name: Deploy to ECR
     needs: docker-build
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
