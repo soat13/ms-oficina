@@ -11,6 +11,7 @@ endif
 up:
 	@if [ ! -f .env ]; then cp .env-example .env; fi
 	docker compose up -d
+	@docker compose up -d --wait app-dev
 
 down:
 	docker compose down
@@ -20,6 +21,7 @@ install:
 	docker compose down -v --remove-orphans
 	docker compose pull
 	docker compose up -d --build --force-recreate
+	@docker compose up -d --wait app-dev
 
 run:
 	docker compose exec app-dev go run ./cmd/api

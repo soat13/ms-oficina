@@ -12,9 +12,9 @@ type Components struct {
 }
 
 func Setup(app *fiber.App, db DBPinger) *Components {
-	SetupLogger()
-
 	ddCfg := ConfigFromEnv()
+
+	SetupLogger(ddCfg)
 
 	StartTracer(ddCfg)
 

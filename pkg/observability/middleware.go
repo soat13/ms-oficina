@@ -44,15 +44,13 @@ func RequestLoggingMiddleware() fiber.Handler {
 		}
 
 		event.
-			Str("request_id", c.Get(RequestIDHeader)).
 			Str("method", c.Method()).
 			Str("path", c.Path()).
-			Str("route", c.Route().Path).
-			Int("status", statusCode).
+			Int("status_code", statusCode).
 			Dur("latency", duration).
 			Str("ip", c.IP()).
 			Str("user_agent", c.Get("User-Agent")).
-			Msg("request completed")
+			Msgf("%d - %s %s - %s", statusCode, c.Method(), c.Path(), c.IP())
 
 		return err
 	}
