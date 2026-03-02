@@ -18,14 +18,12 @@ func TestMetrics_NilSafety(t *testing.T) {
 		var m *Metrics
 		assert.NotPanics(t, func() { m.RecordHTTPRequest("GET", "/test", 200, time.Millisecond) })
 		assert.NotPanics(t, func() { m.RecordRepairOrderPhaseDuration("in_diagnostics", 5.0) })
-		assert.NotPanics(t, func() { m.IncIntegrationError("pg", "query") })
 	})
 
 	t.Run("nil client should not panic", func(t *testing.T) {
 		m := &Metrics{client: nil}
 		assert.NotPanics(t, func() { m.RecordHTTPRequest("GET", "/test", 200, time.Millisecond) })
 		assert.NotPanics(t, func() { m.RecordRepairOrderPhaseDuration("in_execution", 15.0) })
-		assert.NotPanics(t, func() { m.IncIntegrationError("pg", "query") })
 	})
 }
 
@@ -57,9 +55,4 @@ func TestMetrics_RepairOrderMetrics(t *testing.T) {
 	m := newTestMetrics()
 
 	assert.NotPanics(t, func() { m.RecordRepairOrderPhaseDuration("in_diagnostics", 12.5) })
-}
-
-func TestMetrics_IntegrationError(t *testing.T) {
-	m := newTestMetrics()
-	assert.NotPanics(t, func() { m.IncIntegrationError("postgres", "query") })
 }

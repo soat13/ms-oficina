@@ -69,18 +69,3 @@ func (m *Metrics) RecordRepairOrderPhaseDuration(phase string, minutes float64) 
 	tags := []string{"phase:" + phase}
 	_ = m.client.Histogram("repair_order.phase_duration_minutes", minutes, tags, 1)
 }
-
-// ---------------------------------------------------------------------------
-// Integration error metrics
-// ---------------------------------------------------------------------------
-
-func (m *Metrics) IncIntegrationError(integration, operation string) {
-	if m == nil || m.client == nil {
-		return
-	}
-	tags := []string{
-		"integration:" + integration,
-		"operation:" + operation,
-	}
-	_ = m.client.Incr("integration.error", tags, 1)
-}
