@@ -69,36 +69,6 @@ services:
       start_period: 120s
     restart: unless-stopped
 
-  datadog-agent:
-    image: gcr.io/datadoghq/agent:7
-    environment:
-      DD_API_KEY: ${DD_API_KEY}
-      DD_SITE: ${DD_SITE}
-      DD_ENV: development
-      DD_APM_ENABLED: "true"
-      DD_LOGS_ENABLED: "true"
-      DD_LOGS_INJECTION: "true"
-      DD_CONTAINER_EXCLUDE: "name:datadog-agent name:sonarqube name:db-init"
-      DD_PROCESS_AGENT_ENABLED: "true"
-      DD_APM_NON_LOCAL_TRAFFIC: "true"
-      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true"
-      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
-    ports:
-      - "8126:8126/tcp"
-      - "8125:8125/udp"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /proc/:/host/proc/:ro
-      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
-      - app-logs:/var/log/oficina:ro
-      - ./datadog/conf.d/go.d/conf.yaml:/etc/datadog-agent/conf.d/go.d/conf.yaml:ro
-    healthcheck:
-      test: ["CMD", "agent", "health"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
-      
   app-dev:
     image: golang:1.25.1
     working_dir: /app
@@ -106,25 +76,12 @@ services:
       - ./:/app
       - go-mod:/go/pkg/mod
       - go-build:/root/.cache/go-build
-      - app-logs:/var/log/oficina
     environment:
       PG_DSN: ${PG_DSN}
       JWT_SECRET: ${JWT_SECRET}
-      DD_AGENT_HOST: datadog-agent
-      DD_TRACE_AGENT_PORT: "8126"
-      DD_TRACE_ENABLED: "true"
-      DD_SERVICE: oficina-api
-      DD_ENV: development
-      DD_VERSION: "1.0.0"
-      DD_LOGS_INJECTION: "true"
-      DD_LOG_FILE: /var/log/oficina/app.log
-    labels:
-      com.datadoghq.ad.logs: '[{"source": "go", "service": "oficina-api"}]'
     command: tail -f /dev/null
     depends_on:
       db:
-        condition: service_healthy
-      datadog-agent:
         condition: service_healthy
     ports: ["8080:8080"]
 
@@ -143,7 +100,6 @@ volumes:
   pgdata:
   go-mod:
   go-build:
-  app-logs:
   sonarqube_conf:
   sonarqube_data:
   sonarqube_extensions:
