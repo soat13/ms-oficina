@@ -1,6 +1,0 @@
-logs:
-  - type: file
-    path: /var/log/oficina/app.log
-    service: oficina-api
-    source: go
-    sourcecategory: sourcecode
