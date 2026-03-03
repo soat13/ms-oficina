@@ -1,4 +1,4 @@
-DER — Modelo de Dados
+DER - Modelo de Dados
 
 Este diagrama representa a estrutura final do banco PostgreSQL, considerando todas as migrations aplicadas.
 
