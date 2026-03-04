@@ -130,7 +130,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		VehicleID:  req.VehicleID,
 	}
 
-	output, err := h.createUseCase.Execute(ctx.Context(), input)
+	output, err := h.createUseCase.Execute(ctx.UserContext(), input)
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -141,7 +141,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 func (h *Handler) list(ctx *fiber.Ctx) error {
 	pager := fiberHelper.NewPagination(ctx, 50, 0)
 
-	output, err := h.listUseCase.Execute(ctx.Context(), application.ListInput{Pager: *pager})
+	output, err := h.listUseCase.Execute(ctx.UserContext(), application.ListInput{Pager: *pager})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -156,7 +156,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	output, err := h.getUseCase.Execute(ctx.Context(), application.GetInput{ID: id})
+	output, err := h.getUseCase.Execute(ctx.UserContext(), application.GetInput{ID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -174,7 +174,7 @@ func (h *Handler) startDiagnostics(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.startDiagnosticsUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.startDiagnosticsUseCase.Execute(ctx.UserContext(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -200,7 +200,7 @@ func (h *Handler) finishDiagnostics(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	if err := h.finishDiagnosticsUseCase.Execute(ctx.Context(), *input); err != nil {
+	if err := h.finishDiagnosticsUseCase.Execute(ctx.UserContext(), *input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -218,7 +218,7 @@ func (h *Handler) startExecution(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.startExecutionUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.startExecutionUseCase.Execute(ctx.UserContext(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -236,7 +236,7 @@ func (h *Handler) finishExecution(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.finishExecutionUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.finishExecutionUseCase.Execute(ctx.UserContext(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -254,7 +254,7 @@ func (h *Handler) releaseVehicle(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.releaseVehicleUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.releaseVehicleUseCase.Execute(ctx.UserContext(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -272,7 +272,7 @@ func (h *Handler) cancel(ctx *fiber.Ctx) error {
 		RepairOrderID: id,
 	}
 
-	if err := h.cancelUseCase.Execute(ctx.Context(), input); err != nil {
+	if err := h.cancelUseCase.Execute(ctx.UserContext(), input); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
@@ -280,7 +280,7 @@ func (h *Handler) cancel(ctx *fiber.Ctx) error {
 }
 
 func (h *Handler) getAverageExecutionTime(ctx *fiber.Ctx) error {
-	output, err := h.getAverageExecutionTimeUseCase.Execute(ctx.Context())
+	output, err := h.getAverageExecutionTimeUseCase.Execute(ctx.UserContext())
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}

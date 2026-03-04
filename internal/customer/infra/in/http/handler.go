@@ -124,7 +124,7 @@ func (h *Handler) create(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	output, err := h.createUseCase.Execute(ctx.Context(), app.CreateInput{
+	output, err := h.createUseCase.Execute(ctx.UserContext(), app.CreateInput{
 		Name:        body.Name,
 		Document:    documentVO,
 		PhoneNumber: phoneVO,
@@ -169,7 +169,7 @@ func (h *Handler) update(ctx *fiber.Ctx) error {
 		phoneVO = &vo
 	}
 
-	err = h.updateUseCase.Execute(ctx.Context(), app.UpdateInput{
+	err = h.updateUseCase.Execute(ctx.UserContext(), app.UpdateInput{
 		ID:          id,
 		Name:        body.Name,
 		PhoneNumber: phoneVO,
@@ -186,7 +186,7 @@ func (h *Handler) delete(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	if err := h.deleteUseCase.Execute(ctx.Context(), app.DeleteInput{ID: id}); err != nil {
+	if err := h.deleteUseCase.Execute(ctx.UserContext(), app.DeleteInput{ID: id}); err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
 	return ctx.SendStatus(fiber.StatusNoContent)
@@ -197,7 +197,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
-	out, err := h.getUseCase.Execute(ctx.Context(), app.GetInput{ID: id})
+	out, err := h.getUseCase.Execute(ctx.UserContext(), app.GetInput{ID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -207,7 +207,7 @@ func (h *Handler) getByID(ctx *fiber.Ctx) error {
 func (h *Handler) list(ctx *fiber.Ctx) error {
 	pager := fiberHelper.NewPagination(ctx, 50, 0)
 
-	out, err := h.listUseCase.Execute(ctx.Context(), app.ListInput{Pager: *pager})
+	out, err := h.listUseCase.Execute(ctx.UserContext(), app.ListInput{Pager: *pager})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
