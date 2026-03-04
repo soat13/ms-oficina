@@ -37,6 +37,7 @@ require (
 	github.com/DataDog/datadog-agent/pkg/util/log v0.71.2 // indirect
 	github.com/DataDog/datadog-agent/pkg/util/scrubber v0.71.2 // indirect
 	github.com/DataDog/datadog-agent/pkg/version v0.71.2 // indirect
+	github.com/DataDog/dd-trace-go/contrib/database/sql/v2 v2.3.0 // indirect
 	github.com/DataDog/dd-trace-go/contrib/gofiber/fiber.v2/v2 v2.3.0 // indirect
 	github.com/DataDog/dd-trace-go/v2 v2.5.0 // indirect
 	github.com/DataDog/go-libddwaf/v4 v4.8.0 // indirect

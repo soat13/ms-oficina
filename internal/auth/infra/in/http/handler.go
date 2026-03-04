@@ -71,7 +71,7 @@ func (h *Handler) login(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	out, err := h.authenticate.Execute(ctx.Context(), authApp.AuthenticateInput{
+	out, err := h.authenticate.Execute(ctx.UserContext(), authApp.AuthenticateInput{
 		Email:    emailVO,
 		Password: body.Password,
 	})

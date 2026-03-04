@@ -9,13 +9,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/stdlib"
 	infraMessaging "github.com/soat13/fase-1-oficina/internal/shared/infra/out/messaging"
 	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 	helper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
 	"github.com/soat13/fase-1-oficina/pkg/observability"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
+	sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql"
 )
 
 type Container struct {
@@ -84,7 +85,8 @@ func newSQL() *sql.DB {
 		panic("env PG_DSN not found")
 	}
 
-	sqlDB, err := sql.Open("pgx", dsn)
+	sqltrace.Register("pgx", &stdlib.Driver{})
+	sqlDB, err := sqltrace.Open("pgx", dsn)
 	if err != nil {
 		log.Fatal(err)
 	}

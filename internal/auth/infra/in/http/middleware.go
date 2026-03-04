@@ -61,7 +61,7 @@ func (m *Middleware) Handle(ctx *fiber.Ctx) error {
 		return m.errorHandler.Handle(ctx, authDomain.ErrInvalidToken)
 	}
 
-	claims, err := m.tokens.Validate(ctx.Context(), token)
+	claims, err := m.tokens.Validate(ctx.UserContext(), token)
 	if err != nil {
 		return m.errorHandler.Handle(ctx, err)
 	}

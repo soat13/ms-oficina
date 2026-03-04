@@ -63,7 +63,7 @@ func (h *Handler) approve(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.approveUseCase.Execute(ctx.Context(), app.ApproveInput{RepairOrderID: id})
+	err = h.approveUseCase.Execute(ctx.UserContext(), app.ApproveInput{RepairOrderID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -77,7 +77,7 @@ func (h *Handler) reject(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.rejectUseCase.Execute(ctx.Context(), app.RejectInput{RepairOrderID: id})
+	err = h.rejectUseCase.Execute(ctx.UserContext(), app.RejectInput{RepairOrderID: id})
 	if err != nil {
 		return h.errorHandler.Handle(ctx, err)
 	}
@@ -100,7 +100,7 @@ func (h *Handler) addItem(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, sharedErrors.ErrInvalidID)
 	}
 
-	err = h.addItemUseCase.Execute(ctx.Context(), app.AddItemInput{
+	err = h.addItemUseCase.Execute(ctx.UserContext(), app.AddItemInput{
 		EstimateID: id,
 		ItemID:     itemID,
 		Quantity:   body.Quantity,
@@ -123,7 +123,7 @@ func (h *Handler) removeItem(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	err = h.removeItemUseCase.Execute(ctx.Context(), app.RemoveItemInput{
+	err = h.removeItemUseCase.Execute(ctx.UserContext(), app.RemoveItemInput{
 		EstimateID: estimateID,
 		ItemID:     itemID,
 	})
