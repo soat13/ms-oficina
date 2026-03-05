@@ -158,3 +158,12 @@ A aplicação é deployada automaticamente no **Amazon EKS** através do pipelin
 - **services.yaml** — Service do tipo LoadBalancer expondo a aplicação externamente na porta 3000
 - **hpa.yaml** — Horizontal Pod Autoscaler configurado para escalar de 1 a 10 réplicas baseado em CPU (target: 50%)
 - **metric-server.yaml** — Metrics Server necessário para o HPA funcionar corretamente
+
+## Observabilidade
+
+A aplicação é instrumentada com **Datadog APM** para observabilidade. A integração inclui:
+
+- **Traces** — Rastreamento distribuído de requisições HTTP via middleware do Fiber
+- **Métricas customizadas** — Métricas de negócio enviadas via DogStatsD (ex: contagem de orçamentos, OS criadas)
+- **Middleware HTTP** — Captura automática de latência, status code e rotas de cada request
+- **Profiling** — Coleta contínua de dados de performance da aplicação Go
