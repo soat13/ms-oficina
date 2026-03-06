@@ -3,12 +3,21 @@ info:
   title: Oficina API
   version: 1.0.0
   description: |-
-    API da Oficina.
+    #### Autenticação
 
-    Utilize `POST /auth/login` para obter um token JWT e, em seguida, informe `Bearer <token>` no cabeçalho `Authorization` ao chamar as rotas protegidas. No Swagger UI, use o botão **Authorize** para registrar o token.
+    A autenticação é obrigatória para acessar as rotas de administração.
+
+    Utilize `POST /auth/login` para obter um token JWT e, em seguida, informe 
+    `Bearer <token>` no cabeçalho `Authorization` ao chamar as rotas protegidas.
+
+    No Swagger UI, utilize o botão **Authorize** para registrar o token.
+
+    > Observação: o endpoint `POST /auth/login` é mantido nesta API apenas para fins de documentação e desevolvimento local.  
+    > A lógica de autenticação foi movida para uma **AWS Lambda dedicada**, e o **API Gateway** está configurado para
+    > redirecionar automaticamente as requisições para essa função.
 servers:
   - url: /
-    description: Servidor atual 
+    description: API-Gateway
 security:
   - bearerAuth: []
 tags:
@@ -31,10 +40,10 @@ tags:
 paths:
   /auth/login:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Autenticar usuário
       description: Retorna um token JWT válido para acessar as rotas protegidas.
-      security: []
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -42,7 +51,7 @@ paths:
             schema:
               $ref: '#/components/schemas/LoginRequest'
             example:
-              email: admin@example.com
+              cpf: "71296750043"
               password: password123
       responses:
         '200':
@@ -1571,48 +1580,23 @@ components:
                 example: Password is a required field
     LoginRequest:
       type: object
-      required: [email, password]
+      required: [cpf, password]
       properties:
-        email:
+        cpf:
           type: string
-          format: email
+          format: cpf
         password:
           type: string
           minLength: 8
-    AuthenticatedUser:
-      type: object
-      required: [id, name, email, roles]
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        roles:
-          type: array
-          items:
-            type: string
     LoginResponse:
       type: object
-      required: [access_token, token_type, expires_in, expires_at, user]
+      required: [access_token, token_type]
       properties:
         access_token:
           type: string
         token_type:
           type: string
           example: Bearer
-        expires_in:
-          type: integer
-          format: int64
-          description: Tempo (em segundos) até a expiração do token.
-        expires_at:
-          type: string
-          format: date-time
-        user:
-          $ref: '#/components/schemas/AuthenticatedUser'
     Service:
       type: object
       required: [id, name, price]

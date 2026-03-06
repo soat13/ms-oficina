@@ -27,7 +27,7 @@ type (
 		Update(ctx context.Context, u *domain.User) error
 		Delete(ctx context.Context, id uuid.UUID) error
 		GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
-		GetByEmail(ctx context.Context, email string) (*domain.User, error)
+		GetByCPF(ctx context.Context, email string) (*domain.User, error)
 		List(ctx context.Context, pager pagination.Pagination) ([]*domain.User, error)
 		ExistsByEmail(ctx context.Context, email string) (bool, error)
 		ExistsByDocument(ctx context.Context, document string) (bool, error)

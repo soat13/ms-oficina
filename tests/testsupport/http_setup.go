@@ -48,11 +48,11 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 }
 
 func ensureTestAdminUser(t *testing.T, app *fiber.App, container *bootstrap.Container) string {
-	adminEmail := "admin@example.com"
+	cpf := "71296750043"
 	adminPassword := "password123"
 
-	ThereIsAUser(t, container.DB, uuid.Nil, "Test Admin", "71296750043", "11987654999", adminEmail, adminPassword, []string{"manager"})
-	authToken := testauth.Authenticate(t, app, adminEmail, adminPassword)
+	ThereIsAUser(t, container.DB, uuid.Nil, "Test Admin", "71296750043", "11987654999", cpf, adminPassword, []string{"manager"})
+	authToken := testauth.Authenticate(t, app, cpf, adminPassword)
 	return authToken
 }
 

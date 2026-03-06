@@ -36,19 +36,19 @@ func (m *MockUserReader) EXPECT() *MockUserReaderMockRecorder {
 	return m.recorder
 }
 
-// GetByEmail mocks base method.
-func (m *MockUserReader) GetByEmail(ctx context.Context, email string) (*application.UserView, error) {
+// GetByCPF mocks base method.
+func (m *MockUserReader) GetByCPF(ctx context.Context, cpf string) (*application.UserView, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
+	ret := m.ctrl.Call(m, "GetByCPF", ctx, cpf)
 	ret0, _ := ret[0].(*application.UserView)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByEmail indicates an expected call of GetByEmail.
-func (mr *MockUserReaderMockRecorder) GetByEmail(ctx, email interface{}) *gomock.Call {
+// GetByCPF indicates an expected call of GetByCPF.
+func (mr *MockUserReaderMockRecorder) GetByCPF(ctx, cpf interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockUserReader)(nil).GetByEmail), ctx, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByCPF", reflect.TypeOf((*MockUserReader)(nil).GetByCPF), ctx, cpf)
 }
 
 // MockTokenService is a mock of TokenService interface.

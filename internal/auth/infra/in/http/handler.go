@@ -1,15 +1,11 @@
 package http
 
 import (
-	"time"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	authApp "github.com/soat13/fase-1-oficina/internal/auth/application"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 )
 
 type Handler struct {
@@ -39,22 +35,13 @@ func Register(app *fiber.App, h *Handler) {
 }
 
 type loginBody struct {
-	Email    string `json:"email"    validate:"required"`
+	CPF      string `json:"cpf"    validate:"required"`
 	Password string `json:"password" validate:"required,min=8"`
 }
 
-type authenticatedUserJSON struct {
-	ID    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
-	Roles []string  `json:"roles"`
-}
-
 type loginResponse struct {
-	AccessToken string                `json:"access_token"`
-	TokenType   string                `json:"token_type"`
-	ExpiresAt   time.Time             `json:"expires_at"`
-	User        authenticatedUserJSON `json:"user"`
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
 }
 
 func (h *Handler) login(ctx *fiber.Ctx) error {
@@ -66,13 +53,8 @@ func (h *Handler) login(ctx *fiber.Ctx) error {
 		return h.errorHandler.Handle(ctx, err)
 	}
 
-	emailVO, err := email.New(body.Email)
-	if err != nil {
-		return h.errorHandler.Handle(ctx, err)
-	}
-
 	out, err := h.authenticate.Execute(ctx.UserContext(), authApp.AuthenticateInput{
-		Email:    emailVO,
+		CPF:      body.CPF,
 		Password: body.Password,
 	})
 	if err != nil {
@@ -82,13 +64,6 @@ func (h *Handler) login(ctx *fiber.Ctx) error {
 	resp := loginResponse{
 		AccessToken: out.Token.Value,
 		TokenType:   "Bearer",
-		ExpiresAt:   out.Token.ExpiresAt,
-		User: authenticatedUserJSON{
-			ID:    out.User.ID,
-			Name:  out.User.Name,
-			Email: out.User.Email,
-			Roles: out.User.Roles.Strings(),
-		},
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(resp)

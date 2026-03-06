@@ -4,12 +4,11 @@ import (
 	"context"
 
 	authDomain "github.com/soat13/fase-1-oficina/internal/auth/domain"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
 )
 
 type (
 	AuthenticateInput struct {
-		Email    email.Email
+		CPF      string
 		Password string
 	}
 
@@ -32,7 +31,7 @@ func NewAuthenticateUser(userReader UserReader, tokenService TokenService) *Auth
 }
 
 func (uc *AuthenticateUser) Execute(ctx context.Context, in AuthenticateInput) (AuthenticateOutput, error) {
-	user, err := uc.userReader.GetByEmail(ctx, in.Email.String())
+	user, err := uc.userReader.GetByCPF(ctx, in.CPF)
 	if err != nil {
 		return AuthenticateOutput{}, err
 	}

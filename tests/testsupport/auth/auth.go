@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Authenticate(t *testing.T, app *fiber.App, email, password string) string {
+func Authenticate(t *testing.T, app *fiber.App, cpf, password string) string {
 	t.Helper()
 
 	body := map[string]string{
-		"email":    email,
+		"cpf":      cpf,
 		"password": password,
 	}
 
