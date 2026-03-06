@@ -16,7 +16,7 @@ import (
 func TestAuthenticateUserExecuteFailures(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("should propagates error when UserReader.GetByEmail fails", func(t *testing.T) {
+	t.Run("should propagates error when UserReader.GetByCPF fails", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -26,7 +26,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		usersErr := errors.New("db error")
 
 		userReader.EXPECT().
-			GetByEmail(gomock.Any(), gomock.Any()).
+			GetByCPF(gomock.Any(), gomock.Any()).
 			Return(nil, usersErr)
 
 		tokenService.EXPECT().
@@ -36,7 +36,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		uc := application.NewAuthenticateUser(userReader, tokenService)
 
 		_, err := uc.Execute(ctx, application.AuthenticateInput{
-			Email:    setupEmail("john@domain.com"),
+			CPF:      "00063958466",
 			Password: "anything",
 		})
 
@@ -53,7 +53,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		tokenService := mocks.NewMockTokenService(ctrl)
 
 		userReader.EXPECT().
-			GetByEmail(gomock.Any(), gomock.Any()).
+			GetByCPF(gomock.Any(), gomock.Any()).
 			Return(nil, nil)
 
 		tokenService.EXPECT().
@@ -63,7 +63,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		uc := application.NewAuthenticateUser(userReader, tokenService)
 
 		_, err := uc.Execute(ctx, application.AuthenticateInput{
-			Email:    setupEmail("john@domain.com"),
+			CPF:      "00063958466",
 			Password: "anything",
 		})
 
@@ -86,7 +86,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		}
 
 		userReader.EXPECT().
-			GetByEmail(gomock.Any(), gomock.Any()).
+			GetByCPF(gomock.Any(), gomock.Any()).
 			Return(foundUser, nil)
 
 		tokenService.EXPECT().
@@ -96,7 +96,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		uc := application.NewAuthenticateUser(userReader, tokenService)
 
 		_, execErr := uc.Execute(ctx, application.AuthenticateInput{
-			Email:    setupEmail("john@domain.com"),
+			CPF:      "00063958466",
 			Password: "wrong-password",
 		})
 
@@ -122,7 +122,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 
 		gomock.InOrder(
 			userReader.EXPECT().
-				GetByEmail(gomock.Any(), gomock.Any()).
+				GetByCPF(gomock.Any(), gomock.Any()).
 				Return(user, nil),
 
 			tokenService.EXPECT().
@@ -133,7 +133,7 @@ func TestAuthenticateUserExecuteFailures(t *testing.T) {
 		uc := application.NewAuthenticateUser(userReader, tokenService)
 
 		_, execErr := uc.Execute(ctx, application.AuthenticateInput{
-			Email:    setupEmail("john@domain.com"),
+			CPF:      "00063958466",
 			Password: "valid-password",
 		})
 

@@ -12,7 +12,7 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
-func TestGetByEmailWithError(t *testing.T) {
+func TestGetByCPFWithError(t *testing.T) {
 	t.Run("should return error when db query fails", func(t *testing.T) {
 		ctx := context.Background()
 
@@ -26,12 +26,12 @@ func TestGetByEmailWithError(t *testing.T) {
 		reader := db.NewBunUserReader(bunDB)
 
 		wantErr := errors.New("db error")
-		email := "any@domain.com"
+		email := "00063958466"
 
-		mock.ExpectQuery(`users.*email.*any@domain\.com`).
+		mock.ExpectQuery(`users.*document.*00063958466`).
 			WillReturnError(wantErr)
 
-		user, queryErr := reader.GetByEmail(ctx, email)
+		user, queryErr := reader.GetByCPF(ctx, email)
 
 		require.Nil(t, user)
 		require.ErrorIs(t, queryErr, wantErr)

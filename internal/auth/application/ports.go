@@ -19,7 +19,7 @@ type (
 	}
 
 	UserReader interface {
-		GetByEmail(ctx context.Context, email string) (*UserView, error)
+		GetByCPF(ctx context.Context, cpf string) (*UserView, error)
 	}
 
 	TokenService interface {

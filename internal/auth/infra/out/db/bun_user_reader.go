@@ -35,11 +35,11 @@ func NewBunUserReader(db *bun.DB) application.UserReader {
 	return &UserReader{db: db}
 }
 
-func (repo *UserReader) GetByEmail(ctx context.Context, email string) (*application.UserView, error) {
+func (repo *UserReader) GetByCPF(ctx context.Context, email string) (*application.UserView, error) {
 	var model userModel
 	err := repo.db.NewSelect().
 		Model(&model).
-		Where("email = ?", email).
+		Where("document = ?", email).
 		Scan(ctx)
 
 	if err := bun_helper.IgnoreNoRows(err); err != nil {

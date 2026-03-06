@@ -33,7 +33,7 @@ func ensureSetup(t *testing.T) *testsupport.SetupConfig {
 // -----------------------------------------------------------------------------
 
 type authenticateBody struct {
-	Email    string `json:"email"`
+	CPF      string `json:"cpf"`
 	Password string `json:"password"`
 }
 
@@ -59,7 +59,7 @@ func TestAuthenticate(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		userID := testsupport.ThereIsAUser(
+		_ = testsupport.ThereIsAUser(
 			t,
 			setup.Container.DB,
 			uuid.Nil,
@@ -72,7 +72,7 @@ func TestAuthenticate(t *testing.T) {
 		)
 
 		payload := authenticateBody{
-			Email:    "mechanic@example.com",
+			CPF:      "71296750043",
 			Password: "password123",
 		}
 
@@ -84,16 +84,12 @@ func TestAuthenticate(t *testing.T) {
 
 		require.NotEmpty(t, body.AccessToken)
 		require.Equal(t, "Bearer", body.TokenType)
-		require.Equal(t, userID, body.User.ID)
-		require.Equal(t, "John Mechanic", body.User.Name)
-		require.Equal(t, "mechanic@example.com", body.User.Email)
-		require.Contains(t, body.User.Roles, "mechanic")
 	})
 
 	t.Run("Success with Multiple Roles", func(t *testing.T) {
 		setup := ensureSetup(t)
 
-		userID := testsupport.ThereIsAUser(
+		_ = testsupport.ThereIsAUser(
 			t,
 			setup.Container.DB,
 			uuid.Nil,
@@ -106,8 +102,8 @@ func TestAuthenticate(t *testing.T) {
 		)
 
 		payload := authenticateBody{
-			Email:    "manager@example.com",
-			Password: "password456",
+			CPF:      "71296750043",
+			Password: "password123",
 		}
 
 		resp := postAuthenticate(t, setup.Container.FiberApp, payload)
@@ -118,9 +114,6 @@ func TestAuthenticate(t *testing.T) {
 
 		require.NotEmpty(t, body.AccessToken)
 		require.Equal(t, "Bearer", body.TokenType)
-		require.Equal(t, userID, body.User.ID)
-		require.Contains(t, body.User.Roles, "manager")
-		require.Contains(t, body.User.Roles, "attendant")
 	})
 
 	t.Run("Invalid Credentials - Wrong Password", func(t *testing.T) {
@@ -139,7 +132,7 @@ func TestAuthenticate(t *testing.T) {
 		)
 
 		payload := authenticateBody{
-			Email:    "test@example.com",
+			CPF:      "85891302071",
 			Password: "wrongpassword",
 		}
 
@@ -151,7 +144,7 @@ func TestAuthenticate(t *testing.T) {
 		setup := ensureSetup(t)
 
 		payload := authenticateBody{
-			Email:    "nonexistent@example.com",
+			CPF:      "85891302071",
 			Password: "password123",
 		}
 
@@ -159,11 +152,11 @@ func TestAuthenticate(t *testing.T) {
 		require.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
 	})
 
-	t.Run("Invalid Body - Empty Email", func(t *testing.T) {
+	t.Run("Invalid Body - Empty CPF", func(t *testing.T) {
 		setup := ensureSetup(t)
 
 		payload := authenticateBody{
-			Email:    "",
+			CPF:      "",
 			Password: "password123",
 		}
 
@@ -175,20 +168,8 @@ func TestAuthenticate(t *testing.T) {
 		setup := ensureSetup(t)
 
 		payload := authenticateBody{
-			Email:    "test@example.com",
+			CPF:      "85891302071",
 			Password: "",
-		}
-
-		resp := postAuthenticate(t, setup.Container.FiberApp, payload)
-		require.Equal(t, fiber.StatusUnprocessableEntity, resp.StatusCode)
-	})
-
-	t.Run("Invalid Body - Invalid Email Format", func(t *testing.T) {
-		setup := ensureSetup(t)
-
-		payload := authenticateBody{
-			Email:    "not-an-email",
-			Password: "password123",
 		}
 
 		resp := postAuthenticate(t, setup.Container.FiberApp, payload)

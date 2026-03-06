@@ -78,7 +78,9 @@ func Setup(container *bootstrap.Container, cfg Config) {
 	middleware := http2.NewMiddleware(tokenService, container.FiberErrorHandler, cfg.ProtectedPrefixes, cfg.PublicRoutes)
 	container.FiberApp.Use(middleware.Handle)
 
-	http2.Register(container.FiberApp, handler)
+	if os.Getenv("APP_ENV") != "production" {
+		http2.Register(container.FiberApp, handler)
+	}
 }
 
 func parseDuration(value string) time.Duration {
