@@ -1,5 +1,22 @@
 # Oficina API
 
+## Sumário
+
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Fluxos Principais](#fluxos-principais)
+- [Documentação Técnica](#documentação-técnica)
+- [Aspectos Técnicos](#aspectos-técnicos)
+    - [Arquitetura](#arquitetura)
+    - [Stack Tecnológica](#stack-tecnológica)
+- [Requisitos](#requisitos)
+- [Pipeline](#pipeline)
+- [Executando o Projeto](#executando-o-projeto)
+- [Swagger / OpenAPI](#swagger--openapi)
+- [Autenticação](#autenticação)
+- [Testes](#testes)
+- [Deploy no Kubernetes](#deploy-no-kubernetes)
+- [Observabilidade](#observabilidade)
+
 ## Sobre o Projeto
 
 Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de atendimento, desde a entrada do veículo até a entrega ao cliente. A aplicação gerencia clientes, veículos, catálogos de serviços e produtos, orçamentos e ordens de serviço, oferecendo controle centralizado das operações da oficina.
@@ -23,11 +40,15 @@ A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquite
 ## Fluxos Principais
 
 - **Repair Order — fluxo end-to-end**  
-  Fluxo operacional completo da Ordem de Serviço, da criação à entrega do veículo.  
-   [`docs/repair-order-complete-flow.md`](docs/repair-order-complete-flow.md)
+  Fluxo operacional completo da Ordem de Serviço, da criação à entrega do veículo, com foco na ordem de chamadas dos endpoints e nas regras de negócio.  
+  [`docs/repair-order-complete-flow.md`](docs/repair-order-complete-flow.md)
+
+- **Diagrama de sequência — fluxo de negócio**  
+  Visão macro da interação entre Client, API Gateway, Lambda de autenticação e os módulos internos da aplicação ao longo do fluxo operacional da oficina.  
+  [`docs/sequence-diagram.md`](docs/sequence-diagram.md)
 
 > Payloads, schemas e exemplos de request/response estão documentados no **Swagger/OpenAPI**.  
-> Os documentos de fluxo focam exclusivamente na **ordem de chamadas e regras de negócio**.
+> Os documentos em `docs/` focam no fluxo operacional e na visão arquitetural das interações.
 
 ## Documentação Técnica
 
@@ -84,7 +105,7 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 │                      GitHub Actions - Aplicação (oficina)                                   │
 │                                                                                             │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐               │
-│  │   SonarCloud │──▶│     Build    │───▶│     Push     │──▶│   Deploy     │               │
+│  │   SonarCloud │──▶ │     Build    │───▶│     Push     │──▶ │   Deploy     │               │
 │  │     Scan     │    │    Docker    │    │     ECR      │    │   K8s/EKS    │               │
 │  └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘               │
 │   • Security           • Tests              • Tag Image         • Apply Manifests           │
@@ -131,10 +152,50 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 
 ## Autenticação
 
-A API utiliza **JWT** para proteger as rotas administrativas (`/admin/**`).
+A autenticação da plataforma utiliza **JWT** e, em ambiente de produção, é realizada através de uma **AWS Lambda dedicada**,
+exposta pelo **API Gateway**.
 
 - Login: `POST /auth/login`
 - Header: `Authorization: Bearer <token>`
+
+Fluxo:
+
+1. O cliente envia CPF e senha para `/auth/login`
+2. O **API Gateway** roteia a requisição para a **Lambda de autenticação**
+3. A Lambda valida as credenciais e retorna um **JWT**
+4. O token deve ser enviado no header `Authorization` para acessar rotas protegidas da Oficina API
+
+### Ambiente não produtivo
+
+Para facilitar desenvolvimento local e execução de testes automatizados, o endpoint `POST /auth/login` **continua existindo dentro da Oficina API**, porém **apenas em ambientes não produtivos**.
+
+Uma verificação no código garante que esse endpoint só seja habilitado quando a aplicação não está rodando em produção.
+
+Em ambiente de produção, o login ocorre exclusivamente através da **AWS Lambda exposta pelo API Gateway**.
+
+### Fluxo de Autenticação
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API_Gateway
+    participant Auth_Lambda
+    participant Oficina_API
+
+    Client->>API_Gateway: POST /auth/login (CPF + senha)
+
+    API_Gateway->>Auth_Lambda: Invoke Lambda
+    Auth_Lambda->>Auth_Lambda: Valida CPF
+    Auth_Lambda->>Auth_Lambda: Verifica senha
+    Auth_Lambda-->>Client: JWT Token
+
+    Client->>API_Gateway: Request com Bearer Token
+    API_Gateway->>Oficina_API: Encaminha requisição
+    Oficina_API->>Oficina_API: Valida JWT
+    Oficina_API-->>Client: Response
+```
+> Para uma visão completa do fluxo da aplicação,  incluindo CRUDs administrativos, ciclo de vida da Repair Order, 
+> validação de estoque e execução do serviço - consulte o diagrama detalhado em [`docs/sequence-diagram.md`](docs/sequence-diagram.md).
 
 ## Testes
 
