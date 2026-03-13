@@ -187,12 +187,14 @@ sequenceDiagram
     API_Gateway->>Auth_Lambda: Invoke Lambda
     Auth_Lambda->>Auth_Lambda: Valida CPF
     Auth_Lambda->>Auth_Lambda: Verifica senha
-    Auth_Lambda-->>Client: JWT Token
+    Auth_Lambda-->>API_Gateway: JWT Token
+    API_Gateway-->>Client: JWT Token
 
     Client->>API_Gateway: Request com Bearer Token
     API_Gateway->>Oficina_API: Encaminha requisição
     Oficina_API->>Oficina_API: Valida JWT
-    Oficina_API-->>Client: Response
+    Oficina_API-->>API_Gateway: Response
+    API_Gateway-->>Client: Response
 ```
 > Para uma visão completa do fluxo da aplicação,  incluindo CRUDs administrativos, ciclo de vida da Repair Order, 
 > validação de estoque e execução do serviço - consulte o diagrama detalhado em [`docs/sequence-diagram.md`](docs/sequence-diagram.md).
