@@ -77,6 +77,14 @@ spec:
           volumeMounts:
             - name: apmsocketpath
               mountPath: /var/run/datadog
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /health/live

@@ -110,6 +110,44 @@ func TestLivenessHandler(t *testing.T) {
 	})
 }
 
+func TestStartupHandler(t *testing.T) {
+	t.Run("should return started when db is up", func(t *testing.T) {
+		app := newTestHealthApp(NewHealthChecker(&mockDBPinger{}))
+
+		req, _ := http.NewRequest(http.MethodGet, "/health/startup", nil)
+		resp, err := app.Test(req, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		assert.Contains(t, string(body), "started")
+	})
+
+	t.Run("should return not_started when db is down", func(t *testing.T) {
+		app := newTestHealthApp(NewHealthChecker(&mockDBPinger{err: errors.New("connection refused")}))
+
+		req, _ := http.NewRequest(http.MethodGet, "/health/startup", nil)
+		resp, err := app.Test(req, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, fiber.StatusServiceUnavailable, resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		assert.Contains(t, string(body), "not_started")
+	})
+
+	t.Run("should return not_started when db is nil", func(t *testing.T) {
+		app := newTestHealthApp(NewHealthChecker(nil))
+
+		req, _ := http.NewRequest(http.MethodGet, "/health/startup", nil)
+		resp, err := app.Test(req, -1)
+		require.NoError(t, err)
+
+		assert.Equal(t, fiber.StatusServiceUnavailable, resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		assert.Contains(t, string(body), "not_started")
+	})
+}
+
 func TestBoolToStatus(t *testing.T) {
 	assert.Equal(t, "up", boolToStatus(true))
 	assert.Equal(t, "down", boolToStatus(false))

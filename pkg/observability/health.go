@@ -23,6 +23,7 @@ func RegisterHealthRoutes(app *fiber.App, checker *HealthChecker) {
 	app.Get("/health", checker.healthHandler)
 	app.Get("/health/ready", checker.readinessHandler)
 	app.Get("/health/live", checker.livenessHandler)
+	app.Get("/health/startup", checker.startupHandler)
 }
 
 func (h *HealthChecker) healthHandler(c *fiber.Ctx) error {
@@ -58,6 +59,17 @@ func (h *HealthChecker) readinessHandler(c *fiber.Ctx) error {
 func (h *HealthChecker) livenessHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "alive",
+	})
+}
+
+func (h *HealthChecker) startupHandler(c *fiber.Ctx) error {
+	if !h.checkDB() {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"status": "not_started",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "started",
 	})
 }
 
