@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD
 
 on:
   push:
@@ -9,203 +9,32 @@ on:
       - '*'
 
 jobs:
-  tests-and-quality:
-    name: Tests & Quality
-    runs-on: ubuntu-latest
-    env:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: oficina
-
-    services:
-      db:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: oficina
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.1'
-          cache: true
-
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Create .env.testing
-        run: |
-          cat <<EOF > .env.testing
-          PG_DSN=postgres://postgres:postgres@127.0.0.1:5432/oficina?sslmode=disable
-          MIGRATIONS_DIR=scripts/db/migrations
-          TEST_SEEDERS_DIR=scripts/db/test_seeders
-          EOF
-
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Run tests with coverage (unit + integration)
-        run: |
-          go test -v \
-            -coverpkg=./internal/... \
-            -coverprofile=coverage.out \
-            ./...
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: >
-            -Dsonar.go.coverage.reportPaths=coverage.out
+  tests:
+    uses: ./.github/workflows/tests.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker-build:
-    name: Docker Build
-    needs: tests-and-quality
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+    needs: tests
+    uses: ./.github/workflows/docker-build.yml
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
-
-      - name: Build Docker image
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
-        with:
-          context: .
-          push: false
-          tags: oficina-api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy-to-ecr:
-    name: Deploy to ECR
+  deploy-ecr:
     needs: docker-build
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+    uses: ./.github/workflows/deploy-ecr.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@56d6a583f00f6bad6d19d91d53a7bc3b8143d0e9 # v5.1.1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
-
-      - name: Create ECR Repository if not exists
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPO_NAME: oficina-api
-        run: |
-          aws ecr describe-repositories --repository-names $REPO_NAME --region us-east-1 || \
-          aws ecr create-repository --repository-name $REPO_NAME --region us-east-1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1    
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/oficina-api:latest
-            ${{ steps.login-ecr.outputs.registry }}/oficina-api:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  k8s-deploy:
-    name: Deploy to Kubernetes
-    needs: deploy-to-ecr
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      AWS_REGION: us-east-1
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@56d6a583f00f6bad6d19d91d53a7bc3b8143d0e9
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Fetch Terraform Outputs
-        id: tf_outputs
-        run: |
-          aws s3 cp s3://soatfiap-4/state/oficina-infra/terraform.tfstate infra.tfstate
-          
-          aws s3 cp s3://soatfiap-4/state/oficina-db/terraform.tfstate db.tfstate
-          CLUSTER_NAME=$(jq -r '.outputs.cluster_name.value' infra.tfstate)
-          RDS_ENDPOINT=$(jq -r '.outputs.rds_address.value' db.tfstate)
-          RDS_PORT=$(jq -r '.outputs.rds_port.value' db.tfstate)
-          RDS_DATABASE=$(jq -r '.outputs.rds_database_name.value' db.tfstate)
-          
-          echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
-          echo "rds_endpoint=${RDS_ENDPOINT}" >> $GITHUB_OUTPUT
-          echo "rds_port=${RDS_PORT}" >> $GITHUB_OUTPUT
-          echo "rds_database=${RDS_DATABASE}" >> $GITHUB_OUTPUT
-
-      - name: Update Kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --name "${{ steps.tf_outputs.outputs.cluster_name }}" \
-            --region ${{ env.AWS_REGION }}
-
-      - name: Apply Namespace and Base Resources
-        run: |
-          kubectl apply -f deploy/k8s/namespace.yaml
-          kubectl apply -f deploy/k8s/serviceaccount.yaml
-          kubectl apply -f deploy/k8s/configmap.yaml
-
-      - name: Apply Kubernetes Secret
-        env:
-          JWT_SECRET: ${{ secrets.K8S_JWT_SECRET }}
-          POSTGRES_USER: ${{ secrets.TF_RDS_MASTER_USERNAME }}
-          POSTGRES_PASSWORD: ${{ secrets.TF_RDS_MASTER_PASSWORD }}
-          POSTGRES_DB: ${{ steps.tf_outputs.outputs.rds_database }}
-          PG_DSN: postgres://${{ secrets.TF_RDS_MASTER_USERNAME }}:${{ secrets.TF_RDS_MASTER_PASSWORD }}@${{ steps.tf_outputs.outputs.rds_endpoint }}:${{ steps.tf_outputs.outputs.rds_port }}/${{ steps.tf_outputs.outputs.rds_database }}
-        run: |
-          envsubst < deploy/k8s/secrets.yaml | kubectl apply -f -
-
-      - name: Deploy Application
-        run: |
-          kubectl apply -f deploy/k8s/metric-server.yaml
-          kubectl apply -f deploy/k8s/app.yaml
-          kubectl apply -f deploy/k8s/services.yaml
-          kubectl apply -f deploy/k8s/hpa.yaml
-
-      - name: Wait for Deployment Rollout
-        run: |
-          kubectl rollout restart deployment/oficina -n fiap
-          
+  deploy-k8s:
+    needs: deploy-ecr
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-k8s.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      K8S_JWT_SECRET: ${{ secrets.K8S_JWT_SECRET }}
+      TF_RDS_MASTER_USERNAME: ${{ secrets.TF_RDS_MASTER_USERNAME }}
+      TF_RDS_MASTER_PASSWORD: ${{ secrets.TF_RDS_MASTER_PASSWORD }}
