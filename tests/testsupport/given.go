@@ -9,14 +9,12 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 
 	"github.com/soat13/oficina-utils/pkg/valueobjects/document"
-	passwordVO "github.com/soat13/oficina-utils/pkg/valueobjects/password"
 )
 
 func ThereIsAReceivedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
@@ -195,33 +193,6 @@ func ThereIsAnEstimateForRepairOrder(t *testing.T, container *bootstrap.Containe
 	require.NoError(t, err, "falha ao inserir estimate_item")
 
 	return estimateID
-}
-
-func ThereIsAUser(t *testing.T, db *bun.DB, id uuid.UUID, name, documentStr, phoneNumber, email, password string, roles []string) uuid.UUID {
-	t.Helper()
-	if id == uuid.Nil {
-		id = uuid.New()
-	}
-
-	doc, err := document.New(documentStr)
-	require.NoError(t, err, "invalid document in test")
-	normalizedDoc := doc.Value
-
-	hashedPassword := hashPassword(t, password)
-	_, err = db.NewRaw(`
-		INSERT INTO users (id, name, document, document_type, email, phone_number, password, roles)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT (document) DO NOTHING
-	`, id, name, normalizedDoc, doc.Type(), email, phoneNumber, hashedPassword, pq.Array(roles)).Exec(context.Background())
-	require.NoError(t, err, "failed to insert user")
-	return id
-}
-
-func hashPassword(t *testing.T, password string) string {
-	t.Helper()
-	vo, err := passwordVO.New(password)
-	require.NoError(t, err, "invalid password in test")
-	return vo.Hash
 }
 
 func insertService(ctx context.Context, db *bun.DB, id uuid.UUID, name string, cents int64) error {

@@ -8,16 +8,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/soat13/fase-1-oficina/assets/docs"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/customer"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/product"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
-	"github.com/soat13/oficina-utils/pkg/observability"
 	"github.com/soat13/fase-1-oficina/scripts/db"
+	"github.com/soat13/oficina-utils/pkg/observability"
 )
 
 func main() {
@@ -35,14 +33,12 @@ func main() {
 
 	container.Metrics = obs.Metrics
 
-	authBootstrap.SetupDefault(container)
 	docs.Register(container.FiberApp)
 	estimate.SetupDefault(container)
 	repairorder.SetupDefault(container)
 	product.SetupDefault(container)
 	service.SetupDefault(container)
 	customer.SetupDefault(container)
-	user.SetupDefault(container)
 	vehicle.SetupDefault(container)
 
 	// -----------------------------------------------------------------------------

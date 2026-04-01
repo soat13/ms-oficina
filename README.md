@@ -12,7 +12,6 @@
 - [Pipeline](#pipeline)
 - [Executando o Projeto](#executando-o-projeto)
 - [Swagger / OpenAPI](#swagger--openapi)
-- [Autenticação](#autenticação)
 - [Testes](#testes)
 - [Deploy no Kubernetes](#deploy-no-kubernetes)
 - [Observabilidade](#observabilidade)
@@ -32,7 +31,6 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 - **Catálogos** — Serviços técnicos e produtos com controle de estoque
 - **Orçamentos** — Propostas com itens de serviço e produto, sujeitas à aprovação
 - **Ordens de Serviço (OS)** — Fluxo completo: recepção, diagnóstico, aprovação, execução e liberação
-- **Controle de Acesso** — Autenticação e autorização por perfis (Atendente, Mecânico, Gerente)
 - **Eventos de Domínio** — Desacoplamento entre contextos (ex: baixa de estoque após aprovação)
 
 A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, com organização por contextos de domínio independentes.
@@ -86,7 +84,6 @@ Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/a
 - **Framework HTTP**: Fiber v2
 - **ORM**: Bun
 - **Migrações**: sql-migrate
-- **Autenticação**: JWT (HS256)
 - **Testes**: Go testing + testify
 - **Containerização**: Docker + Docker Compose
 - **Banco de Dados**: PostgreSQL — Escolhido por ser um SGBD relacional maduro e confiável, adequado para garantir integridade transacional em operações críticas como criação de Ordens de Serviço, aprovação de orçamentos e controle de estoque. O modelo relacional facilita a consistência entre entidades fortemente relacionadas e oferece suporte nativo a transações ACID, constraints e índices, essenciais para a confiabilidade e evolução do sistema.
@@ -149,55 +146,6 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 - UI: http://localhost:8080/docs
 - Spec: http://localhost:8080/openapi.yaml
 - Arquivo no repositório: `assets/docs/openapi.yaml`
-
-## Autenticação
-
-A autenticação da plataforma utiliza **JWT** e, em ambiente de produção, é realizada através de uma **AWS Lambda dedicada**,
-exposta pelo **API Gateway**.
-
-- Login: `POST /auth/login`
-- Header: `Authorization: Bearer <token>`
-
-Fluxo:
-
-1. O cliente envia CPF e senha para `/auth/login`
-2. O **API Gateway** roteia a requisição para a **Lambda de autenticação**
-3. A Lambda valida as credenciais e retorna um **JWT**
-4. O token deve ser enviado no header `Authorization` para acessar rotas protegidas da Oficina API
-
-### Ambiente não produtivo
-
-Para facilitar desenvolvimento local e execução de testes automatizados, o endpoint `POST /auth/login` **continua existindo dentro da Oficina API**, porém **apenas em ambientes não produtivos**.
-
-Uma verificação no código garante que esse endpoint só seja habilitado quando a aplicação não está rodando em produção.
-
-Em ambiente de produção, o login ocorre exclusivamente através da **AWS Lambda exposta pelo API Gateway**.
-
-### Fluxo de Autenticação
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant API_Gateway
-    participant Auth_Lambda
-    participant Oficina_API
-
-    Client->>API_Gateway: POST /auth/login (CPF + senha)
-
-    API_Gateway->>Auth_Lambda: Invoke Lambda
-    Auth_Lambda->>Auth_Lambda: Valida CPF
-    Auth_Lambda->>Auth_Lambda: Verifica senha
-    Auth_Lambda-->>API_Gateway: JWT Token
-    API_Gateway-->>Client: JWT Token
-
-    Client->>API_Gateway: Request com Bearer Token
-    API_Gateway->>Oficina_API: Encaminha requisição
-    Oficina_API->>Oficina_API: Valida JWT
-    Oficina_API-->>API_Gateway: Response
-    API_Gateway-->>Client: Response
-```
-> Para uma visão completa do fluxo da aplicação,  incluindo CRUDs administrativos, ciclo de vida da Repair Order, 
-> validação de estoque e execução do serviço - consulte o diagrama detalhado em [`docs/sequence-diagram.md`](docs/sequence-diagram.md).
 
 ## Testes
 

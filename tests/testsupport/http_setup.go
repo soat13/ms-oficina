@@ -6,12 +6,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/google/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
-	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 )
 
 type SetupConfig struct {
@@ -30,8 +28,6 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, nil)
 
 	ensureTestJWTConfig()
-	authBootstrap.SetupDefault(container)
-	authToken := ensureTestAdminUser(t, fiberApp, container)
 
 	register(fiberApp, container)
 
@@ -43,17 +39,8 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	return &SetupConfig{
 		FiberErrorHandler: container.FiberErrorHandler,
 		Container:         container,
-		AuthToken:         authToken,
+		AuthToken: testauth.GenerateToken(),
 	}
-}
-
-func ensureTestAdminUser(t *testing.T, app *fiber.App, container *bootstrap.Container) string {
-	cpf := "71296750043"
-	adminPassword := "password123"
-
-	ThereIsAUser(t, container.DB, uuid.Nil, "Test Admin", "71296750043", "11987654999", cpf, adminPassword, []string{"manager"})
-	authToken := testauth.Authenticate(t, app, cpf, adminPassword)
-	return authToken
 }
 
 func ensureTestJWTConfig() {

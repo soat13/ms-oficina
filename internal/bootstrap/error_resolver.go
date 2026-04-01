@@ -21,9 +21,6 @@ func NewErrorResolver() *errorHelper.Resolver {
 	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidDocument)
 	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidPhoneNumber)
 	errorResolver.RegisterHTTPUnprocessableError(email.ErrInvalidEmail)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrPasswordTooShort)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrPasswordTooLong)
-	errorResolver.RegisterHTTPUnprocessableError(errors.ErrInvalidPasswordHash)
 
 	return errorResolver
 }
