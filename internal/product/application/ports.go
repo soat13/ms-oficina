@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/product/domain"
-	"github.com/soat13/fase-1-oficina/pkg/money"
-	"github.com/soat13/fase-1-oficina/pkg/pagination"
+	"github.com/soat13/oficina-utils/pkg/money"
+	"github.com/soat13/oficina-utils/pkg/pagination"
 )
 
 type (

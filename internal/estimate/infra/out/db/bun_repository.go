@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/estimate/application"
-	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
+	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
 	"github.com/uptrace/bun"
 
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/pkg/money"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type (

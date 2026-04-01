@@ -8,7 +8,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/money"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type (

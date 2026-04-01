@@ -7,10 +7,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/vehicle/application"
 	"github.com/soat13/fase-1-oficina/internal/vehicle/domain"
-	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/pagination"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/plate"
+	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
+	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/pagination"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/plate"
 	"github.com/uptrace/bun"
 )
 

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	authDomain "github.com/soat13/fase-1-oficina/internal/auth/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/authz"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/password"
 )
 
 type (

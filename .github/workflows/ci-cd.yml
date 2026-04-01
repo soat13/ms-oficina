@@ -61,7 +61,7 @@ jobs:
       - name: Run tests with coverage (unit + integration)
         run: |
           go test -v \
-            -coverpkg=./internal/...,./pkg/... \
+            -coverpkg=./internal/... \
             -coverprofile=coverage.out \
             ./...
 

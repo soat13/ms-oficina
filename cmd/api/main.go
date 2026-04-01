@@ -16,7 +16,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/user"
 	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
-	"github.com/soat13/fase-1-oficina/pkg/observability"
+	"github.com/soat13/oficina-utils/pkg/observability"
 	"github.com/soat13/fase-1-oficina/scripts/db"
 )
 

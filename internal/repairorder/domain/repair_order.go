@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
-	uuidHelper "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
+	"github.com/soat13/oficina-utils/pkg/entity"
+	uuidHelper "github.com/soat13/oficina-utils/pkg/utils/uuid"
 )
 
 type (

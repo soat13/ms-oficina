@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/maps"
 )
 
 type (

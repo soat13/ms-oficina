@@ -10,8 +10,8 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
+	"github.com/soat13/oficina-utils/pkg/maps"
 )
 
 type (

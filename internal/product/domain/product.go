@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
-	"github.com/soat13/fase-1-oficina/pkg/money"
-	uuidHelper "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
+	"github.com/soat13/oficina-utils/pkg/entity"
+	"github.com/soat13/oficina-utils/pkg/money"
+	uuidHelper "github.com/soat13/oficina-utils/pkg/utils/uuid"
 )
 
 type Product struct {

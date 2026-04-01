@@ -154,7 +154,7 @@ A lógica de reação a eventos (regras e orquestração) permanece na camada `a
 
 - **Eventos (publicação)**: `internal/<contexto>/infra/out/event/publisher.go`
     - Implementa o port de publicação de eventos
-    - Utiliza o event bus definido em `pkg/event`
+    - Utiliza o event bus via pkg externo
 
 - **Autenticação (JWT)**: `internal/auth/infra/out/jwt`
     - Implementa geração e validação de tokens
