@@ -1,41 +1,27 @@
 package testauth
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
-	"net/http/httptest"
-	"testing"
+	"os"
+	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/require"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func Authenticate(t *testing.T, app *fiber.App, cpf, password string) string {
-	t.Helper()
-
-	body := map[string]string{
-		"cpf":      cpf,
-		"password": password,
+func GenerateToken() string {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "test-secret"
 	}
 
-	payload, err := json.Marshal(body)
-	require.NoError(t, err)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":   "test-user",
+		"roles": []string{"manager"},
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
 
-	req := httptest.NewRequest("POST", "/auth/login", bytes.NewReader(payload))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := app.Test(req, -1)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusOK, resp.StatusCode)
-
-	var response struct {
-		AccessToken string `json:"access_token"`
-	}
-	require.NoError(t, json.NewDecoder(resp.Body).Decode(&response))
-	require.NotEmpty(t, response.AccessToken)
-
-	return response.AccessToken
+	signed, _ := token.SignedString([]byte(secret))
+	return signed
 }
 
 func AddAuthHeader(req *http.Request, token string) {
