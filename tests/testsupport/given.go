@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
-	passwordVO "github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/document"
+	passwordVO "github.com/soat13/oficina-utils/pkg/valueobjects/password"
 )
 
 func ThereIsAReceivedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {

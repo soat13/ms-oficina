@@ -3,7 +3,7 @@ package metrics
 import (
 	"testing"
 
-	"github.com/soat13/fase-1-oficina/pkg/observability"
+	"github.com/soat13/oficina-utils/pkg/observability"
 	"github.com/stretchr/testify/assert"
 )
 

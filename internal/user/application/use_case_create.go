@@ -6,11 +6,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/shared/authz"
 	"github.com/soat13/fase-1-oficina/internal/user/domain"
-	stringhelper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
+	stringhelper "github.com/soat13/oficina-utils/pkg/utils/helpers/string"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/document"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/email"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/password"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/phone"
 )
 
 type (

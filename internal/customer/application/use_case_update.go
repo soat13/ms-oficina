@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/email"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/phone"
 )
 
 type (

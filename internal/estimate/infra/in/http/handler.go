@@ -6,7 +6,7 @@ import (
 	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 )
 
 type (

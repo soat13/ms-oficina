@@ -7,11 +7,11 @@ import (
 	app "github.com/soat13/fase-1-oficina/internal/customer/application"
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
+	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/document"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/email"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/phone"
 )
 
 type Handler struct {

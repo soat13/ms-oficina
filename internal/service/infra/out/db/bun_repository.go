@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/service/application"
 	"github.com/soat13/fase-1-oficina/internal/service/domain"
-	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/money"
-	"github.com/soat13/fase-1-oficina/pkg/pagination"
+	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
+	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/money"
+	"github.com/soat13/oficina-utils/pkg/pagination"
 	"github.com/uptrace/bun"
 )
 

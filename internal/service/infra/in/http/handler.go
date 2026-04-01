@@ -9,9 +9,9 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/service/application"
 	"github.com/soat13/fase-1-oficina/internal/service/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/money"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
+	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type Handler struct {

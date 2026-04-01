@@ -8,10 +8,10 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/pagination"
+	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
+	"github.com/soat13/oficina-utils/pkg/entity"
+	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/pagination"
 	"github.com/uptrace/bun"
 )
 

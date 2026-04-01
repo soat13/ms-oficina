@@ -10,7 +10,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
+	"github.com/soat13/oficina-utils/pkg/entity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

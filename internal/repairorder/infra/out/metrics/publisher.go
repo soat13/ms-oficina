@@ -1,6 +1,6 @@
 package metrics
 
-import "github.com/soat13/fase-1-oficina/pkg/observability"
+import "github.com/soat13/oficina-utils/pkg/observability"
 
 type MetricsPublisher struct {
 	metrics *observability.Metrics

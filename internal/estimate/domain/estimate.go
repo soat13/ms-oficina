@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	pkgEntity "github.com/soat13/fase-1-oficina/pkg/entity"
-	"github.com/soat13/fase-1-oficina/pkg/money"
+	pkgEntity "github.com/soat13/oficina-utils/pkg/entity"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type (

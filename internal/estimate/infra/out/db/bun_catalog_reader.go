@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 
 	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
-	"github.com/soat13/fase-1-oficina/pkg/money"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 func NewProductCatalogReader(db *bun.DB) app.ProductCatalogReader {

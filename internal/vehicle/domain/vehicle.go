@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/entity"
-	uuidPkg "github.com/soat13/fase-1-oficina/pkg/utils/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/plate"
+	"github.com/soat13/oficina-utils/pkg/entity"
+	uuidPkg "github.com/soat13/oficina-utils/pkg/utils/uuid"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/plate"
 )
 
 type Vehicle struct {

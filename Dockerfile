@@ -13,7 +13,6 @@ RUN go mod download
 COPY assets/ assets/
 COPY cmd/ cmd/
 COPY internal/ internal/
-COPY pkg/ pkg/
 COPY scripts/db scripts/db/
 
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o api ./cmd/api/main.go

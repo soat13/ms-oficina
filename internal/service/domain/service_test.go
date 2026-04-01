@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/pkg/money"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 func TestNewService(t *testing.T) {

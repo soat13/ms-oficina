@@ -7,7 +7,7 @@ import (
 
 	authApp "github.com/soat13/fase-1-oficina/internal/auth/application"
 	authDomain "github.com/soat13/fase-1-oficina/internal/auth/domain"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 )
 
 const (

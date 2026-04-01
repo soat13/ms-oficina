@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/soat13/fase-1-oficina/internal/customer/domain"
-	stringHelper "github.com/soat13/fase-1-oficina/pkg/utils/helpers/string"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/document"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/phone"
+	stringHelper "github.com/soat13/oficina-utils/pkg/utils/helpers/string"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/document"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/email"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/phone"
 )
 
 type (

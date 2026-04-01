@@ -7,9 +7,9 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/vehicle/application"
 	"github.com/soat13/fase-1-oficina/internal/vehicle/domain"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
-	"github.com/soat13/fase-1-oficina/pkg/maps"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/plate"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
+	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/plate"
 )
 
 type Handler struct {

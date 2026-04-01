@@ -9,8 +9,8 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/auth/application"
 	"github.com/soat13/fase-1-oficina/internal/auth/application/mocks"
 	authDomain "github.com/soat13/fase-1-oficina/internal/auth/domain"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/email"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/email"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/password"
 )
 
 func TestAuthenticateUserExecuteFailures(t *testing.T) {

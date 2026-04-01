@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/auth/application"
 	"github.com/soat13/fase-1-oficina/internal/shared/authz"
-	"github.com/soat13/fase-1-oficina/pkg/db/bun_helper"
-	"github.com/soat13/fase-1-oficina/pkg/valueobjects/password"
+	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
+	"github.com/soat13/oficina-utils/pkg/valueobjects/password"
 	"github.com/uptrace/bun"
 )
 

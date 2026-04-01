@@ -10,7 +10,7 @@ import (
 
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
-	fiberHelper "github.com/soat13/fase-1-oficina/pkg/http/fiber"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
 )
 
