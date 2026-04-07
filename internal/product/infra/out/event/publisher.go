@@ -7,17 +7,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/soat13/fase-1-oficina/internal/product/application"
 	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
-	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
+	"github.com/soat13/oficina-utils/pkg/messaging"
 )
 
 type EventPublisher struct {
-	bus messaging.Bus
+	publisher messaging.Publisher
 }
 
-func NewEventPublisher(bus messaging.Bus) application.EventPublisher {
-	return &EventPublisher{
-		bus: bus,
-	}
+func NewEventPublisher(publisher messaging.Publisher) application.EventPublisher {
+	return &EventPublisher{publisher: publisher}
 }
 
 func (e *EventPublisher) PublishStockInsufficientDetected(
@@ -32,7 +30,7 @@ func (e *EventPublisher) PublishStockInsufficientDetected(
 		RepairOrderID: repairOrderID,
 	}
 
-	return messaging.Publish(ctx, e.bus, insufficientDetected)
+	return messaging.Publish(ctx, e.publisher, insufficientDetected)
 }
 
 func (e *EventPublisher) PublishStockReduceConfirmed(
@@ -47,5 +45,5 @@ func (e *EventPublisher) PublishStockReduceConfirmed(
 		RepairOrderID: repairOrderID,
 	}
 
-	return messaging.Publish(ctx, e.bus, stockReduceConfirmed)
+	return messaging.Publish(ctx, e.publisher, stockReduceConfirmed)
 }

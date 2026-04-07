@@ -20,7 +20,7 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 		repository = productDB.NewBunProductRepository(container.DB)
 	}
 
-	eventPublisher := eventOut.NewEventPublisher(container.EventBus)
+	eventPublisher := eventOut.NewEventPublisher(container.Publisher())
 	createProduct := application.NewCreateProduct(repository)
 	updateProduct := application.NewUpdateProduct(repository)
 	deleteProduct := application.NewDeleteProduct(repository)
@@ -41,8 +41,5 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 
 	productHTTP.Register(container.FiberApp, productHandler)
 
-	container.EventBus.Subscribe(
-		estimateEvent.EstimateApproved{}.Topic(),
-		event.OnEstimateApproved(handleEstimateApproved),
-	)
+	container.Subscribe(estimateEvent.EstimateApproved{}.Topic(), event.OnEstimateApproved(handleEstimateApproved))
 }
