@@ -21,7 +21,7 @@ func Setup(container *bootstrap.Container) {
 	customerReader := db.NewCustomerReader(container.DB)
 	productReader := db.NewProductReader(container.DB)
 	serviceReader := db.NewServiceReader(container.DB)
-	eventPublisher := eventOut.NewEventPublisher(container.EventBus)
+	eventPublisher := eventOut.NewEventPublisher(container.Publisher())
 	metricsPublisher := metricsOut.NewPublisher(container.Metrics)
 
 	list := application.NewListRepairOrders(repository)
@@ -29,7 +29,7 @@ func Setup(container *bootstrap.Container) {
 	create := application.NewCreate(repository, customerReader, vehicleReader, metricsPublisher)
 	startDiagnostics := application.NewStartDiagnostics(repository, metricsPublisher)
 	startExecution := application.NewStartExecution(repository, metricsPublisher)
-	finishExecution := application.NewFinishExecution(repository, metricsPublisher)
+	finishExecution := application.NewFinishExecution(repository, eventPublisher, metricsPublisher)
 	releaseVehicle := application.NewReleaseVehicle(repository, metricsPublisher)
 	getAverageExecutionTime := application.NewGetAverageExecutionTime(repository)
 	cancel := application.NewCancel(repository, eventPublisher, metricsPublisher)
@@ -62,14 +62,8 @@ func Setup(container *bootstrap.Container) {
 	handleStockInsufficient := application.NewHandleStockInsufficient(cancel)
 	handleStockReductionConfirmed := application.NewHandleStockReductionConfirmed(repository, metricsPublisher)
 
-	container.EventBus.Subscribe(events.EstimateCreated{}.Topic(), eventIn.OnEstimateCreated(handleEstimateCreated))
-	container.EventBus.Subscribe(events.EstimateRejected{}.Topic(), eventIn.OnEstimateRejected(handleEstimateRejected))
-	container.EventBus.Subscribe(
-		events.StockInsufficientDetected{}.Topic(),
-		eventIn.OnStockInsufficientDetected(handleStockInsufficient),
-	)
-	container.EventBus.Subscribe(
-		events.StockReductionConfirmed{}.Topic(),
-		eventIn.OnStockReduceConfirmed(handleStockReductionConfirmed),
-	)
+	container.Subscribe(events.EstimateCreated{}.Topic(), eventIn.OnEstimateCreated(handleEstimateCreated))
+	container.Subscribe(events.EstimateRejected{}.Topic(), eventIn.OnEstimateRejected(handleEstimateRejected))
+	container.Subscribe(events.StockInsufficientDetected{}.Topic(), eventIn.OnStockInsufficientDetected(handleStockInsufficient))
+	container.Subscribe(events.StockReductionConfirmed{}.Topic(), eventIn.OnStockReduceConfirmed(handleStockReductionConfirmed))
 }

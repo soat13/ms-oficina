@@ -10,6 +10,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
 	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
+	"github.com/soat13/oficina-utils/pkg/messaging"
 )
 
 type SetupConfig struct {
@@ -25,7 +26,7 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New())
 
-	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, nil)
+	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, messaging.NewSyncBroker())
 
 	ensureTestJWTConfig()
 
@@ -39,7 +40,7 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	return &SetupConfig{
 		FiberErrorHandler: container.FiberErrorHandler,
 		Container:         container,
-		AuthToken: testauth.GenerateToken(),
+		AuthToken:         testauth.GenerateToken(),
 	}
 }
 
