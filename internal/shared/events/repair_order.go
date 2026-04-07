@@ -23,3 +23,11 @@ type RepairOrderDiagnosticsFinished struct {
 }
 
 func (RepairOrderDiagnosticsFinished) Topic() string { return "repairOrder.diagnostics.finished" }
+
+type RepairOrderFinished struct {
+	EventID       uuid.UUID `json:"event_id"`
+	OccurredAt    time.Time `json:"occurred_at"`
+	RepairOrderID uuid.UUID `json:"repair_order_id"`
+}
+
+func (RepairOrderFinished) Topic() string { return "repairOrder.finished" }
