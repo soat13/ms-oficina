@@ -10,8 +10,9 @@ import (
 
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
 	authBootstrap "github.com/soat13/fase-1-oficina/internal/bootstrap/auth"
-	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
+	infraBroker "github.com/soat13/fase-1-oficina/internal/shared/infra/messaging"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 )
 
 type SetupConfig struct {
@@ -27,7 +28,7 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New())
 
-	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, nil)
+	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, infraBroker.NewNoopBroker())
 
 	ensureTestJWTConfig()
 	authBootstrap.SetupDefault(container)

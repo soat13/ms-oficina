@@ -11,16 +11,12 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 )
 
-type (
-	EventPublisher struct {
-		bus messaging.Bus
-	}
-)
+type EventPublisher struct {
+	publisher messaging.Publisher
+}
 
-func NewEventPublisher(bus messaging.Bus) application.EventPublisher {
-	return &EventPublisher{
-		bus: bus,
-	}
+func NewEventPublisher(publisher messaging.Publisher) application.EventPublisher {
+	return &EventPublisher{publisher: publisher}
 }
 
 func (e *EventPublisher) PublishApproved(ctx context.Context, estimate domain.Estimate) error {
@@ -31,7 +27,7 @@ func (e *EventPublisher) PublishApproved(ctx context.Context, estimate domain.Es
 		}
 	}
 
-	return messaging.Publish(ctx, e.bus, estimateEvent.EstimateApproved{
+	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateApproved{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
@@ -41,7 +37,7 @@ func (e *EventPublisher) PublishApproved(ctx context.Context, estimate domain.Es
 }
 
 func (e *EventPublisher) PublishRejected(ctx context.Context, estimate domain.Estimate) error {
-	return messaging.Publish(ctx, e.bus, estimateEvent.EstimateRejected{
+	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateRejected{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
@@ -50,7 +46,7 @@ func (e *EventPublisher) PublishRejected(ctx context.Context, estimate domain.Es
 }
 
 func (e *EventPublisher) PublishCreated(ctx context.Context, estimate domain.Estimate) error {
-	return messaging.Publish(ctx, e.bus, estimateEvent.EstimateCreated{
+	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateCreated{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,

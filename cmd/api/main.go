@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -44,6 +45,8 @@ func main() {
 	customer.SetupDefault(container)
 	user.SetupDefault(container)
 	vehicle.SetupDefault(container)
+
+	container.StartConsumers(context.Background())
 
 	// -----------------------------------------------------------------------------
 	// HTTP server start

@@ -14,12 +14,14 @@ type FinishExecutionInput struct {
 
 type FinishExecution struct {
 	Repository       Repository
+	eventPublisher   EventPublisher
 	metricsPublisher MetricsPublisher
 }
 
-func NewFinishExecution(repository Repository, metricsPublisher MetricsPublisher) *FinishExecution {
+func NewFinishExecution(repository Repository, eventPublisher EventPublisher, metricsPublisher MetricsPublisher) *FinishExecution {
 	return &FinishExecution{
 		Repository:       repository,
+		eventPublisher:   eventPublisher,
 		metricsPublisher: metricsPublisher,
 	}
 }
@@ -46,5 +48,5 @@ func (uc *FinishExecution) Execute(ctx context.Context, input FinishExecutionInp
 		uc.metricsPublisher.RecordRepairOrderPhaseDuration("in_execution", time.Since(repairorder.UpdatedAt).Minutes())
 	}
 
-	return nil
+	return uc.eventPublisher.PublishRepairOrderFinished(ctx, repairorder.ID)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/stdlib"
-	infraMessaging "github.com/soat13/fase-1-oficina/internal/shared/infra/out/messaging"
+	infraBroker "github.com/soat13/fase-1-oficina/internal/shared/infra/messaging"
 	"github.com/soat13/fase-1-oficina/internal/shared/messaging"
 	helper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/observability"
@@ -25,7 +25,7 @@ type Container struct {
 	FiberApp          *fiber.App
 	FiberErrorHandler *helper.ErrorHandler
 	Validator         *validator.Validate
-	EventBus          messaging.Bus
+	Broker            *infraBroker.Broker
 	Metrics           *observability.Metrics
 }
 
@@ -38,9 +38,8 @@ func Build(
 	fiberApp *fiber.App,
 	fiberErrorHandler *helper.ErrorHandler,
 	structValidator *validator.Validate,
-	EventBus messaging.Bus,
+	broker *infraBroker.Broker,
 ) *Container {
-
 	if fiberApp == nil {
 		fiberApp = newApp()
 	}
@@ -57,8 +56,12 @@ func Build(
 		bunDB = bun.NewDB(newSQL(), pgdialect.New())
 	}
 
-	if EventBus == nil {
-		EventBus = infraMessaging.NewInMemoryBus()
+	if broker == nil {
+		var err error
+		broker, err = infraBroker.NewBroker(context.Background())
+		if err != nil {
+			log.Fatalf("failed to create SQS broker: %v", err)
+		}
 	}
 
 	return &Container{
@@ -66,11 +69,26 @@ func Build(
 		FiberApp:          fiberApp,
 		FiberErrorHandler: fiberErrorHandler,
 		Validator:         structValidator,
-		EventBus:          EventBus,
+		Broker:            broker,
 	}
 }
 
+func (c *Container) StartConsumers(ctx context.Context) {
+	c.Broker.Start(ctx)
+}
+
+func (c *Container) Publisher() messaging.Publisher {
+	return c.Broker
+}
+
+func (c *Container) Subscribe(topic string, handler messaging.Handler) {
+	c.Broker.Subscribe(topic, handler)
+}
+
 func (c *Container) Close() {
+	if c.Broker != nil {
+		c.Broker.Shutdown()
+	}
 	if c.DB != nil {
 		_ = c.DB.Close()
 	}

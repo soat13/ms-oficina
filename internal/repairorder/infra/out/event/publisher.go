@@ -11,13 +11,11 @@ import (
 )
 
 type EventPublisher struct {
-	bus messaging.Bus
+	publisher messaging.Publisher
 }
 
-func NewEventPublisher(bus messaging.Bus) application.EventPublisher {
-	return &EventPublisher{
-		bus: bus,
-	}
+func NewEventPublisher(publisher messaging.Publisher) application.EventPublisher {
+	return &EventPublisher{publisher: publisher}
 }
 
 func (e *EventPublisher) PublishRepairOrderDiagnosticsFinished(
@@ -34,15 +32,25 @@ func (e *EventPublisher) PublishRepairOrderDiagnosticsFinished(
 		Services:      services,
 	}
 
-	return messaging.Publish(ctx, e.bus, orderDiagnosticsFinished)
+	return messaging.Publish(ctx, e.publisher, orderDiagnosticsFinished)
 }
 
 func (e *EventPublisher) PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error {
-	orderDiagnosticsFinished := estimateEvent.RepairOrderCanceled{
+	evt := estimateEvent.RepairOrderCanceled{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		RepairOrderID: RepairOrderID,
 	}
 
-	return messaging.Publish(ctx, e.bus, orderDiagnosticsFinished)
+	return messaging.Publish(ctx, e.publisher, evt)
+}
+
+func (e *EventPublisher) PublishRepairOrderFinished(ctx context.Context, RepairOrderID uuid.UUID) error {
+	evt := estimateEvent.RepairOrderFinished{
+		EventID:       uuid.New(),
+		OccurredAt:    time.Now(),
+		RepairOrderID: RepairOrderID,
+	}
+
+	return messaging.Publish(ctx, e.publisher, evt)
 }
