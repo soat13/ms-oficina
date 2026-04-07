@@ -25,6 +25,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 			&mockRepository{getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 				return ro, nil
 			}},
+			&mockEventPublisher{},
 			metrics,
 		)
 
@@ -42,6 +43,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 			&mockRepository{getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 				return nil, repoErr
 			}},
+			&mockEventPublisher{},
 			&mockMetricsPublisher{},
 		)
 
@@ -55,6 +57,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 			&mockRepository{getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 				return nil, nil
 			}},
+			&mockEventPublisher{},
 			&mockMetricsPublisher{},
 		)
 
@@ -69,6 +72,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 			&mockRepository{getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 				return ro, nil
 			}},
+			&mockEventPublisher{},
 			&mockMetricsPublisher{},
 		)
 
@@ -89,6 +93,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 					return saveErr
 				},
 			},
+			&mockEventPublisher{},
 			&mockMetricsPublisher{},
 		)
 

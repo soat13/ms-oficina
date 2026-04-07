@@ -19,7 +19,7 @@ func Setup(container *bootstrap.Container) {
 	productCatalogReader := db.NewProductCatalogReader(container.DB)
 	serviceCatalogReader := db.NewServiceCatalogReader(container.DB)
 	repository := db.NewBunRepository(container.DB)
-	eventPublisher := eventOut.NewEventPublisher(container.EventBus)
+	eventPublisher := eventOut.NewEventPublisher(container.Publisher())
 
 	createEstimate := application.NewCreateEstimate(
 		repairOrderReader,
@@ -40,13 +40,7 @@ func Setup(container *bootstrap.Container) {
 	estimateHttpHandler := http.NewHandler(approve, reject, addItem, removeItem, container.FiberErrorHandler)
 	http.Register(container.FiberApp, estimateHttpHandler)
 
-	container.EventBus.Subscribe(
-		events.RepairOrderCanceled{}.Topic(),
-		eventIn.OnRepairOrderCanceled(handleRepairOrderCanceled),
-	)
-	container.EventBus.Subscribe(
-		events.RepairOrderDiagnosticsFinished{}.Topic(),
-		eventIn.OnDiagnosticsFinished(handleDiagnosticsFinished),
-	)
+	container.Subscribe(events.RepairOrderCanceled{}.Topic(), eventIn.OnRepairOrderCanceled(handleRepairOrderCanceled))
+	container.Subscribe(events.RepairOrderDiagnosticsFinished{}.Topic(), eventIn.OnDiagnosticsFinished(handleDiagnosticsFinished))
 
 }

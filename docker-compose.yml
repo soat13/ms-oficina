@@ -69,6 +69,22 @@ services:
       start_period: 120s
     restart: unless-stopped
 
+  localstack:
+    image: localstack/localstack:4.4
+    environment:
+      SERVICES: sqs
+      DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./scripts/localstack:/etc/localstack/init/ready.d
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal sqs list-queues"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   app-dev:
     image: golang:1.25.1
     working_dir: /app
@@ -79,9 +95,16 @@ services:
     environment:
       PG_DSN: ${PG_DSN}
       JWT_SECRET: ${JWT_SECRET}
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localstack:4566
+      SQS_BASE_URL: http://localstack:4566/000000000000/
     command: tail -f /dev/null
     depends_on:
       db:
+        condition: service_healthy
+      localstack:
         condition: service_healthy
     ports: ["8080:8080"]
 
