@@ -14,7 +14,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/rs/zerolog v1.35.0
 	github.com/rubenv/sql-migrate v1.8.0
-	github.com/soat13/oficina-utils v0.0.3
+	github.com/soat13/oficina-utils v0.0.4
 )
 
 require (
