@@ -23,7 +23,8 @@ spec:
       annotations:
         ad.datadoghq.com/oficina-api.logs: '[{"source":"go","service":"oficina-api"}]'
     spec:
-      automountServiceAccountToken: false
+      serviceAccountName: app-sa
+      automountServiceAccountToken: true
       terminationGracePeriodSeconds: 3
       volumes:
         - name: apmsocketpath
