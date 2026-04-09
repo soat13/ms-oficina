@@ -10,3 +10,5 @@ data:
   DD_TRACE_ENABLED: "true"
   LOG_LEVEL: "info"
   APP_ENV: "development"
+  AWS_REGION: "us-east-1"
+  SQS_BASE_URL: ${SQS_BASE_URL}
