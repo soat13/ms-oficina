@@ -30,7 +30,7 @@ spec:
           hostPath:
             path: /var/run/datadog/
       containers:
-        - image: 991677575887.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+        - image: 985909969878.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
           imagePullPolicy: Always
           name: oficina-api
           ports:
