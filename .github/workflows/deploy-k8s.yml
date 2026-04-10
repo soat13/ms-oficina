@@ -45,7 +45,6 @@ jobs:
 
           CLUSTER_NAME=$(jq -r '.outputs.cluster_name.value' infra.tfstate)
           SQS_BASE_URL=$(jq -r '.outputs.sqs_base_url.value' infra.tfstate)
-          SQS_ROLE_ARN=$(jq -r '.outputs.sqs_role_arn.value' infra.tfstate)
           RDS_ENDPOINT=$(jq -r '.outputs.rds_address.value' db.tfstate)
           RDS_PORT=$(jq -r '.outputs.rds_port.value' db.tfstate)
           RDS_DATABASE=$(jq -r '.outputs.rds_database_name.value' db.tfstate)
@@ -55,7 +54,6 @@ jobs:
           echo "rds_port=${RDS_PORT}" >> $GITHUB_OUTPUT
           echo "rds_database=${RDS_DATABASE}" >> $GITHUB_OUTPUT
           echo "sqs_base_url=${SQS_BASE_URL}" >> $GITHUB_OUTPUT
-          echo "sqs_role_arn=${SQS_ROLE_ARN}" >> $GITHUB_OUTPUT
 
       - name: Update Kubeconfig
         run: |
@@ -66,10 +64,9 @@ jobs:
       - name: Apply Namespace and Base Resources
         env:
           SQS_BASE_URL: ${{ steps.tf_outputs.outputs.sqs_base_url }}
-          SQS_ROLE_ARN: ${{ steps.tf_outputs.outputs.sqs_role_arn }}
         run: |
           kubectl apply -f deploy/k8s/namespace.yaml
-          envsubst < deploy/k8s/serviceaccount.yaml | kubectl apply -f -
+          kubectl apply -f deploy/k8s/serviceaccount.yaml
           envsubst < deploy/k8s/configmap.yaml | kubectl apply -f -
 
       - name: Apply Kubernetes Secret
