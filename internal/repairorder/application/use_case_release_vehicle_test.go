@@ -18,7 +18,7 @@ func TestReleaseVehicle_Execute(t *testing.T) {
 	roID := uuid.New()
 
 	t.Run("should release vehicle successfully", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusFinished)
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentSucceeded)
 		metrics := &mockMetricsPublisher{}
 
 		uc := NewReleaseVehicle(
@@ -32,7 +32,7 @@ func TestReleaseVehicle_Execute(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusReleased, ro.Status)
-		assert.Contains(t, metrics.phaseDurations, "finished")
+		assert.Contains(t, metrics.phaseDurations, "payment_succeeded")
 	})
 
 	t.Run("should return error when repository fails", func(t *testing.T) {
@@ -77,14 +77,14 @@ func TestReleaseVehicle_Execute(t *testing.T) {
 	})
 
 	t.Run("should return error when save fails", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusFinished)
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentSucceeded)
 		saveErr := errors.New("save failed")
 		uc := NewReleaseVehicle(
 			&mockRepository{
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfFinishedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentSucceededFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return saveErr
 				},
 			},

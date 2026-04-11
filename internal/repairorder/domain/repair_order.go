@@ -17,6 +17,7 @@ type (
 		VehicleID            uuid.UUID
 		Status               repairorder.Status
 		ExecutionTimeMinutes *int64
+		PaymentURL           *string
 		*entity.Timestamps
 	}
 )
@@ -46,12 +47,28 @@ func NewRepairOrder(id uuid.UUID, customerID, vehicleID uuid.UUID, status *repai
 	}, nil
 }
 
+func (r *RepairOrder) UpdatePaymentURL(paymentURL *string) {
+	r.PaymentURL = paymentURL
+}
+
 func (r *RepairOrder) IsCancelled() bool {
 	return r.Status == repairorder.StatusCanceled
 }
 
+func (r *RepairOrder) calculateExecutionTime() {
+	executionTime := time.Since(r.UpdatedAt).Minutes()
+	executionTimeMinutes := int64(executionTime)
+	r.ExecutionTimeMinutes = &executionTimeMinutes
+}
+
 func (r *RepairOrder) Cancel() error {
-	if r.Status == repairorder.StatusReleased {
+	switch r.Status {
+	case repairorder.StatusFinished,
+		repairorder.StatusPaymentCreated,
+		repairorder.StatusPaymentSucceeded,
+		repairorder.StatusPaymentFailed,
+		repairorder.StatusReleased,
+		repairorder.StatusCanceled:
 		return errors.ErrInvalidStatusTransaction
 	}
 
@@ -84,8 +101,20 @@ func (r *RepairOrder) FinishExecution() error {
 	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)
 }
 
+func (r *RepairOrder) PaymentCreated() error {
+	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusPaymentCreated)
+}
+
+func (r *RepairOrder) PaymentSucceeded() error {
+	return r.moveStatus(repairorder.StatusPaymentCreated, repairorder.StatusPaymentSucceeded)
+}
+
+func (r *RepairOrder) PaymentFailed() error {
+	return r.moveStatus(repairorder.StatusPaymentCreated, repairorder.StatusPaymentFailed)
+}
+
 func (r *RepairOrder) ReleaseVehicle() error {
-	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusReleased)
+	return r.moveStatus(repairorder.StatusPaymentSucceeded, repairorder.StatusReleased)
 }
 
 func (r *RepairOrder) moveStatus(statusFrom, statusTo repairorder.Status) error {
@@ -95,10 +124,4 @@ func (r *RepairOrder) moveStatus(statusFrom, statusTo repairorder.Status) error 
 
 	r.Status = statusTo
 	return nil
-}
-
-func (r *RepairOrder) calculateExecutionTime() {
-	executionTime := time.Since(r.UpdatedAt).Minutes()
-	executionTimeMinutes := int64(executionTime)
-	r.ExecutionTimeMinutes = &executionTimeMinutes
 }

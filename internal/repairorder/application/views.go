@@ -13,6 +13,7 @@ type RepairOrderView struct {
 	CustomerID uuid.UUID
 	VehicleID  uuid.UUID
 	Status     sharedRepairOrder.Status
+	PaymentURL *string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
@@ -23,6 +24,7 @@ func toView(ro *domain.RepairOrder) RepairOrderView {
 		CustomerID: ro.CustomerID,
 		VehicleID:  ro.VehicleID,
 		Status:     ro.Status,
+		PaymentURL: ro.PaymentURL,
 		CreatedAt:  ro.CreatedAt,
 		UpdatedAt:  ro.UpdatedAt,
 	}

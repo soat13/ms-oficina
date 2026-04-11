@@ -344,7 +344,7 @@ func TestRepairOrderReleaseVehicle(t *testing.T) {
 	setup := ensureSetup(t)
 
 	t.Run("Success", func(t *testing.T) {
-		repairOrderID := testsupport.ThereIsAFinishedRepairOrder(t, setup.Container.DB)
+		repairOrderID := testsupport.ThereIsAPaymentSucceededRepairOrder(t, setup.Container.DB)
 
 		resp := postReleaseVehicle(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
