@@ -10,6 +10,9 @@ const (
 	StatusApproved            Status = "approved"
 	StatusInExecution         Status = "in_execution"
 	StatusFinished            Status = "finished"
+	StatusPaymentCreated      Status = "payment_created"
+	StatusPaymentSucceeded    Status = "payment_succeeded"
+	StatusPaymentFailed       Status = "payment_failed"
 	StatusReleased            Status = "released"
 	StatusCanceled            Status = "canceled"
 )

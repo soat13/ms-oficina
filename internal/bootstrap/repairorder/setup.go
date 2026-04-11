@@ -61,9 +61,11 @@ func Setup(container *bootstrap.Container) {
 	handleEstimateRejected := application.NewHandleEstimateRejected(cancel)
 	handleStockInsufficient := application.NewHandleStockInsufficient(cancel)
 	handleStockReductionConfirmed := application.NewHandleStockReductionConfirmed(repository, metricsPublisher)
+	handlePaymentStatusChanged := application.NewHandlePaymentStatusChanged(repository, metricsPublisher)
 
 	container.Subscribe(events.EstimateCreated{}.Topic(), eventIn.OnEstimateCreated(handleEstimateCreated))
 	container.Subscribe(events.EstimateRejected{}.Topic(), eventIn.OnEstimateRejected(handleEstimateRejected))
 	container.Subscribe(events.StockInsufficientDetected{}.Topic(), eventIn.OnStockInsufficientDetected(handleStockInsufficient))
 	container.Subscribe(events.StockReductionConfirmed{}.Topic(), eventIn.OnStockReduceConfirmed(handleStockReductionConfirmed))
+	container.Subscribe(events.PaymentStatusChanged{}.Topic(), eventIn.OnPaymentStatusChanged(handlePaymentStatusChanged))
 }

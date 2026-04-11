@@ -52,6 +52,11 @@ func ThereIsAFinishedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
 	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusFinished)
 }
 
+func ThereIsAPaymentSucceededRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
+	t.Helper()
+	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusPaymentSucceeded)
+}
+
 func ThereIsAReleasedRepairOrder(t *testing.T, db *bun.DB) uuid.UUID {
 	t.Helper()
 	return ThereIsARepairOrderWithStatus(t, db, repairorder.StatusReleased)

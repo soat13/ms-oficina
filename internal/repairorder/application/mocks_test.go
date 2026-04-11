@@ -24,6 +24,8 @@ type mockRepository struct {
 	saveIfApprovedFn             func(ctx context.Context, ro *domain.RepairOrder) error
 	saveIfInExecutionFn          func(ctx context.Context, ro *domain.RepairOrder) error
 	saveIfFinishedFn             func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfPaymentCreatedFn       func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfPaymentSucceededFn     func(ctx context.Context, ro *domain.RepairOrder) error
 	getAverageExecTimeFn         func(ctx context.Context) (*float64, error)
 }
 
@@ -90,6 +92,18 @@ func (m *mockRepository) SaveIfInExecution(ctx context.Context, ro *domain.Repai
 func (m *mockRepository) SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error {
 	if m.saveIfFinishedFn != nil {
 		return m.saveIfFinishedFn(ctx, ro)
+	}
+	return nil
+}
+func (m *mockRepository) SaveIfPaymentCreated(ctx context.Context, ro *domain.RepairOrder) error {
+	if m.saveIfPaymentCreatedFn != nil {
+		return m.saveIfPaymentCreatedFn(ctx, ro)
+	}
+	return nil
+}
+func (m *mockRepository) SaveIfPaymentSucceeded(ctx context.Context, ro *domain.RepairOrder) error {
+	if m.saveIfPaymentSucceededFn != nil {
+		return m.saveIfPaymentSucceededFn(ctx, ro)
 	}
 	return nil
 }

@@ -10,8 +10,7 @@ QUEUES=(
   "estimate-rejected"
   "product-stock-reduce-confirmed"
   "product-stock-insufficient-detected"
-  "payment-confirmed"
-  "payment-failed"
+  "payment-status-changed"
 )
 
 for q in "${QUEUES[@]}"; do

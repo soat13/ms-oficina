@@ -27,6 +27,7 @@ type repairOrderModel struct {
 	VehicleID            uuid.UUID `bun:"vehicle_id,type:uuid,notnull"`
 	Status               string    `bun:"status,notnull"`
 	ExecutionTimeMinutes *int64    `bun:"execution_time_minutes"`
+	PaymentURL           *string   `bun:"payment_url"`
 	CreatedAt            time.Time `bun:"created_at,notnull,default:current_timestamp"`
 	UpdatedAt            time.Time `bun:"updated_at,notnull,default:current_timestamp"`
 }
@@ -87,9 +88,15 @@ func (r *BunRepairOrderRepository) List(ctx context.Context, pager pagination.Pa
 				WHEN ? THEN 3
 				WHEN ? THEN 4
 				WHEN ? THEN 5
-				ELSE 6
+				WHEN ? THEN 6
+				WHEN ? THEN 7
+				WHEN ? THEN 8
+				ELSE 9
 			END
 		`,
+			repairorder.StatusPaymentSucceeded,
+			repairorder.StatusPaymentFailed,
+			repairorder.StatusPaymentCreated,
 			repairorder.StatusInExecution,
 			repairorder.StatusApproved,
 			repairorder.StatusAwaitingApproval,
@@ -124,6 +131,7 @@ func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.Re
 		VehicleID:            m.VehicleID,
 		Status:               repairorder.Status(m.Status),
 		ExecutionTimeMinutes: m.ExecutionTimeMinutes,
+		PaymentURL:           m.PaymentURL,
 		Timestamps:           &timestamps,
 	}
 }
@@ -142,6 +150,10 @@ func (r *BunRepairOrderRepository) Create(ctx context.Context, repairOrder *doma
 
 func (r *BunRepairOrderRepository) SaveCancellation(ctx context.Context, ro *domain.RepairOrder) error {
 	deniedStatusList := []repairorder.Status{
+		repairorder.StatusFinished,
+		repairorder.StatusPaymentCreated,
+		repairorder.StatusPaymentSucceeded,
+		repairorder.StatusPaymentFailed,
 		repairorder.StatusReleased,
 		repairorder.StatusCanceled,
 	}
@@ -183,12 +195,22 @@ func (r *BunRepairOrderRepository) SaveIfFinished(ctx context.Context, ro *domai
 	return r.saveIfStatus(ctx, ro, repairorder.StatusFinished)
 }
 
+func (r *BunRepairOrderRepository) SaveIfPaymentCreated(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentCreated)
+}
+
+func (r *BunRepairOrderRepository) SaveIfPaymentSucceeded(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentSucceeded)
+}
+
 func (r *BunRepairOrderRepository) GetAverageExecutionTime(ctx context.Context) (*float64, error) {
 	var avg float64
 
 	validStatusList := []repairorder.Status{
 		repairorder.StatusReleased,
 		repairorder.StatusFinished,
+		repairorder.StatusPaymentCreated,
+		repairorder.StatusPaymentSucceeded,
 	}
 
 	err := r.db.NewSelect().
@@ -221,6 +243,7 @@ func toModel(ro *domain.RepairOrder) *repairOrderModel {
 		VehicleID:            ro.VehicleID,
 		Status:               string(ro.Status),
 		ExecutionTimeMinutes: ro.ExecutionTimeMinutes,
+		PaymentURL:           ro.PaymentURL,
 		CreatedAt:            ro.CreatedAt,
 		UpdatedAt:            ro.UpdatedAt,
 	}

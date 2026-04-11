@@ -38,12 +38,12 @@ func (uc *ReleaseVehicle) Execute(ctx context.Context, input ReleaseVehicleInput
 		return err
 	}
 
-	if err := uc.Repository.SaveIfFinished(ctx, repairorder); err != nil {
+	if err := uc.Repository.SaveIfPaymentSucceeded(ctx, repairorder); err != nil {
 		return err
 	}
 
 	if repairorder.Timestamps != nil {
-		uc.metricsPublisher.RecordRepairOrderPhaseDuration("finished", time.Since(repairorder.UpdatedAt).Minutes())
+		uc.metricsPublisher.RecordRepairOrderPhaseDuration("payment_succeeded", time.Since(repairorder.UpdatedAt).Minutes())
 	}
 
 	return nil

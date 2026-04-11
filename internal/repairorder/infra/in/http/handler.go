@@ -94,6 +94,7 @@ type (
 		CustomerID uuid.UUID `json:"customer_id"`
 		VehicleID  uuid.UUID `json:"vehicle_id"`
 		Status     string    `json:"status"`
+		PaymentURL *string   `json:"payment_url,omitempty"`
 		CreatedAt  time.Time `json:"created_at"`
 		UpdatedAt  time.Time `json:"updated_at"`
 	}
@@ -110,6 +111,7 @@ func toJSON(view application.RepairOrderView) repairOrderJSON {
 		CustomerID: view.CustomerID,
 		VehicleID:  view.VehicleID,
 		Status:     string(view.Status),
+		PaymentURL: view.PaymentURL,
 		CreatedAt:  view.CreatedAt,
 		UpdatedAt:  view.UpdatedAt,
 	}
