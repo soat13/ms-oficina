@@ -62,7 +62,10 @@ jobs:
           go test -v \
             -coverpkg=./internal/... \
             -coverprofile=coverage.out \
-            ./...
+            $(go list ./... | grep -v /bdd/)
+
+      - name: Run BDD tests
+        run: go test -v ./tests/bdd/...
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
