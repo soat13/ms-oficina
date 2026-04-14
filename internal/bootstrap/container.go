@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	helper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/messaging"
+	sqs "github.com/soat13/oficina-utils/pkg/messaging/sqs"
 	"github.com/soat13/oficina-utils/pkg/observability"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -24,7 +25,7 @@ type Container struct {
 	FiberApp          *fiber.App
 	FiberErrorHandler *helper.ErrorHandler
 	Validator         *validator.Validate
-	Broker            *messaging.Broker
+	Broker            messaging.Broker
 	Metrics           *observability.Metrics
 }
 
@@ -37,7 +38,7 @@ func Build(
 	fiberApp *fiber.App,
 	fiberErrorHandler *helper.ErrorHandler,
 	structValidator *validator.Validate,
-	broker *messaging.Broker,
+	broker messaging.Broker,
 ) *Container {
 	if fiberApp == nil {
 		fiberApp = newApp()
@@ -59,7 +60,7 @@ func Build(
 		var err error
 		awsEndpoint := os.Getenv("AWS_ENDPOINT_URL")
 		sqsBaseUrl := os.Getenv("SQS_BASE_URL")
-		broker, err = messaging.NewBroker(context.Background(), awsEndpoint, sqsBaseUrl)
+		broker, err = sqs.NewBroker(context.Background(), awsEndpoint, sqsBaseUrl)
 		if err != nil {
 			log.Fatalf("failed to create SQS broker: %v", err)
 		}
@@ -75,7 +76,7 @@ func Build(
 }
 
 func (c *Container) StartConsumers(ctx context.Context) {
-	c.Broker.Start(ctx)
+	c.Broker.Listen(ctx)
 }
 
 func (c *Container) Publisher() messaging.Publisher {
@@ -88,7 +89,7 @@ func (c *Container) Subscribe(topic string, handler messaging.Handler) {
 
 func (c *Container) Close() {
 	if c.Broker != nil {
-		c.Broker.Shutdown()
+		c.Broker.Stop()
 	}
 	if c.DB != nil {
 		_ = c.DB.Close()

@@ -260,8 +260,8 @@ github.com/secure-systems-lab/go-securesystemslib v0.9.1/go.mod h1:np53YzT0zXGMv
 github.com/shirou/gopsutil/v4 v4.25.10 h1:at8lk/5T1OgtuCp+AwrDofFRjnvosn0nkN2OLQ6g8tA=
 github.com/shirou/gopsutil/v4 v4.25.10/go.mod h1:+kSwyC8DRUD9XXEHCAFjK+0nuArFJM0lva+StQAcskM=
 github.com/sirupsen/logrus v1.7.0/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
-github.com/soat13/oficina-utils v0.0.4 h1:4wXxS4KOhKUat1fA7Ka2AufhFZyKVBQyfggtNQmC4K8=
-github.com/soat13/oficina-utils v0.0.4/go.mod h1:ECcKuooYMjBgIEhQG/ElSWu//GsUxZtxxKeX5c3bSBk=
+github.com/soat13/oficina-utils v0.0.9 h1:s9SbdE4X0xtoYhuKP5GBm3m21Z8NG3QoWRKjRqKaOJE=
+github.com/soat13/oficina-utils v0.0.9/go.mod h1:ECcKuooYMjBgIEhQG/ElSWu//GsUxZtxxKeX5c3bSBk=
 github.com/spaolacci/murmur3 v1.1.0 h1:7c1g84S4BPRrfL5Xrdp6fOJ206sU9y293DDHaoy0bLI=
 github.com/spaolacci/murmur3 v1.1.0/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/cobra v1.7.0/go.mod h1:uLxZILRyS/50WlhOIKD7W6V5bgeIt+4sICxh6uRMrb0=
