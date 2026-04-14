@@ -1,4 +1,4 @@
-.PHONY: install up down run test test-coverage mod vendor tidy fmt lint sh \
+.PHONY: install up down run test test-bdd test-coverage mod vendor tidy fmt lint sh \
         migrate-up migrate-down migrate-status seed-up sonar sonar-analysis
 
 # Load .env file if it exists
@@ -29,6 +29,8 @@ run:
 # QA
 test:
 	docker compose exec app-dev go test ./...
+test-bdd:
+	docker compose exec app-dev go test ./tests/bdd/... -v
 test-coverage:
 	docker compose exec app-dev go test -coverpkg=./internal/... -coverprofile=coverage.out ./...
 mod:
