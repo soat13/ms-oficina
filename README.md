@@ -14,6 +14,7 @@
 - [Swagger / OpenAPI](#swagger--openapi)
 - [Testes](#testes)
 - [Deploy no Kubernetes](#deploy-no-kubernetes)
+- [Arquitetura de Eventos (SQS)](#arquitetura-de-eventos-sqs)
 - [Observabilidade](#observabilidade)
 
 ## Sobre o Projeto
@@ -31,7 +32,8 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 - **Catálogos** — Serviços técnicos e produtos com controle de estoque
 - **Orçamentos** — Propostas com itens de serviço e produto, sujeitas à aprovação
 - **Ordens de Serviço (OS)** — Fluxo completo: recepção, diagnóstico, aprovação, execução e liberação
-- **Eventos de Domínio** — Desacoplamento entre contextos (ex: baixa de estoque após aprovação)
+- **Pagamentos** — Integração via eventos para atualização do status da OS com base em mudanças de status de pagamento
+- **Eventos de Domínio via SQS** — Comunicação assíncrona entre contextos via filas AWS SQS (ex: baixa de estoque após aprovação)
 
 A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, com organização por contextos de domínio independentes.
 
@@ -74,7 +76,7 @@ Cada contexto é estruturado em:
 
 Os casos de uso são invocados por adapters de entrada e acessam recursos externos exclusivamente via **ports**, garantindo baixo acoplamento e inversão de dependência.
 
-A comunicação entre contextos ocorre por **eventos de domínio**, publicados e consumidos através de um event bus em memória, preservando o desacoplamento entre bounded contexts.
+A comunicação entre contextos ocorre por **eventos de domínio**, publicados e consumidos através de filas **AWS SQS**, preservando o desacoplamento entre bounded contexts. Em ambiente local, o SQS é emulado via **LocalStack**. Os eventos são definidos em `internal/shared/events/` e as subscrições são registradas nos respectivos `internal/bootstrap/<context>/setup.go`.
 
 Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/architecture.md`](docs/architecture.md)
 
@@ -84,13 +86,14 @@ Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/a
 - **Framework HTTP**: Fiber v2
 - **ORM**: Bun
 - **Migrações**: sql-migrate
-- **Testes**: Go testing + testify
+- **Testes**: Go testing + testify + godog (BDD/Gherkin)
+- **Mensageria**: AWS SQS (LocalStack para desenvolvimento local)
 - **Containerização**: Docker + Docker Compose
 - **Banco de Dados**: PostgreSQL — Escolhido por ser um SGBD relacional maduro e confiável, adequado para garantir integridade transacional em operações críticas como criação de Ordens de Serviço, aprovação de orçamentos e controle de estoque. O modelo relacional facilita a consistência entre entidades fortemente relacionadas e oferece suporte nativo a transações ACID, constraints e índices, essenciais para a confiabilidade e evolução do sistema.
 
 ## Requisitos
 
-- Docker e Docker Compose
+- Docker e Docker Compose (LocalStack e PostgreSQL sobem como containers)
 - make (opcional, recomendado)
 
 ## Pipeline
@@ -109,10 +112,10 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 │   • Code Quality       • Coverage           • Amazon ECR        • Rolling Update            │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-1. **tests-and-quality** — Testes unitários/integração + SonarCloud
+1. **tests-and-quality** — Testes unitários/integração + BDD + SonarCloud
 2. **docker-build** — Build da imagem Docker
-3. **deploy-to-ecr** — Push para Amazon ECR (apenas branch `main`)
-4. **k8s-deploy** — Deploy automático no Kubernetes (EKS) aplicando os manifests localizados em `deploy/k8s/` (apenas branch `main`)
+3. **deploy-ecr** — Push para Amazon ECR (apenas branch `main`)
+4. **deploy-k8s** — Deploy automático no Kubernetes (EKS) aplicando os manifests localizados em `deploy/k8s/` (apenas branch `main`)
    - Obtém outputs do Terraform do estado armazenado no S3
    - Configura kubectl para conectar ao cluster EKS
    - Aplica todos os recursos Kubernetes necessários
@@ -120,12 +123,14 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 
 ## Executando o Projeto
 
+O `docker compose up` sobe PostgreSQL, LocalStack (emulação do SQS) e o container de desenvolvimento Go. As filas SQS são criadas automaticamente pelo script `scripts/localstack/init-sqs.sh`. As migrações de banco são aplicadas automaticamente ao iniciar a API.
+
 ### Com Make
 
 1. Subir os containers:
     - `make install`
     - Caso não exista `.env`, ele será criado a partir do `.env-example`
-2. Aplicar migrações:
+2. Aplicar migrações (opcional — a API aplica automaticamente ao iniciar):
     - `make migrate-up`
 3. Rodar a API:
     - `make run`
@@ -135,7 +140,8 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 1. Criar o `.env` a partir do `.env-example`
 2. Subir os containers:
     - `docker compose up -d`
-3. Aplicar migrações:
+    - Aguardar os containers ficarem healthy (PostgreSQL + LocalStack)
+3. Aplicar migrações (opcional — a API aplica automaticamente ao iniciar):
     - `docker compose exec -T app-dev sh -lc 'test -x /go/bin/sql-migrate || GOBIN=/go/bin /usr/local/go/bin/go install github.com/rubenv/sql-migrate/sql-migrate@latest'`
     - `docker compose exec -T app-dev sh -lc '/go/bin/sql-migrate up -config=./scripts/db/dbconfig.yml -env=development'`
 4. Rodar a API:
@@ -150,10 +156,17 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 ## Testes
 
 - `make test` — executa testes unitários e de integração
+- `make test-bdd` — executa testes BDD (Behavior-Driven Development)
 - `make test-coverage` — gera relatório de cobertura
 - `make sonar` — executa análise no SonarQube
 
-> Os testes de integração criam bancos isolados e aplicam migrações automaticamente
+Os testes de integração criam bancos isolados e aplicam migrações automaticamente.
+
+### Testes BDD
+
+O projeto inclui testes BDD escritos com **godog** (Cucumber/Gherkin) em `tests/bdd/`. Os cenários descrevem fluxos de negócio em linguagem natural (português) e validam o comportamento end-to-end dos casos de uso.
+
+Exemplo: o fluxo de diagnóstico da Ordem de Reparo é validado desde a criação da OS até a geração automática do orçamento, incluindo cenários de erro como estoque insuficiente e transições de status inválidas.
 
 ## Deploy no Kubernetes
 
@@ -163,10 +176,10 @@ A aplicação é deployada automaticamente no **Amazon EKS** através do pipelin
 
 - **namespace.yaml** — Cria o namespace `fiap` para isolamento dos recursos
 - **serviceaccount.yaml** — Service account para o pod da aplicação
-- **configmap.yaml** — Configurações não sensíveis (MIGRATIONS_DIR, PORT)
+- **configmap.yaml** — Configurações não sensíveis (PORT, AWS_REGION, SQS_BASE_URL, variáveis Datadog)
 - **secrets.yaml** — Dados sensíveis (JWT_SECRET, credenciais do PostgreSQL, PG_DSN)
-- **app.yaml** — Deployment da aplicação com 2 réplicas iniciais
-- **services.yaml** — Service do tipo LoadBalancer expondo a aplicação externamente na porta 3000
+- **app.yaml** — Deployment da aplicação com 2 réplicas iniciais, probes de health check e integração com Datadog APM
+- **services.yaml** — Service do tipo NodePort expondo a aplicação externamente
 - **hpa.yaml** — Horizontal Pod Autoscaler configurado para escalar de 1 a 10 réplicas baseado em CPU (target: 50%)
 - **metric-server.yaml** — Metrics Server necessário para o HPA funcionar corretamente
 
