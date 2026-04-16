@@ -128,6 +128,16 @@ func (e *Estimate) Approve() error {
 		return sharedErrors.ErrInvalidStatusTransaction
 	}
 
+	e.Status = StatusAwaitingStock
+	e.Touch()
+	return nil
+}
+
+func (e *Estimate) ConfirmStock() error {
+	if e.Status != StatusAwaitingStock {
+		return sharedErrors.ErrInvalidStatusTransaction
+	}
+
 	e.Status = StatusApproved
 	e.Touch()
 	return nil
@@ -146,6 +156,10 @@ func (e *Estimate) Cancel() error {
 	e.Status = StatusCanceled
 	e.Touch()
 	return nil
+}
+
+func (e *Estimate) IsApproved() bool {
+	return e.Status == StatusApproved
 }
 
 func (e *Estimate) IsRejected() bool {

@@ -33,3 +33,13 @@ type EstimateApproved struct {
 }
 
 func (EstimateApproved) Topic() string { return "estimate.approved" }
+
+type EstimateCanceled struct {
+	EventID       uuid.UUID         `json:"event_id"`
+	OccurredAt    time.Time         `json:"occurred_at"`
+	EstimateID    uuid.UUID         `json:"estimate_id"`
+	RepairOrderID uuid.UUID         `json:"repair_order_id"`
+	Products      map[uuid.UUID]int `json:"products"`
+}
+
+func (EstimateCanceled) Topic() string { return "estimate.canceled" }

@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -193,7 +192,6 @@ func TestAddItemToEstimate(t *testing.T) {
 		estimateID := testsupport.ThereIsAnEstimateForRepairOrder(t, setup.Container, repairOrderID)
 
 		postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
-		time.Sleep(50 * time.Millisecond)
 
 		resp := postAddItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID, 1)
 
@@ -269,7 +267,6 @@ func TestRemoveItemFromEstimate(t *testing.T) {
 		})
 
 		postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
-		time.Sleep(50 * time.Millisecond)
 
 		resp := deleteRemoveItem(t, setup.Container.FiberApp, setup.AuthToken, estimateID, productID1)
 
@@ -317,8 +314,6 @@ func TestApproveEstimate_EventFlow(t *testing.T) {
 		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		time.Sleep(100 * time.Millisecond)
-
 		expectEstimateStatus(t, setup.Container, estimateID, estimateDomain.StatusApproved)
 
 		expectProductStock(t, setup.Container, productID1, 98)
@@ -339,12 +334,10 @@ func TestApproveEstimate_EventFlow(t *testing.T) {
 		resp := postApproveEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 		require.Contains(t, []int{fiber.StatusOK, fiber.StatusConflict}, resp.StatusCode, "Expected 200 or 409")
 
-		time.Sleep(150 * time.Millisecond)
-
 		var estimateStatus string
 		ctx := context.Background()
 		require.NoError(t, setup.Container.DB.NewRaw(`SELECT status FROM estimates WHERE id = ?`, estimateID).Scan(ctx, &estimateStatus))
-		require.Contains(t, []string{string(estimateDomain.StatusApproved), string(estimateDomain.StatusCanceled)}, estimateStatus)
+		require.Contains(t, []string{string(estimateDomain.StatusAwaitingStock), string(estimateDomain.StatusCanceled)}, estimateStatus)
 
 		expectProductStock(t, setup.Container, productID, 5)
 
@@ -361,8 +354,6 @@ func TestRejectEstimate_EventFlow(t *testing.T) {
 
 		resp := postRejectEstimate(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
-
-		time.Sleep(100 * time.Millisecond)
 
 		expectEstimateStatus(t, setup.Container, estimateID, estimateDomain.StatusRejected)
 		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusCanceled)

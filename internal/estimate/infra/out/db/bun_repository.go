@@ -180,7 +180,6 @@ func toEntity(er estimateModel, itemRows []estimateItemModel) (*domain.Estimate,
 		return nil, err
 	}
 	estimate.ID = er.ID
-	estimate.Status = domain.Status(er.Status)
 
 	for _, r := range itemRows {
 		_ = estimate.AddItem(
@@ -191,5 +190,7 @@ func toEntity(er estimateModel, itemRows []estimateItemModel) (*domain.Estimate,
 			domain.ItemType(r.ItemType),
 		)
 	}
+
+	estimate.Status = domain.Status(er.Status)
 	return estimate, nil
 }

@@ -12,12 +12,16 @@ type (
 	}
 
 	Cancel struct {
-		repository Repository
+		repository     Repository
+		eventPublisher EventPublisher
 	}
 )
 
-func NewCancelEstimate(repository Repository) *Cancel {
-	return &Cancel{repository: repository}
+func NewCancelEstimate(repository Repository, eventPublisher EventPublisher) *Cancel {
+	return &Cancel{
+		repository:     repository,
+		eventPublisher: eventPublisher,
+	}
 }
 
 func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {
@@ -33,9 +37,19 @@ func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return nil
 	}
 
+	wasApproved := estimate.IsApproved()
+
 	if err := estimate.Cancel(); err != nil {
 		return err
 	}
 
-	return a.repository.Save(ctx, estimate)
+	if err := a.repository.Save(ctx, estimate); err != nil {
+		return err
+	}
+
+	if wasApproved {
+		return a.eventPublisher.PublishCanceled(ctx, *estimate)
+	}
+
+	return nil
 }

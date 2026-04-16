@@ -201,3 +201,7 @@ func (m *mockEventPublisher) PublishRejected(ctx context.Context, estimate domai
 func (m *mockEventPublisher) PublishCreated(ctx context.Context, estimate domain.Estimate) error {
 	return nil
 }
+
+func (m *mockEventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate) error {
+	return nil
+}
