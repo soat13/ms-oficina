@@ -27,7 +27,9 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 	getProduct := application.NewGetProduct(repository)
 	listProducts := application.NewListProducts(repository)
 	reduceStock := application.NewReduceStock(repository, eventPublisher)
+	restoreStock := application.NewRestoreStock(repository)
 	handleEstimateApproved := application.NewHandleEstimateApproved(reduceStock)
+	handleEstimateCanceled := application.NewHandleEstimateCanceled(restoreStock)
 
 	productHandler := productHTTP.NewHandler(
 		createProduct,
@@ -42,4 +44,5 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 	productHTTP.Register(container.FiberApp, productHandler)
 
 	container.Subscribe(estimateEvent.EstimateApproved{}.Topic(), event.OnEstimateApproved(handleEstimateApproved))
+	container.Subscribe(estimateEvent.EstimateCanceled{}.Topic(), event.OnEstimateCanceled(handleEstimateCanceled))
 }

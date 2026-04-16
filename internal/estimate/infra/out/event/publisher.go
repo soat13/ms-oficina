@@ -53,3 +53,20 @@ func (e *EventPublisher) PublishCreated(ctx context.Context, estimate domain.Est
 		RepairOrderID: estimate.RepairOrderID,
 	})
 }
+
+func (e *EventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate) error {
+	products := make(map[uuid.UUID]int)
+	for _, item := range estimate.Items() {
+		if item.Type == domain.ProductItemType {
+			products[item.ID] = item.Quantity
+		}
+	}
+
+	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateCanceled{
+		EventID:       uuid.New(),
+		OccurredAt:    time.Now(),
+		EstimateID:    estimate.ID,
+		RepairOrderID: estimate.RepairOrderID,
+		Products:      products,
+	})
+}

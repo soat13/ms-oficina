@@ -30,8 +30,9 @@ func Setup(container *bootstrap.Container) {
 	)
 
 	approve := application.NewApproveEstimate(repository, eventPublisher)
-	cancel := application.NewCancelEstimate(repository)
+	cancel := application.NewCancelEstimate(repository, eventPublisher)
 	reject := application.NewRejectEstimate(repository, eventPublisher)
+	confirmStock := application.NewConfirmStock(repository)
 	addItem := application.NewAddItem(productCatalogReader, serviceCatalogReader, repository)
 	removeItem := application.NewRemoveItem(repository)
 	handleDiagnosticsFinished := application.NewHandleDiagnosticsFinished(*createEstimate)
@@ -42,5 +43,6 @@ func Setup(container *bootstrap.Container) {
 
 	container.Subscribe(events.RepairOrderCanceled{}.Topic(), eventIn.OnRepairOrderCanceled(handleRepairOrderCanceled))
 	container.Subscribe(events.RepairOrderDiagnosticsFinished{}.Topic(), eventIn.OnDiagnosticsFinished(handleDiagnosticsFinished))
+	container.Subscribe(events.StockReductionConfirmed{}.Topic(), eventIn.OnStockReduceConfirmed(confirmStock))
 
 }

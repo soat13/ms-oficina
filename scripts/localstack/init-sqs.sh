@@ -8,6 +8,7 @@ QUEUES=(
   "estimate-created"
   "estimate-approved"
   "estimate-rejected"
+  "estimate-canceled"
   "product-stock-reduce-confirmed"
   "product-stock-insufficient-detected"
   "payment-status-changed"

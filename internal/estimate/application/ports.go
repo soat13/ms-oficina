@@ -40,6 +40,7 @@ type (
 		PublishApproved(ctx context.Context, estimate domain.Estimate) error
 		PublishRejected(ctx context.Context, estimate domain.Estimate) error
 		PublishCreated(ctx context.Context, estimate domain.Estimate) error
+		PublishCanceled(ctx context.Context, estimate domain.Estimate) error
 	}
 
 	Repository interface {
