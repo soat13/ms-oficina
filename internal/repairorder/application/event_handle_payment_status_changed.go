@@ -12,16 +12,25 @@ import (
 type Status string
 
 const (
-	StatusPending   Status = "PENDING"
-	StatusSucceeded Status = "SUCCEEDED"
-	StatusFailed    Status = "FAILED"
-	StatusError     Status = "ERROR"
+	StatusPending    Status = "PENDING"
+	StatusProcessing Status = "PROCESSING"
+	StatusSucceeded  Status = "SUCCEEDED"
+	StatusFailed     Status = "FAILED"
+	StatusError      Status = "ERROR"
 )
 
-type HandlePaymentStatusChanged struct {
-	repository       Repository
-	metricsPublisher MetricsPublisher
-}
+type (
+	HandlePaymentStatusChanged struct {
+		repository       Repository
+		metricsPublisher MetricsPublisher
+	}
+
+	paymentTransition struct {
+		apply       func() error
+		save        func(context.Context, *domain.RepairOrder) error
+		metricPhase string
+	}
+)
 
 func NewHandlePaymentStatusChanged(repository Repository, metricsPublisher MetricsPublisher) HandlePaymentStatusChanged {
 	return HandlePaymentStatusChanged{
@@ -48,34 +57,27 @@ func (h *HandlePaymentStatusChanged) Execute(ctx context.Context, evt events.Pay
 }
 
 func (h *HandlePaymentStatusChanged) handleStatusChanged(ctx context.Context, repairOrder *domain.RepairOrder, status string) error {
-	switch Status(status) {
-	case StatusPending:
-		if err := repairOrder.PaymentCreated(); err != nil {
-			return err
-		}
-		if err := h.repository.SaveIfFinished(ctx, repairOrder); err != nil {
-			return err
-		}
-		if repairOrder.Timestamps != nil {
-			h.metricsPublisher.RecordRepairOrderPhaseDuration("finished", time.Since(repairOrder.UpdatedAt).Minutes())
-		}
-	case StatusSucceeded:
-		if err := repairOrder.PaymentSucceeded(); err != nil {
-			return err
-		}
-		if err := h.repository.SaveIfPaymentCreated(ctx, repairOrder); err != nil {
-			return err
-		}
-		if repairOrder.Timestamps != nil {
-			h.metricsPublisher.RecordRepairOrderPhaseDuration("payment_created", time.Since(repairOrder.UpdatedAt).Minutes())
-		}
-	case StatusFailed, StatusError:
-		if err := repairOrder.PaymentFailed(); err != nil {
-			return err
-		}
-		if err := h.repository.SaveIfPaymentCreated(ctx, repairOrder); err != nil {
-			return err
-		}
+	transitions := map[Status]paymentTransition{
+		StatusPending:    {repairOrder.PaymentCreated, h.repository.SaveIfFinished, "finished"},
+		StatusProcessing: {repairOrder.PaymentProcessing, h.repository.SaveIfPaymentCreated, "payment_created"},
+		StatusSucceeded:  {repairOrder.PaymentSucceeded, h.repository.SaveIfPaymentProcessing, "payment_processing"},
+		StatusFailed:     {repairOrder.PaymentFailed, h.repository.SaveIfPaymentProcessing, ""},
+		StatusError:      {repairOrder.PaymentError, h.repository.SaveIfPaymentProcessing, ""},
+	}
+
+	transition, ok := transitions[Status(status)]
+	if !ok {
+		return nil
+	}
+
+	if err := transition.apply(); err != nil {
+		return err
+	}
+	if err := transition.save(ctx, repairOrder); err != nil {
+		return err
+	}
+	if transition.metricPhase != "" && repairOrder.Timestamps != nil {
+		h.metricsPublisher.RecordRepairOrderPhaseDuration(transition.metricPhase, time.Since(repairOrder.UpdatedAt).Minutes())
 	}
 	return nil
 }
