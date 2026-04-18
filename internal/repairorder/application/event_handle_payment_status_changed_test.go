@@ -134,8 +134,9 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, saveErr)
 	})
 
-	t.Run("StatusSucceeded: transitions PaymentCreated->PaymentSucceeded, records metrics", func(t *testing.T) {
+	t.Run("StatusProcessing: sets PaymentURL, transitions PaymentCreated->PaymentProcessing, records metrics", func(t *testing.T) {
 		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+		paymentURL := "https://pay.example.com/123"
 		metrics := &mockMetricsPublisher{}
 
 		h := newHandler(
@@ -150,11 +151,92 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 			metrics,
 		)
 
+		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "PROCESSING", PaymentURL: &paymentURL})
+
+		require.NoError(t, err)
+		assert.Equal(t, repairorder.StatusPaymentProcessing, ro.Status)
+		assert.Equal(t, &paymentURL, ro.PaymentURL)
+		assert.Contains(t, metrics.phaseDurations, "payment_created")
+	})
+
+	t.Run("StatusProcessing: skips UpdatePaymentURL when PaymentURL is nil", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+
+		h := newHandler(
+			&mockRepository{
+				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
+					return ro, nil
+				},
+				saveIfPaymentCreatedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+					return nil
+				},
+			},
+			&mockMetricsPublisher{},
+		)
+
+		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "PROCESSING", PaymentURL: nil})
+		require.NoError(t, err)
+		assert.Equal(t, repairorder.StatusPaymentProcessing, ro.Status)
+		assert.Nil(t, ro.PaymentURL)
+	})
+
+	t.Run("StatusProcessing: returns error on invalid status transition", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusFinished)
+
+		h := newHandler(
+			&mockRepository{
+				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
+					return ro, nil
+				},
+			},
+			&mockMetricsPublisher{},
+		)
+
+		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "PROCESSING"})
+		assert.ErrorIs(t, err, sharedErrors.ErrInvalidStatusTransaction)
+	})
+
+	t.Run("StatusProcessing: returns error when SaveIfPaymentCreated fails", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+		saveErr := errors.New(saveFailedError)
+
+		h := newHandler(
+			&mockRepository{
+				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
+					return ro, nil
+				},
+				saveIfPaymentCreatedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+					return saveErr
+				},
+			},
+			&mockMetricsPublisher{},
+		)
+
+		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "PROCESSING"})
+		assert.ErrorIs(t, err, saveErr)
+	})
+
+	t.Run("StatusSucceeded: transitions PaymentProcessing->PaymentSucceeded, records metrics", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
+		metrics := &mockMetricsPublisher{}
+
+		h := newHandler(
+			&mockRepository{
+				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
+					return ro, nil
+				},
+				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
+					return nil
+				},
+			},
+			metrics,
+		)
+
 		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "SUCCEEDED"})
 
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusPaymentSucceeded, ro.Status)
-		assert.Contains(t, metrics.phaseDurations, "payment_created")
+		assert.Contains(t, metrics.phaseDurations, "payment_processing")
 	})
 
 	t.Run("StatusSucceeded: returns error on invalid status transition", func(t *testing.T) {
@@ -173,8 +255,8 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, sharedErrors.ErrInvalidStatusTransaction)
 	})
 
-	t.Run("StatusSucceeded: returns error when SaveIfPaymentCreated fails", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+	t.Run("StatusSucceeded: returns error when SaveIfPaymentProcessing fails", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
 		saveErr := errors.New(saveFailedError)
 
 		h := newHandler(
@@ -182,7 +264,7 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfPaymentCreatedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return saveErr
 				},
 			},
@@ -193,15 +275,15 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, saveErr)
 	})
 
-	t.Run("StatusFailed: transitions PaymentCreated->PaymentFailed", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+	t.Run("StatusFailed: transitions PaymentProcessing->PaymentFailed", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
 
 		h := newHandler(
 			&mockRepository{
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfPaymentCreatedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return nil
 				},
 			},
@@ -214,15 +296,15 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.Equal(t, repairorder.StatusPaymentFailed, ro.Status)
 	})
 
-	t.Run("StatusError: transitions PaymentCreated->PaymentFailed", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+	t.Run("StatusError: transitions PaymentProcessing->PaymentError", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
 
 		h := newHandler(
 			&mockRepository{
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfPaymentCreatedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return nil
 				},
 			},
@@ -232,11 +314,27 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "ERROR"})
 
 		require.NoError(t, err)
-		assert.Equal(t, repairorder.StatusPaymentFailed, ro.Status)
+		assert.Equal(t, repairorder.StatusPaymentError, ro.Status)
 	})
 
-	t.Run("StatusFailed: returns error when SaveIfPaymentCreated fails", func(t *testing.T) {
+	t.Run("StatusError: returns error on invalid status transition", func(t *testing.T) {
 		ro := newRepairOrderWithStatus(repairorder.StatusPaymentCreated)
+
+		h := newHandler(
+			&mockRepository{
+				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
+					return ro, nil
+				},
+			},
+			&mockMetricsPublisher{},
+		)
+
+		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "ERROR"})
+		assert.ErrorIs(t, err, sharedErrors.ErrInvalidStatusTransaction)
+	})
+
+	t.Run("StatusFailed: returns error when SaveIfPaymentProcessing fails", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
 		saveErr := errors.New(saveFailedError)
 
 		h := newHandler(
@@ -244,7 +342,7 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfPaymentCreatedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return saveErr
 				},
 			},

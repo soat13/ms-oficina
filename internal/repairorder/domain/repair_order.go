@@ -63,17 +63,17 @@ func (r *RepairOrder) calculateExecutionTime() {
 
 func (r *RepairOrder) Cancel() error {
 	switch r.Status {
-	case repairorder.StatusFinished,
-		repairorder.StatusPaymentCreated,
-		repairorder.StatusPaymentSucceeded,
-		repairorder.StatusPaymentFailed,
-		repairorder.StatusReleased,
-		repairorder.StatusCanceled:
-		return errors.ErrInvalidStatusTransaction
+	case repairorder.StatusReceived,
+		repairorder.StatusInDiagnostics,
+		repairorder.StatusDiagnosticsFinished,
+		repairorder.StatusAwaitingApproval,
+		repairorder.StatusApproved,
+		repairorder.StatusInExecution:
+		r.Status = repairorder.StatusCanceled
+		return nil
 	}
 
-	r.Status = repairorder.StatusCanceled
-	return nil
+	return errors.ErrInvalidStatusTransaction
 }
 
 func (r *RepairOrder) StartDiagnostics() error {
@@ -105,12 +105,20 @@ func (r *RepairOrder) PaymentCreated() error {
 	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusPaymentCreated)
 }
 
+func (r *RepairOrder) PaymentProcessing() error {
+	return r.moveStatus(repairorder.StatusPaymentCreated, repairorder.StatusPaymentProcessing)
+}
+
 func (r *RepairOrder) PaymentSucceeded() error {
-	return r.moveStatus(repairorder.StatusPaymentCreated, repairorder.StatusPaymentSucceeded)
+	return r.moveStatus(repairorder.StatusPaymentProcessing, repairorder.StatusPaymentSucceeded)
 }
 
 func (r *RepairOrder) PaymentFailed() error {
-	return r.moveStatus(repairorder.StatusPaymentCreated, repairorder.StatusPaymentFailed)
+	return r.moveStatus(repairorder.StatusPaymentProcessing, repairorder.StatusPaymentFailed)
+}
+
+func (r *RepairOrder) PaymentError() error {
+	return r.moveStatus(repairorder.StatusPaymentProcessing, repairorder.StatusPaymentError)
 }
 
 func (r *RepairOrder) ReleaseVehicle() error {

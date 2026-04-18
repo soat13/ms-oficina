@@ -199,6 +199,10 @@ func (r *BunRepairOrderRepository) SaveIfPaymentCreated(ctx context.Context, ro 
 	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentCreated)
 }
 
+func (r *BunRepairOrderRepository) SaveIfPaymentProcessing(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentProcessing)
+}
+
 func (r *BunRepairOrderRepository) SaveIfPaymentSucceeded(ctx context.Context, ro *domain.RepairOrder) error {
 	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentSucceeded)
 }
