@@ -8,4 +8,4 @@ type PaymentStatusChanged struct {
 	PaymentURL *string   `json:"payment_url,omitempty"`
 }
 
-func (PaymentStatusChanged) Topic() string { return "payment.status.changed" }
+func (PaymentStatusChanged) Topic() string { return "payment.status.changed.fifo" }

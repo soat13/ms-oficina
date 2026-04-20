@@ -12,10 +12,10 @@ import (
 )
 
 type EventPublisher struct {
-	publisher messaging.Publisher
+	publisher messaging.QueueSender
 }
 
-func NewEventPublisher(publisher messaging.Publisher) application.EventPublisher {
+func NewEventPublisher(publisher messaging.QueueSender) application.EventPublisher {
 	return &EventPublisher{publisher: publisher}
 }
 
@@ -27,31 +27,34 @@ func (e *EventPublisher) PublishApproved(ctx context.Context, estimate domain.Es
 		}
 	}
 
-	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateApproved{
+	event := estimateEvent.EstimateApproved{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
 		Products:      products,
-	})
+	}
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
 func (e *EventPublisher) PublishRejected(ctx context.Context, estimate domain.Estimate) error {
-	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateRejected{
+	event := estimateEvent.EstimateRejected{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
-	})
+	}
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
 func (e *EventPublisher) PublishCreated(ctx context.Context, estimate domain.Estimate) error {
-	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateCreated{
+	event := estimateEvent.EstimateCreated{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
-	})
+	}
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
 func (e *EventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate) error {
@@ -62,11 +65,12 @@ func (e *EventPublisher) PublishCanceled(ctx context.Context, estimate domain.Es
 		}
 	}
 
-	return messaging.Publish(ctx, e.publisher, estimateEvent.EstimateCanceled{
+	event := estimateEvent.EstimateCanceled{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
 		Products:      products,
-	})
+	}
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
