@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/soat13/oficina-utils/pkg/awsconfig"
 	helper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/messaging"
 	sqs "github.com/soat13/oficina-utils/pkg/messaging/sqs"
@@ -25,7 +26,7 @@ type Container struct {
 	FiberApp          *fiber.App
 	FiberErrorHandler *helper.ErrorHandler
 	Validator         *validator.Validate
-	Broker            messaging.Broker
+	Broker            messaging.QueueBroker
 	Metrics           *observability.Metrics
 }
 
@@ -38,7 +39,7 @@ func Build(
 	fiberApp *fiber.App,
 	fiberErrorHandler *helper.ErrorHandler,
 	structValidator *validator.Validate,
-	broker messaging.Broker,
+	broker messaging.QueueBroker,
 ) *Container {
 	if fiberApp == nil {
 		fiberApp = newApp()
@@ -58,9 +59,10 @@ func Build(
 
 	if broker == nil {
 		var err error
-		awsEndpoint := os.Getenv("AWS_ENDPOINT_URL")
 		sqsBaseUrl := os.Getenv("SQS_BASE_URL")
-		broker, err = sqs.NewBroker(context.Background(), awsEndpoint, sqsBaseUrl)
+		awsConfig := awsconfig.Config{EndpointURL: os.Getenv("AWS_ENDPOINT_URL")}
+
+		broker, err = sqs.NewBroker(context.Background(), awsConfig, sqsBaseUrl)
 		if err != nil {
 			log.Fatalf("failed to create SQS broker: %v", err)
 		}
@@ -79,7 +81,7 @@ func (c *Container) StartConsumers(ctx context.Context) {
 	c.Broker.Listen(ctx)
 }
 
-func (c *Container) Publisher() messaging.Publisher {
+func (c *Container) Publisher() messaging.QueueSender {
 	return c.Broker
 }
 

@@ -78,11 +78,11 @@ services:
     volumes:
       - ./scripts/localstack:/etc/localstack/init/ready.d
     healthcheck:
-      test: ["CMD-SHELL", "awslocal sqs list-queues"]
+      test: ["CMD-SHELL", "test -f /tmp/sqs-init.done"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
+      retries: 30
+      start_period: 15s
 
   app-dev:
     image: golang:1.25.1

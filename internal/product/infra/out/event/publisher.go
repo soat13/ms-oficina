@@ -11,10 +11,10 @@ import (
 )
 
 type EventPublisher struct {
-	publisher messaging.Publisher
+	publisher messaging.QueueSender
 }
 
-func NewEventPublisher(publisher messaging.Publisher) application.EventPublisher {
+func NewEventPublisher(publisher messaging.QueueSender) application.EventPublisher {
 	return &EventPublisher{publisher: publisher}
 }
 
@@ -23,14 +23,13 @@ func (e *EventPublisher) PublishStockInsufficientDetected(
 	estimateID uuid.UUID,
 	repairOrderID uuid.UUID,
 ) error {
-	insufficientDetected := estimateEvent.StockInsufficientDetected{
+	event := estimateEvent.StockInsufficientDetected{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimateID,
 		RepairOrderID: repairOrderID,
 	}
-
-	return messaging.Publish(ctx, e.publisher, insufficientDetected)
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
 func (e *EventPublisher) PublishStockReduceConfirmed(
@@ -38,12 +37,11 @@ func (e *EventPublisher) PublishStockReduceConfirmed(
 	estimateID uuid.UUID,
 	repairOrderID uuid.UUID,
 ) error {
-	stockReduceConfirmed := estimateEvent.StockReductionConfirmed{
+	event := estimateEvent.StockReductionConfirmed{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimateID,
 		RepairOrderID: repairOrderID,
 	}
-
-	return messaging.Publish(ctx, e.publisher, stockReduceConfirmed)
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }

@@ -11,10 +11,10 @@ import (
 )
 
 type EventPublisher struct {
-	publisher messaging.Publisher
+	publisher messaging.QueueSender
 }
 
-func NewEventPublisher(publisher messaging.Publisher) application.EventPublisher {
+func NewEventPublisher(publisher messaging.QueueSender) application.EventPublisher {
 	return &EventPublisher{publisher: publisher}
 }
 
@@ -24,33 +24,30 @@ func (e *EventPublisher) PublishRepairOrderDiagnosticsFinished(
 	products map[uuid.UUID]int,
 	services map[uuid.UUID]int,
 ) error {
-	orderDiagnosticsFinished := estimateEvent.RepairOrderDiagnosticsFinished{
+	event := estimateEvent.RepairOrderDiagnosticsFinished{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		RepairOrderID: RepairOrderID,
 		Products:      products,
 		Services:      services,
 	}
-
-	return messaging.Publish(ctx, e.publisher, orderDiagnosticsFinished)
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
 func (e *EventPublisher) PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error {
-	evt := estimateEvent.RepairOrderCanceled{
+	event := estimateEvent.RepairOrderCanceled{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		RepairOrderID: RepairOrderID,
 	}
-
-	return messaging.Publish(ctx, e.publisher, evt)
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
 func (e *EventPublisher) PublishRepairOrderFinished(ctx context.Context, RepairOrderID uuid.UUID) error {
-	evt := estimateEvent.RepairOrderFinished{
+	event := estimateEvent.RepairOrderFinished{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		RepairOrderID: RepairOrderID,
 	}
-
-	return messaging.Publish(ctx, e.publisher, evt)
+	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
