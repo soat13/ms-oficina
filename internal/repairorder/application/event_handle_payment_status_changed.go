@@ -40,7 +40,7 @@ func NewHandlePaymentStatusChanged(repository Repository, metricsPublisher Metri
 }
 
 func (h *HandlePaymentStatusChanged) Execute(ctx context.Context, evt events.PaymentStatusChanged) error {
-	repairOrder, err := h.repository.GetById(ctx, evt.ID)
+	repairOrder, err := h.repository.GetById(ctx, evt.RepairOrderID)
 	if err != nil {
 		return err
 	}

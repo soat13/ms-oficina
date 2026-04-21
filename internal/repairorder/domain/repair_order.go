@@ -101,6 +101,10 @@ func (r *RepairOrder) FinishExecution() error {
 	return r.moveStatus(repairorder.StatusInExecution, repairorder.StatusFinished)
 }
 
+func (r *RepairOrder) RequestPayment() error {
+	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusPaymentRequested)
+}
+
 func (r *RepairOrder) PaymentCreated() error {
 	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusPaymentCreated)
 }

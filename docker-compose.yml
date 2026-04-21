@@ -76,7 +76,7 @@ services:
     ports:
       - "4566:4566"
     volumes:
-      - ./scripts/localstack:/etc/localstack/init/ready.d
+      - ./scripts/aws/init/ready.d:/etc/localstack/init/ready.d
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/sqs-init.done"]
       interval: 5s

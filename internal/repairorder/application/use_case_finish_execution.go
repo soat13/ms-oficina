@@ -48,5 +48,13 @@ func (uc *FinishExecution) Execute(ctx context.Context, input FinishExecutionInp
 		uc.metricsPublisher.RecordRepairOrderPhaseDuration("in_execution", time.Since(repairorder.UpdatedAt).Minutes())
 	}
 
-	return uc.eventPublisher.PublishRepairOrderFinished(ctx, repairorder.ID)
+	if err := uc.eventPublisher.PublishPaymentRequest(ctx, repairorder.ID); err != nil {
+		return err
+	}
+
+	if err := repairorder.RequestPayment(); err != nil {
+		return err
+	}
+
+	return uc.Repository.SaveIfFinished(ctx, repairorder)
 }

@@ -56,7 +56,7 @@ type (
 			services map[uuid.UUID]int,
 		) error
 		PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error
-		PublishRepairOrderFinished(ctx context.Context, RepairOrderID uuid.UUID) error
+		PublishPaymentRequest(ctx context.Context, RepairOrderID uuid.UUID) error
 	}
 
 	MetricsPublisher interface {

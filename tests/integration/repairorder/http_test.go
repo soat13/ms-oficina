@@ -330,7 +330,7 @@ func TestRepairOrderFinishExecution(t *testing.T) {
 		resp := postFinishExecution(t, setup.Container.FiberApp, setup.AuthToken, repairOrderID)
 
 		require.Equal(t, fiber.StatusNoContent, resp.StatusCode)
-		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusFinished)
+		expectRepairOrderStatus(t, setup.Container, repairOrderID, repairorderShared.StatusPaymentRequested)
 		expectRepairOrderHasExecutionTime(t, setup.Container, repairOrderID)
 	})
 

@@ -163,7 +163,7 @@ func (m *mockMetricsPublisher) IncIntegrationError(integration, operation string
 type mockEventPublisher struct {
 	diagnosticsFinishedFn func(ctx context.Context, id uuid.UUID, products map[uuid.UUID]int, services map[uuid.UUID]int) error
 	canceledFn            func(ctx context.Context, id uuid.UUID) error
-	finishedFn            func(ctx context.Context, id uuid.UUID) error
+	paymentRequestFn      func(ctx context.Context, id uuid.UUID) error
 }
 
 func (m *mockEventPublisher) PublishRepairOrderDiagnosticsFinished(ctx context.Context, id uuid.UUID, products map[uuid.UUID]int, services map[uuid.UUID]int) error {
@@ -180,9 +180,9 @@ func (m *mockEventPublisher) PublishRepairOrderCanceled(ctx context.Context, id 
 	return nil
 }
 
-func (m *mockEventPublisher) PublishRepairOrderFinished(ctx context.Context, id uuid.UUID) error {
-	if m.finishedFn != nil {
-		return m.finishedFn(ctx, id)
+func (m *mockEventPublisher) PublishPaymentRequest(ctx context.Context, id uuid.UUID) error {
+	if m.paymentRequestFn != nil {
+		return m.paymentRequestFn(ctx, id)
 	}
 	return nil
 }
