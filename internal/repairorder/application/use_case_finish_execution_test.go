@@ -32,7 +32,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 		err := uc.Execute(ctx, FinishExecutionInput{RepairOrderID: roID})
 
 		require.NoError(t, err)
-		assert.Equal(t, repairorder.StatusFinished, ro.Status)
+		assert.Equal(t, repairorder.StatusPaymentRequested, ro.Status)
 		assert.NotNil(t, ro.ExecutionTimeMinutes)
 		assert.Contains(t, metrics.phaseDurations, "in_execution")
 	})
