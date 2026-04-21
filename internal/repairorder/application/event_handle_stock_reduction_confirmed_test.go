@@ -31,7 +31,7 @@ func TestHandleStockReductionConfirmed_Execute(t *testing.T) {
 		}
 
 		handler := NewHandleStockReductionConfirmed(repo, metrics)
-		evt := events.StockReductionConfirmed{RepairOrderID: roID}
+		evt := events.RepairOrderStockReductionConfirmed{RepairOrderID: roID}
 
 		err := handler.Execute(ctx, evt)
 
@@ -49,7 +49,7 @@ func TestHandleStockReductionConfirmed_Execute(t *testing.T) {
 		}
 
 		handler := NewHandleStockReductionConfirmed(repo, metrics)
-		evt := events.StockReductionConfirmed{RepairOrderID: roID}
+		evt := events.RepairOrderStockReductionConfirmed{RepairOrderID: roID}
 
 		err := handler.Execute(ctx, evt)
 
@@ -69,7 +69,7 @@ func TestHandleStockReductionConfirmed_Execute(t *testing.T) {
 		}
 
 		handler := NewHandleStockReductionConfirmed(repo, metrics)
-		evt := events.StockReductionConfirmed{RepairOrderID: roID}
+		evt := events.RepairOrderStockReductionConfirmed{RepairOrderID: roID}
 
 		err := handler.Execute(ctx, evt)
 
@@ -92,7 +92,7 @@ func TestHandleStockReductionConfirmed_Execute(t *testing.T) {
 		}
 
 		handler := NewHandleStockReductionConfirmed(repo, metrics)
-		evt := events.StockReductionConfirmed{RepairOrderID: roID}
+		evt := events.RepairOrderStockReductionConfirmed{RepairOrderID: roID}
 
 		err := handler.Execute(ctx, evt)
 

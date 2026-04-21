@@ -13,7 +13,7 @@ type StockReductionConfirmed struct {
 	RepairOrderID uuid.UUID `json:"repair_order_id"`
 }
 
-func (StockReductionConfirmed) Topic() string { return "product.stock.reduce.confirmed" }
+func (StockReductionConfirmed) Topic() string { return "product-stock-reduction-confirmed" }
 
 type StockInsufficientDetected struct {
 	EventID       uuid.UUID `json:"event_id"`
@@ -22,4 +22,4 @@ type StockInsufficientDetected struct {
 	RepairOrderID uuid.UUID `json:"repair_order_id"`
 }
 
-func (StockInsufficientDetected) Topic() string { return "product.stock.insufficient.detected" }
+func (StockInsufficientDetected) Topic() string { return "product-stock-insufficient-detected" }

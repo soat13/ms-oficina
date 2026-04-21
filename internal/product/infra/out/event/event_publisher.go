@@ -31,17 +31,3 @@ func (e *EventPublisher) PublishStockInsufficientDetected(
 	}
 	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
-
-func (e *EventPublisher) PublishStockReduceConfirmed(
-	ctx context.Context,
-	estimateID uuid.UUID,
-	repairOrderID uuid.UUID,
-) error {
-	event := estimateEvent.StockReductionConfirmed{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		EstimateID:    estimateID,
-		RepairOrderID: repairOrderID,
-	}
-	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
-}

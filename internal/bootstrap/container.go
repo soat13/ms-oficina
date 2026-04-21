@@ -13,6 +13,7 @@ import (
 	"github.com/soat13/oficina-utils/pkg/awsconfig"
 	helper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/messaging"
+	"github.com/soat13/oficina-utils/pkg/messaging/sns"
 	sqs "github.com/soat13/oficina-utils/pkg/messaging/sqs"
 	"github.com/soat13/oficina-utils/pkg/observability"
 	"github.com/uptrace/bun"
@@ -21,17 +22,18 @@ import (
 )
 
 type Container struct {
-	SQL               *sql.DB
-	DB                *bun.DB
-	FiberApp          *fiber.App
-	FiberErrorHandler *helper.ErrorHandler
-	Validator         *validator.Validate
-	Broker            messaging.QueueBroker
-	Metrics           *observability.Metrics
+	SQL                  *sql.DB
+	DB                   *bun.DB
+	FiberApp             *fiber.App
+	FiberErrorHandler    *helper.ErrorHandler
+	Validator            *validator.Validate
+	Broker               messaging.QueueBroker
+	Metrics              *observability.Metrics
+	TopicPublisherClient messaging.TopicPublisher
 }
 
 func BuildDefault() *Container {
-	return Build(nil, nil, nil, nil, nil)
+	return Build(nil, nil, nil, nil, nil, nil)
 }
 
 func Build(
@@ -40,6 +42,7 @@ func Build(
 	fiberErrorHandler *helper.ErrorHandler,
 	structValidator *validator.Validate,
 	broker messaging.QueueBroker,
+	topicPublisher messaging.TopicPublisher,
 ) *Container {
 	if fiberApp == nil {
 		fiberApp = newApp()
@@ -57,10 +60,11 @@ func Build(
 		bunDB = bun.NewDB(newSQL(), pgdialect.New())
 	}
 
+	awsConfig := awsconfig.Config{EndpointURL: os.Getenv("AWS_ENDPOINT_URL")}
+
 	if broker == nil {
 		var err error
 		sqsBaseUrl := os.Getenv("SQS_BASE_URL")
-		awsConfig := awsconfig.Config{EndpointURL: os.Getenv("AWS_ENDPOINT_URL")}
 
 		broker, err = sqs.NewBroker(context.Background(), awsConfig, sqsBaseUrl)
 		if err != nil {
@@ -68,12 +72,23 @@ func Build(
 		}
 	}
 
+	if topicPublisher == nil {
+		var err error
+		baseSnsArn := os.Getenv("AWS_BASE_SNS_ARN")
+
+		topicPublisher, err = sns.NewPublisher(context.Background(), awsConfig, baseSnsArn)
+		if err != nil {
+			log.Fatalf("failed to create SNS publisher: %v", err)
+		}
+	}
+
 	return &Container{
-		DB:                bunDB,
-		FiberApp:          fiberApp,
-		FiberErrorHandler: fiberErrorHandler,
-		Validator:         structValidator,
-		Broker:            broker,
+		DB:                   bunDB,
+		FiberApp:             fiberApp,
+		FiberErrorHandler:    fiberErrorHandler,
+		Validator:            structValidator,
+		Broker:               broker,
+		TopicPublisherClient: topicPublisher,
 	}
 }
 
@@ -83,6 +98,10 @@ func (c *Container) StartConsumers(ctx context.Context) {
 
 func (c *Container) Publisher() messaging.QueueSender {
 	return c.Broker
+}
+
+func (c *Container) TopicPublisher() messaging.TopicPublisher {
+	return c.TopicPublisherClient
 }
 
 func (c *Container) Subscribe(topic string, handler messaging.Handler) {
