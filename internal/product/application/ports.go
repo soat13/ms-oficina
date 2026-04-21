@@ -30,7 +30,10 @@ type (
 
 	EventPublisher interface {
 		PublishStockInsufficientDetected(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID) error
-		PublishStockReduceConfirmed(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID) error
+	}
+
+	TopicPublisher interface {
+		PublishStockReductionConfirmed(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID) error
 	}
 )
 

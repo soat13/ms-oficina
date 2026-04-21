@@ -19,7 +19,7 @@ func NewHandleStockReductionConfirmed(repository Repository, metricsPublisher Me
 	}
 }
 
-func (h *HandleStockReductionConfirmed) Execute(ctx context.Context, evt events.StockReductionConfirmed) error {
+func (h *HandleStockReductionConfirmed) Execute(ctx context.Context, evt events.RepairOrderStockReductionConfirmed) error {
 	repairOrder, err := h.repository.GetById(ctx, evt.RepairOrderID)
 	if err != nil {
 		return err

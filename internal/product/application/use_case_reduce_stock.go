@@ -18,13 +18,15 @@ type (
 	ReduceStock struct {
 		repository     Repository
 		eventPublisher EventPublisher
+		topicPublisher TopicPublisher
 	}
 )
 
-func NewReduceStock(repository Repository, eventPublisher EventPublisher) *ReduceStock {
+func NewReduceStock(repository Repository, eventPublisher EventPublisher, topicPublisher TopicPublisher) *ReduceStock {
 	return &ReduceStock{
 		repository:     repository,
 		eventPublisher: eventPublisher,
+		topicPublisher: topicPublisher,
 	}
 }
 
@@ -38,7 +40,7 @@ func (uc *ReduceStock) Execute(ctx context.Context, in ReduceStockInput) error {
 		return uc.eventPublisher.PublishStockInsufficientDetected(ctx, in.EstimateID, in.RepairOrderID)
 	}
 
-	return uc.eventPublisher.PublishStockReduceConfirmed(ctx, in.EstimateID, in.RepairOrderID)
+	return uc.topicPublisher.PublishStockReductionConfirmed(ctx, in.EstimateID, in.RepairOrderID)
 }
 
 func (uc *ReduceStock) updateStock(ctx context.Context, in ReduceStockInput) error {

@@ -43,6 +43,6 @@ func Setup(container *bootstrap.Container) {
 
 	container.Subscribe(events.RepairOrderCanceled{}.Topic(), eventIn.OnRepairOrderCanceled(handleRepairOrderCanceled))
 	container.Subscribe(events.RepairOrderDiagnosticsFinished{}.Topic(), eventIn.OnDiagnosticsFinished(handleDiagnosticsFinished))
-	container.Subscribe(events.StockReductionConfirmed{}.Topic(), eventIn.OnStockReduceConfirmed(confirmStock))
+	container.Subscribe(events.EstimateStockReductionConfirmed{}.Topic(), eventIn.OnStockReduceConfirmed(confirmStock))
 
 }

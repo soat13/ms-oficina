@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
 	"github.com/soat13/fase-1-oficina/internal/bootstrap"
+	"github.com/soat13/fase-1-oficina/internal/shared/events"
 	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
 	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/messaging/sqs"
@@ -26,7 +27,15 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New())
 
-	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, sqs.NewSyncBroker())
+	broker := sqs.NewSyncBroker()
+	topicPublisher := NewFanoutTopicPublisher(broker, map[string][]string{
+		events.StockReductionConfirmed{}.Topic(): {
+			events.EstimateStockReductionConfirmed{}.Topic(),
+			events.RepairOrderStockReductionConfirmed{}.Topic(),
+		},
+	})
+
+	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, broker, topicPublisher)
 
 	ensureTestJWTConfig()
 

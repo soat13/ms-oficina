@@ -21,12 +21,13 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 	}
 
 	eventPublisher := eventOut.NewEventPublisher(container.Publisher())
+	topicPublisher := eventOut.NewTopicPublisher(container.TopicPublisher())
 	createProduct := application.NewCreateProduct(repository)
 	updateProduct := application.NewUpdateProduct(repository)
 	deleteProduct := application.NewDeleteProduct(repository)
 	getProduct := application.NewGetProduct(repository)
 	listProducts := application.NewListProducts(repository)
-	reduceStock := application.NewReduceStock(repository, eventPublisher)
+	reduceStock := application.NewReduceStock(repository, eventPublisher, topicPublisher)
 	restoreStock := application.NewRestoreStock(repository)
 	handleEstimateApproved := application.NewHandleEstimateApproved(reduceStock)
 	handleEstimateCanceled := application.NewHandleEstimateCanceled(restoreStock)

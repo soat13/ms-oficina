@@ -14,7 +14,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/rs/zerolog v1.35.0
 	github.com/rubenv/sql-migrate v1.8.0
-	github.com/soat13/oficina-utils v0.0.15
+	github.com/soat13/oficina-utils v0.0.16
 )
 
 require (
@@ -57,6 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.25 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.19 // indirect
