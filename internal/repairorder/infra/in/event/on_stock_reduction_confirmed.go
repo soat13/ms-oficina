@@ -10,7 +10,7 @@ import (
 
 func OnStockReduceConfirmed(handle application.HandleStockReductionConfirmed) messaging.Handler {
 	return func(ctx context.Context, msg messaging.Message) error {
-		event, err := messaging.DecodePayload[events.RepairOrderStockReductionConfirmed](msg)
+		event, err := messaging.DecodePayload[events.StockReductionConfirmed](msg)
 		if err != nil {
 			return err
 		}

@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const TopicRepairOrderStockReductionConfirmed = "repairorder-product-stock-reduction-confirmed"
+
 type RepairOrderCanceled struct {
 	EventID       uuid.UUID `json:"event_id"`
 	OccurredAt    time.Time `json:"occurred_at"`
@@ -31,14 +33,3 @@ type RepairOrderFinished struct {
 }
 
 func (RepairOrderFinished) Topic() string { return "repairorder-finished" }
-
-type RepairOrderStockReductionConfirmed struct {
-	EventID       uuid.UUID `json:"event_id"`
-	OccurredAt    time.Time `json:"occurred_at"`
-	EstimateID    uuid.UUID `json:"estimate_id"`
-	RepairOrderID uuid.UUID `json:"repair_order_id"`
-}
-
-func (RepairOrderStockReductionConfirmed) Topic() string {
-	return "repairorder-product-stock-reduction-confirmed"
-}

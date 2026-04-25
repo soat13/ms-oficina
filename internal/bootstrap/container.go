@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/stdlib"
+	zlog "github.com/rs/zerolog/log"
 	"github.com/soat13/oficina-utils/pkg/awsconfig"
 	helper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/messaging"
@@ -93,6 +94,7 @@ func Build(
 }
 
 func (c *Container) StartConsumers(ctx context.Context) {
+	zlog.Info().Msg("container: starting SQS consumers")
 	c.Broker.Listen(ctx)
 }
 
@@ -105,6 +107,7 @@ func (c *Container) TopicPublisher() messaging.TopicPublisher {
 }
 
 func (c *Container) Subscribe(topic string, handler messaging.Handler) {
+	zlog.Info().Str("topic", topic).Msg("container: registering SQS subscriber")
 	c.Broker.Subscribe(topic, handler)
 }
 

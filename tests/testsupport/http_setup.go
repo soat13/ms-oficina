@@ -30,8 +30,8 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 	broker := sqs.NewSyncBroker()
 	topicPublisher := NewFanoutTopicPublisher(broker, map[string][]string{
 		events.StockReductionConfirmed{}.Topic(): {
-			events.EstimateStockReductionConfirmed{}.Topic(),
-			events.RepairOrderStockReductionConfirmed{}.Topic(),
+			events.TopicEstimateStockReductionConfirmed,
+			events.TopicRepairOrderStockReductionConfirmed,
 		},
 	})
 
