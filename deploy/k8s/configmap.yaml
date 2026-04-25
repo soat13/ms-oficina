@@ -12,3 +12,4 @@ data:
   APP_ENV: "development"
   AWS_REGION: "us-east-1"
   SQS_BASE_URL: ${SQS_BASE_URL}
+  AWS_BASE_SNS_ARN: ${AWS_BASE_SNS_ARN}
