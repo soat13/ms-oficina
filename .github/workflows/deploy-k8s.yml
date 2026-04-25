@@ -45,6 +45,7 @@ jobs:
 
           CLUSTER_NAME=$(jq -r '.outputs.cluster_name.value' infra.tfstate)
           SQS_BASE_URL=$(jq -r '.outputs.sqs_base_url.value' infra.tfstate)
+          SNS_BASE_ARN=$(jq -r '.outputs.sns_base_arn.value' infra.tfstate)
           RDS_ENDPOINT=$(jq -r '.outputs.rds_address.value' db.tfstate)
           RDS_PORT=$(jq -r '.outputs.rds_port.value' db.tfstate)
           RDS_DATABASE=$(jq -r '.outputs.rds_database_name.value' db.tfstate)
@@ -54,6 +55,7 @@ jobs:
           echo "rds_port=${RDS_PORT}" >> $GITHUB_OUTPUT
           echo "rds_database=${RDS_DATABASE}" >> $GITHUB_OUTPUT
           echo "sqs_base_url=${SQS_BASE_URL}" >> $GITHUB_OUTPUT
+          echo "sns_base_arn=${SNS_BASE_ARN}" >> $GITHUB_OUTPUT
 
       - name: Update Kubeconfig
         run: |
@@ -64,6 +66,7 @@ jobs:
       - name: Apply Namespace and Base Resources
         env:
           SQS_BASE_URL: ${{ steps.tf_outputs.outputs.sqs_base_url }}
+          AWS_BASE_SNS_ARN: ${{ steps.tf_outputs.outputs.sns_base_arn }}
         run: |
           kubectl apply -f deploy/k8s/namespace.yaml
           kubectl apply -f deploy/k8s/serviceaccount.yaml
