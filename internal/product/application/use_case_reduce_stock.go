@@ -33,7 +33,6 @@ func NewReduceStock(repository Repository, eventPublisher EventPublisher, topicP
 func (uc *ReduceStock) Execute(ctx context.Context, in ReduceStockInput) error {
 	if err := uc.updateStock(ctx, in); err != nil {
 		if !errors.Is(err, ErrInsufficientStock) {
-
 			return err
 		}
 
