@@ -21,6 +21,7 @@ func (h *HandleEstimateApproved) Execute(ctx context.Context, evt events.Estimat
 		Products:      evt.Products,
 		EstimateID:    evt.EstimateID,
 		RepairOrderID: evt.RepairOrderID,
+		TotalEstimate: evt.TotalEstimate,
 	}
 
 	return h.reduceStock.Execute(ctx, input)

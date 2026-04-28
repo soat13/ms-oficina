@@ -33,6 +33,7 @@ func (e *EventPublisher) PublishApproved(ctx context.Context, estimate domain.Es
 		EstimateID:    estimate.ID,
 		RepairOrderID: estimate.RepairOrderID,
 		Products:      products,
+		TotalEstimate: estimate.Total(),
 	}
 	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
