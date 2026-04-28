@@ -8,6 +8,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/product/application"
 	productEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
 	"github.com/soat13/oficina-utils/pkg/messaging"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type TopicPublisher struct {
@@ -22,12 +23,14 @@ func (p *TopicPublisher) PublishStockReductionConfirmed(
 	ctx context.Context,
 	estimateID uuid.UUID,
 	repairOrderID uuid.UUID,
+	totalEstimate money.Money,
 ) error {
 	event := productEvent.StockReductionConfirmed{
 		EventID:       uuid.New(),
 		OccurredAt:    time.Now(),
 		EstimateID:    estimateID,
 		RepairOrderID: repairOrderID,
+		TotalEstimate: totalEstimate,
 	}
 
 	return p.publisher.Publish(ctx, messaging.TopicMessage{EventName: event.Topic(), Payload: event})

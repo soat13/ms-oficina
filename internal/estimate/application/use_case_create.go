@@ -8,7 +8,6 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
-	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type (
@@ -22,16 +21,6 @@ type (
 		Products      map[uuid.UUID]int
 		Services      map[uuid.UUID]int
 		Now           time.Time
-	}
-
-	EstimateView struct {
-		ID            uuid.UUID
-		RepairOrderID uuid.UUID
-		Total         money.Money
-	}
-
-	CreateEstimateOutput struct {
-		Estimate EstimateView
 	}
 
 	Create struct {

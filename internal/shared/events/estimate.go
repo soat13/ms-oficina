@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 const TopicEstimateStockReductionConfirmed = "estimate-product-stock-reduction-confirmed"
@@ -32,6 +33,7 @@ type EstimateApproved struct {
 	EstimateID    uuid.UUID         `json:"estimate_id"`
 	RepairOrderID uuid.UUID         `json:"repair_order_id"`
 	Products      map[uuid.UUID]int `json:"products"`
+	TotalEstimate money.Money       `json:"total_estimate"`
 }
 
 func (EstimateApproved) Topic() string { return "estimate-approved" }
