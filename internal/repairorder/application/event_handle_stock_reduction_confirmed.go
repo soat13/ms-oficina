@@ -29,7 +29,7 @@ func (h *HandleStockReductionConfirmed) Execute(ctx context.Context, evt events.
 		return err
 	}
 
-	if err := h.repository.SaveIfInAwaitingApproval(ctx, repairOrder); err != nil {
+	if err := h.repository.ApproveIfAwaitingApproval(ctx, repairOrder); err != nil {
 		return err
 	}
 

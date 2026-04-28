@@ -86,7 +86,7 @@ func TestHandleStockReductionConfirmed_Execute(t *testing.T) {
 			getByIdFn: func(_ context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
 				return ro, nil
 			},
-			saveIfInAwaitingApprovalFn: func(_ context.Context, ro *domain.RepairOrder) error {
+			approveIfAwaitingApprovalFn: func(_ context.Context, ro *domain.RepairOrder) error {
 				return errors.New("save failed")
 			},
 		}

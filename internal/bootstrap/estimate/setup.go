@@ -20,6 +20,7 @@ func Setup(container *bootstrap.Container) {
 	serviceCatalogReader := db.NewServiceCatalogReader(container.DB)
 	repository := db.NewBunRepository(container.DB)
 	eventPublisher := eventOut.NewEventPublisher(container.Publisher())
+	topicPublisher := eventOut.NewTopicPublisher(container.TopicPublisher())
 
 	createEstimate := application.NewCreateEstimate(
 		repairOrderReader,
@@ -29,7 +30,7 @@ func Setup(container *bootstrap.Container) {
 		eventPublisher,
 	)
 
-	approve := application.NewApproveEstimate(repository, eventPublisher)
+	approve := application.NewApproveEstimate(repository, topicPublisher)
 	cancel := application.NewCancelEstimate(repository, eventPublisher)
 	reject := application.NewRejectEstimate(repository, eventPublisher)
 	confirmStock := application.NewConfirmStock(repository)

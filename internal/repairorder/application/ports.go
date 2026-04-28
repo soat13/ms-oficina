@@ -39,6 +39,8 @@ type (
 		SaveIfInDiagnostics(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfDiagnosticsFinished(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
+		SaveTotalEstimateIfAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
+		ApproveIfAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error
@@ -56,7 +58,7 @@ type (
 			services map[uuid.UUID]int,
 		) error
 		PublishRepairOrderCanceled(ctx context.Context, RepairOrderID uuid.UUID) error
-		PublishPaymentRequest(ctx context.Context, RepairOrderID uuid.UUID) error
+		PublishPaymentRequest(ctx context.Context, ro *domain.RepairOrder) error
 	}
 
 	MetricsPublisher interface {

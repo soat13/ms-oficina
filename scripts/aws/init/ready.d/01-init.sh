@@ -18,12 +18,13 @@ QUEUES=(
   "repairorder-diagnostics-finished:fifo=false:dlq=true"
   "repairorder-canceled:fifo=false:dlq=true"
   "estimate-created:fifo=false:dlq=true"
-  "estimate-approved:fifo=false:dlq=true"
   "estimate-rejected:fifo=false:dlq=true"
   "estimate-canceled:fifo=false:dlq=true"
-  "product-stock-insufficient-detected:fifo=false:dlq=true"
   "estimate-product-stock-reduction-confirmed:fifo=false:dlq=true"
   "repairorder-product-stock-reduction-confirmed:fifo=false:dlq=true"
+  "repairorder-estimate-approved:fifo=false:dlq=true"
+  "product-estimate-approved:fifo=false:dlq=true"
+  "product-stock-insufficient-detected:fifo=false:dlq=true"
   "payment-request:fifo=false:dlq=true"
   "payment-status-changed:fifo=true:dlq=false"
 )
@@ -82,6 +83,12 @@ STOCK_REDUCTION_CONFIRMED_SUBSCRIBERS=(
   "repairorder-product-stock-reduction-confirmed"
 )
 
+ESTIMATE_APPROVED_TOPIC_NAME="estimate-approved"
+ESTIMATE_APPROVED_SUBSCRIBERS=(
+  "product-estimate-approved"
+  "repairorder-estimate-approved"
+)
+
 echo "Checking/creating SNS topic..."
 
 STOCK_REDUCTION_CONFIRMED_TOPIC_ARN=$(awslocal sns create-topic \
@@ -92,9 +99,18 @@ STOCK_REDUCTION_CONFIRMED_TOPIC_ARN=$(awslocal sns create-topic \
 
 echo "Topic ready: ${STOCK_REDUCTION_CONFIRMED_TOPIC_ARN}"
 
+ESTIMATE_APPROVED_TOPIC_ARN=$(awslocal sns create-topic \
+  --name "${ESTIMATE_APPROVED_TOPIC_NAME}" \
+  --region "${REGION}" \
+  --query 'TopicArn' \
+  --output text)
+
+echo "Topic ready: ${ESTIMATE_APPROVED_TOPIC_ARN}"
+
 subscribe_queue_to_topic() {
   local queue_name="$1"
   local topic_arn="$2"
+  local topic_name="$3"
 
   local queue_url
   queue_url=$(awslocal sqs get-queue-url \
@@ -138,14 +154,18 @@ EOF
       --protocol sqs \
       --notification-endpoint "${queue_arn}" \
       --region "${REGION}" >/dev/null
-    echo "Queue ${queue_name} subscribed to topic ${STOCK_REDUCTION_CONFIRMED_TOPIC_NAME}"
+    echo "Queue ${queue_name} subscribed to topic ${topic_name}"
   else
     echo "Subscription for ${queue_name} already exists, skipping..."
   fi
 }
 
 for subscriber in "${STOCK_REDUCTION_CONFIRMED_SUBSCRIBERS[@]}"; do
-  subscribe_queue_to_topic "${subscriber}" "${STOCK_REDUCTION_CONFIRMED_TOPIC_ARN}"
+  subscribe_queue_to_topic "${subscriber}" "${STOCK_REDUCTION_CONFIRMED_TOPIC_ARN}" "${STOCK_REDUCTION_CONFIRMED_TOPIC_NAME}"
+done
+
+for subscriber in "${ESTIMATE_APPROVED_SUBSCRIBERS[@]}"; do
+  subscribe_queue_to_topic "${subscriber}" "${ESTIMATE_APPROVED_TOPIC_ARN}" "${ESTIMATE_APPROVED_TOPIC_NAME}"
 done
 
 echo "Done."
@@ -160,5 +180,6 @@ for entry in "${QUEUES[@]}"; do
   fi
 done
 echo "- SNS topic: ${STOCK_REDUCTION_CONFIRMED_TOPIC_NAME}"
+echo "- SNS topic: ${ESTIMATE_APPROVED_TOPIC_NAME}"
 
 touch /tmp/sqs-init.done

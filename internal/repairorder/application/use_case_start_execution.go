@@ -37,9 +37,5 @@ func (uc *StartExecution) Execute(ctx context.Context, input StartExecutionInput
 		return err
 	}
 
-	if err := uc.Repository.SaveIfApproved(ctx, repairorder); err != nil {
-		return err
-	}
-
-	return nil
+	return uc.Repository.SaveIfApproved(ctx, repairorder)
 }

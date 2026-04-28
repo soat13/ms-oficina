@@ -190,10 +190,6 @@ func (m *mockRepository) GetByRepairOrderID(ctx context.Context, repairOrderID u
 
 type mockEventPublisher struct{}
 
-func (m *mockEventPublisher) PublishApproved(ctx context.Context, estimate domain.Estimate) error {
-	return nil
-}
-
 func (m *mockEventPublisher) PublishRejected(ctx context.Context, estimate domain.Estimate) error {
 	return nil
 }

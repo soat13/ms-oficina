@@ -33,6 +33,10 @@ func SetupHTTP(t *testing.T, register func(app *fiber.App, c *bootstrap.Containe
 			events.TopicEstimateStockReductionConfirmed,
 			events.TopicRepairOrderStockReductionConfirmed,
 		},
+		events.EstimateApproved{}.Topic(): {
+			events.TopicProductEstimateApproved,
+			events.TopicRepairOrderEstimateApproved,
+		},
 	})
 
 	container := bootstrap.Build(testDB.DB, fiberApp, nil, nil, broker, topicPublisher)

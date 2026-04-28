@@ -9,6 +9,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
 	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	"github.com/soat13/oficina-utils/pkg/money"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 	roID := uuid.New()
 
 	t.Run("should finish execution successfully", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusInExecution)
+		ro := withTotalEstimate(newRepairOrderWithStatus(repairorder.StatusInExecution))
 		metrics := &mockMetricsPublisher{}
 
 		uc := NewFinishExecution(
@@ -67,7 +68,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 	})
 
 	t.Run("should return error on invalid status transition", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusReceived)
+		ro := withTotalEstimate(newRepairOrderWithStatus(repairorder.StatusReceived))
 		uc := NewFinishExecution(
 			&mockRepository{getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 				return ro, nil
@@ -82,7 +83,7 @@ func TestFinishExecution_Execute(t *testing.T) {
 	})
 
 	t.Run("should return error when save fails", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusInExecution)
+		ro := withTotalEstimate(newRepairOrderWithStatus(repairorder.StatusInExecution))
 		saveErr := errors.New("save failed")
 		uc := NewFinishExecution(
 			&mockRepository{
@@ -101,4 +102,10 @@ func TestFinishExecution_Execute(t *testing.T) {
 
 		assert.ErrorIs(t, err, saveErr)
 	})
+}
+
+func withTotalEstimate(ro *domain.RepairOrder) *domain.RepairOrder {
+	total := money.Money{Cents: 10000}
+	ro.UpdateTotalEstimate(&total)
+	return ro
 }

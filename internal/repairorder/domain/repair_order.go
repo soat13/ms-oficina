@@ -7,6 +7,7 @@ import (
 	"github.com/soat13/fase-1-oficina/internal/shared/errors"
 	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
 	"github.com/soat13/oficina-utils/pkg/entity"
+	"github.com/soat13/oficina-utils/pkg/money"
 	uuidHelper "github.com/soat13/oficina-utils/pkg/utils/uuid"
 )
 
@@ -18,6 +19,7 @@ type (
 		Status               repairorder.Status
 		ExecutionTimeMinutes *int64
 		PaymentURL           *string
+		TotalEstimate        *money.Money
 		*entity.Timestamps
 	}
 )
@@ -49,6 +51,10 @@ func NewRepairOrder(id uuid.UUID, customerID, vehicleID uuid.UUID, status *repai
 
 func (r *RepairOrder) UpdatePaymentURL(paymentURL *string) {
 	r.PaymentURL = paymentURL
+}
+
+func (r *RepairOrder) UpdateTotalEstimate(totalEstimate *money.Money) {
+	r.TotalEstimate = totalEstimate
 }
 
 func (r *RepairOrder) IsCancelled() bool {
