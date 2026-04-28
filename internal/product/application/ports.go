@@ -33,7 +33,7 @@ type (
 	}
 
 	TopicPublisher interface {
-		PublishStockReductionConfirmed(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID, totalEstimate money.Money) error
+		PublishStockReductionConfirmed(ctx context.Context, estimateID uuid.UUID, repairOrderID uuid.UUID) error
 	}
 )
 

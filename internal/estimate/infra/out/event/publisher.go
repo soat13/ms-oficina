@@ -19,25 +19,6 @@ func NewEventPublisher(publisher messaging.QueueSender) application.EventPublish
 	return &EventPublisher{publisher: publisher}
 }
 
-func (e *EventPublisher) PublishApproved(ctx context.Context, estimate domain.Estimate) error {
-	products := make(map[uuid.UUID]int, 0)
-	for _, item := range estimate.Items() {
-		if item.Type == domain.ProductItemType {
-			products[item.ID] = item.Quantity
-		}
-	}
-
-	event := estimateEvent.EstimateApproved{
-		EventID:       uuid.New(),
-		OccurredAt:    time.Now(),
-		EstimateID:    estimate.ID,
-		RepairOrderID: estimate.RepairOrderID,
-		Products:      products,
-		TotalEstimate: estimate.Total(),
-	}
-	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
-}
-
 func (e *EventPublisher) PublishRejected(ctx context.Context, estimate domain.Estimate) error {
 	event := estimateEvent.EstimateRejected{
 		EventID:       uuid.New(),

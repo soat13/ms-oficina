@@ -36,6 +36,10 @@ func (uc *FinishExecution) Execute(ctx context.Context, input FinishExecutionInp
 		return sharedRepairOrder.ErrRepairOrderNotFound
 	}
 
+	if repairorder.TotalEstimate == nil {
+		return ErrTotalEstimateRequired
+	}
+
 	if err := repairorder.FinishExecution(); err != nil {
 		return err
 	}
@@ -48,7 +52,7 @@ func (uc *FinishExecution) Execute(ctx context.Context, input FinishExecutionInp
 		uc.metricsPublisher.RecordRepairOrderPhaseDuration("in_execution", time.Since(repairorder.UpdatedAt).Minutes())
 	}
 
-	if err := uc.eventPublisher.PublishPaymentRequest(ctx, repairorder.ID); err != nil {
+	if err := uc.eventPublisher.PublishPaymentRequest(ctx, repairorder); err != nil {
 		return err
 	}
 

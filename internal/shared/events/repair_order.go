@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+const TopicRepairOrderEstimateApproved = "repairorder-estimate-approved"
 const TopicRepairOrderStockReductionConfirmed = "repairorder-product-stock-reduction-confirmed"
 
 type RepairOrderCanceled struct {

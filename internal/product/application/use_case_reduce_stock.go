@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/soat13/oficina-utils/pkg/maps"
-	"github.com/soat13/oficina-utils/pkg/money"
 )
 
 type (
@@ -14,7 +13,6 @@ type (
 		Products      map[uuid.UUID]int
 		EstimateID    uuid.UUID
 		RepairOrderID uuid.UUID
-		TotalEstimate money.Money
 	}
 
 	ReduceStock struct {
@@ -41,7 +39,7 @@ func (uc *ReduceStock) Execute(ctx context.Context, in ReduceStockInput) error {
 		return uc.eventPublisher.PublishStockInsufficientDetected(ctx, in.EstimateID, in.RepairOrderID)
 	}
 
-	return uc.topicPublisher.PublishStockReductionConfirmed(ctx, in.EstimateID, in.RepairOrderID, in.TotalEstimate)
+	return uc.topicPublisher.PublishStockReductionConfirmed(ctx, in.EstimateID, in.RepairOrderID)
 }
 
 func (uc *ReduceStock) updateStock(ctx context.Context, in ReduceStockInput) error {

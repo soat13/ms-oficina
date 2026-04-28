@@ -44,6 +44,6 @@ func Setup(container *bootstrap.Container, repository productApp.Repository) {
 
 	productHTTP.Register(container.FiberApp, productHandler)
 
-	container.Subscribe(estimateEvent.EstimateApproved{}.Topic(), event.OnEstimateApproved(handleEstimateApproved))
+	container.Subscribe(estimateEvent.TopicProductEstimateApproved, event.OnEstimateApproved(handleEstimateApproved))
 	container.Subscribe(estimateEvent.EstimateCanceled{}.Topic(), event.OnEstimateCanceled(handleEstimateCanceled))
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
 	"github.com/soat13/oficina-utils/pkg/entity"
 	"github.com/soat13/oficina-utils/pkg/maps"
+	"github.com/soat13/oficina-utils/pkg/money"
 	"github.com/soat13/oficina-utils/pkg/pagination"
 	"github.com/uptrace/bun"
 )
@@ -28,6 +29,7 @@ type repairOrderModel struct {
 	Status               string    `bun:"status,notnull"`
 	ExecutionTimeMinutes *int64    `bun:"execution_time_minutes"`
 	PaymentURL           *string   `bun:"payment_url"`
+	TotalEstimate        *int64    `bun:"total_estimate"`
 	CreatedAt            time.Time `bun:"created_at,notnull,default:current_timestamp"`
 	UpdatedAt            time.Time `bun:"updated_at,notnull,default:current_timestamp"`
 }
@@ -125,6 +127,11 @@ func (r *BunRepairOrderRepository) List(ctx context.Context, pager pagination.Pa
 func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.RepairOrder {
 	timestamps := entity.NewTimestamps(m.CreatedAt, m.UpdatedAt)
 
+	var totalEstimate *money.Money
+	if m.TotalEstimate != nil {
+		totalEstimate = &money.Money{Cents: *m.TotalEstimate}
+	}
+
 	return &domain.RepairOrder{
 		ID:                   m.ID,
 		CustomerID:           m.CustomerID,
@@ -132,6 +139,7 @@ func (r *BunRepairOrderRepository) toEntityOrNil(m *repairOrderModel) *domain.Re
 		Status:               repairorder.Status(m.Status),
 		ExecutionTimeMinutes: m.ExecutionTimeMinutes,
 		PaymentURL:           m.PaymentURL,
+		TotalEstimate:        totalEstimate,
 		Timestamps:           &timestamps,
 	}
 }
@@ -181,6 +189,14 @@ func (r *BunRepairOrderRepository) SaveIfDiagnosticsFinished(ctx context.Context
 
 func (r *BunRepairOrderRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
 	return r.saveIfStatus(ctx, ro, repairorder.StatusAwaitingApproval)
+}
+
+func (r *BunRepairOrderRepository) SaveTotalEstimateIfAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.updateColumnIfStatus(ctx, ro.ID, "total_estimate", &ro.TotalEstimate.Cents, repairorder.StatusAwaitingApproval)
+}
+
+func (r *BunRepairOrderRepository) ApproveIfAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	return r.updateColumnIfStatus(ctx, ro.ID, "status", string(ro.Status), repairorder.StatusAwaitingApproval)
 }
 
 func (r *BunRepairOrderRepository) SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error {
@@ -240,7 +256,30 @@ func (r *BunRepairOrderRepository) saveIfStatus(ctx context.Context, ro *domain.
 	return err
 }
 
+func (r *BunRepairOrderRepository) updateColumnIfStatus(
+	ctx context.Context,
+	id uuid.UUID,
+	column string,
+	value any,
+	expectedStatus repairorder.Status,
+) error {
+	_, err := r.db.NewUpdate().
+		Model((*repairOrderModel)(nil)).
+		Set("? = ?", bun.Ident(column), value).
+		Set("updated_at = ?", time.Now()).
+		Where("id = ?", id).
+		Where("status = ?", expectedStatus).
+		Exec(ctx)
+	return err
+}
+
 func toModel(ro *domain.RepairOrder) *repairOrderModel {
+	var totalEstimateCents *int64
+	if ro.TotalEstimate != nil {
+		cents := ro.TotalEstimate.Cents
+		totalEstimateCents = &cents
+	}
+
 	return &repairOrderModel{
 		ID:                   ro.ID,
 		CustomerID:           ro.CustomerID,
@@ -248,6 +287,7 @@ func toModel(ro *domain.RepairOrder) *repairOrderModel {
 		Status:               string(ro.Status),
 		ExecutionTimeMinutes: ro.ExecutionTimeMinutes,
 		PaymentURL:           ro.PaymentURL,
+		TotalEstimate:        totalEstimateCents,
 		CreatedAt:            ro.CreatedAt,
 		UpdatedAt:            ro.UpdatedAt,
 	}

@@ -13,14 +13,14 @@ type (
 
 	Approve struct {
 		repository     Repository
-		eventPublisher EventPublisher
+		topicPublisher TopicPublisher
 	}
 )
 
-func NewApproveEstimate(repository Repository, eventPublisher EventPublisher) *Approve {
+func NewApproveEstimate(repository Repository, topicPublisher TopicPublisher) *Approve {
 	return &Approve{
 		repository:     repository,
-		eventPublisher: eventPublisher,
+		topicPublisher: topicPublisher,
 	}
 }
 
@@ -42,5 +42,5 @@ func (a *Approve) Execute(ctx context.Context, input ApproveInput) error {
 		return err
 	}
 
-	return a.eventPublisher.PublishApproved(ctx, *estimate)
+	return a.topicPublisher.PublishApproved(ctx, *estimate)
 }

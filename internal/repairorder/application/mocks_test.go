@@ -13,21 +13,23 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockRepository struct {
-	getByIdFn                    func(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error)
-	listFn                       func(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error)
-	createFn                     func(ctx context.Context, ro *domain.RepairOrder) error
-	saveCancellationFn           func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfReceivedFn             func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfInDiagnosticsFn        func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfDiagnosticsFinishedFn  func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfInAwaitingApprovalFn   func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfApprovedFn             func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfInExecutionFn          func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfFinishedFn             func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfPaymentCreatedFn       func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfPaymentProcessingFn    func(ctx context.Context, ro *domain.RepairOrder) error
-	saveIfPaymentSucceededFn     func(ctx context.Context, ro *domain.RepairOrder) error
-	getAverageExecTimeFn         func(ctx context.Context) (*float64, error)
+	getByIdFn                           func(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error)
+	listFn                              func(ctx context.Context, pager pagination.Pagination) ([]*domain.RepairOrder, error)
+	createFn                            func(ctx context.Context, ro *domain.RepairOrder) error
+	saveCancellationFn                  func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfReceivedFn                    func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfInDiagnosticsFn               func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfDiagnosticsFinishedFn         func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfInAwaitingApprovalFn          func(ctx context.Context, ro *domain.RepairOrder) error
+	saveTotalEstimateIfAwaitingApprovFn func(ctx context.Context, ro *domain.RepairOrder) error
+	approveIfAwaitingApprovalFn         func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfApprovedFn                    func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfInExecutionFn                 func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfFinishedFn                    func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfPaymentCreatedFn              func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfPaymentProcessingFn           func(ctx context.Context, ro *domain.RepairOrder) error
+	saveIfPaymentSucceededFn            func(ctx context.Context, ro *domain.RepairOrder) error
+	getAverageExecTimeFn                func(ctx context.Context) (*float64, error)
 }
 
 func (m *mockRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.RepairOrder, error) {
@@ -75,6 +77,18 @@ func (m *mockRepository) SaveIfDiagnosticsFinished(ctx context.Context, ro *doma
 func (m *mockRepository) SaveIfInAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
 	if m.saveIfInAwaitingApprovalFn != nil {
 		return m.saveIfInAwaitingApprovalFn(ctx, ro)
+	}
+	return nil
+}
+func (m *mockRepository) SaveTotalEstimateIfAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	if m.saveTotalEstimateIfAwaitingApprovFn != nil {
+		return m.saveTotalEstimateIfAwaitingApprovFn(ctx, ro)
+	}
+	return nil
+}
+func (m *mockRepository) ApproveIfAwaitingApproval(ctx context.Context, ro *domain.RepairOrder) error {
+	if m.approveIfAwaitingApprovalFn != nil {
+		return m.approveIfAwaitingApprovalFn(ctx, ro)
 	}
 	return nil
 }
@@ -126,18 +140,18 @@ func (m *mockRepository) GetAverageExecutionTime(ctx context.Context) (*float64,
 // ---------------------------------------------------------------------------
 
 type mockMetricsPublisher struct {
-	createdCalled       int
-	statusChangeCalled  int
-	canceledCalled      int
-	lastFromStatus      string
-	lastToStatus        string
-	executionTime       float64
-	phaseDurations      map[string]float64
-	integrationErrors   int
+	createdCalled      int
+	statusChangeCalled int
+	canceledCalled     int
+	lastFromStatus     string
+	lastToStatus       string
+	executionTime      float64
+	phaseDurations     map[string]float64
+	integrationErrors  int
 }
 
-func (m *mockMetricsPublisher) IncRepairOrderCreated()     { m.createdCalled++ }
-func (m *mockMetricsPublisher) IncRepairOrderCanceled()    { m.canceledCalled++ }
+func (m *mockMetricsPublisher) IncRepairOrderCreated()  { m.createdCalled++ }
+func (m *mockMetricsPublisher) IncRepairOrderCanceled() { m.canceledCalled++ }
 func (m *mockMetricsPublisher) IncRepairOrderStatusChange(from, to string) {
 	m.statusChangeCalled++
 	m.lastFromStatus = from
@@ -163,7 +177,7 @@ func (m *mockMetricsPublisher) IncIntegrationError(integration, operation string
 type mockEventPublisher struct {
 	diagnosticsFinishedFn func(ctx context.Context, id uuid.UUID, products map[uuid.UUID]int, services map[uuid.UUID]int) error
 	canceledFn            func(ctx context.Context, id uuid.UUID) error
-	paymentRequestFn      func(ctx context.Context, id uuid.UUID) error
+	paymentRequestFn      func(ctx context.Context, ro *domain.RepairOrder) error
 }
 
 func (m *mockEventPublisher) PublishRepairOrderDiagnosticsFinished(ctx context.Context, id uuid.UUID, products map[uuid.UUID]int, services map[uuid.UUID]int) error {
@@ -180,9 +194,9 @@ func (m *mockEventPublisher) PublishRepairOrderCanceled(ctx context.Context, id 
 	return nil
 }
 
-func (m *mockEventPublisher) PublishPaymentRequest(ctx context.Context, id uuid.UUID) error {
+func (m *mockEventPublisher) PublishPaymentRequest(ctx context.Context, ro *domain.RepairOrder) error {
 	if m.paymentRequestFn != nil {
-		return m.paymentRequestFn(ctx, id)
+		return m.paymentRequestFn(ctx, ro)
 	}
 	return nil
 }

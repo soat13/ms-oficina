@@ -172,8 +172,8 @@ func ThereIsARepairOrder(t *testing.T, db *bun.DB, id, customerID, vehicleID uui
 		id = uuid.New()
 	}
 	_, err := db.NewRaw(`
-		INSERT INTO repair_orders (id, customer_id, vehicle_id, status)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO repair_orders (id, customer_id, vehicle_id, status, total_estimate)
+		VALUES (?, ?, ?, ?, 1000)
 		ON CONFLICT (id) DO NOTHING
 	`, id, customerID, vehicleID, status).Exec(context.Background())
 	require.NoError(t, err, "falha ao inserir repair_order")
