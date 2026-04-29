@@ -52,8 +52,8 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, repairorder.ErrRepairOrderNotFound)
 	})
 
-	t.Run("StatusPending: sets PaymentURL, transitions Finished->PaymentCreated, records metrics", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusFinished)
+	t.Run("StatusPending: sets PaymentURL, transitions PaymentRequested->PaymentCreated, records metrics", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentRequested)
 		paymentURL := "https://pay.example.com/123"
 		metrics := &mockMetricsPublisher{}
 
@@ -62,7 +62,7 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfFinishedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentRequestedFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return nil
 				},
 			},
@@ -74,18 +74,18 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusPaymentCreated, ro.Status)
 		assert.Equal(t, &paymentURL, ro.PaymentURL)
-		assert.Contains(t, metrics.phaseDurations, "finished")
+		assert.Contains(t, metrics.phaseDurations, "payment_requested")
 	})
 
 	t.Run("StatusPending: skips UpdatePaymentURL when PaymentURL is nil", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusFinished)
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentRequested)
 
 		h := newHandler(
 			&mockRepository{
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfFinishedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentRequestedFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return nil
 				},
 			},
@@ -114,8 +114,8 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, sharedErrors.ErrInvalidStatusTransaction)
 	})
 
-	t.Run("StatusPending: returns error when SaveIfFinished fails", func(t *testing.T) {
-		ro := newRepairOrderWithStatus(repairorder.StatusFinished)
+	t.Run("StatusPending: returns error when SaveIfPaymentRequested fails", func(t *testing.T) {
+		ro := newRepairOrderWithStatus(repairorder.StatusPaymentRequested)
 		saveErr := errors.New(saveFailedError)
 
 		h := newHandler(
@@ -123,7 +123,7 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfFinishedFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentRequestedFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return saveErr
 				},
 			},
