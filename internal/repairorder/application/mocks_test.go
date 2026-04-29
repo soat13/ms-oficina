@@ -112,7 +112,7 @@ func (m *mockRepository) SaveIfFinished(ctx context.Context, ro *domain.RepairOr
 	return nil
 }
 func (m *mockRepository) SaveIfPaymentRequested(ctx context.Context, ro *domain.RepairOrder) error {
-	if m.saveIfFinishedFn != nil {
+	if m.saveIfPaymentRequestedFn != nil {
 		return m.saveIfPaymentRequestedFn(ctx, ro)
 	}
 	return nil
