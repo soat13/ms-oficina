@@ -112,7 +112,7 @@ func (r *RepairOrder) RequestPayment() error {
 }
 
 func (r *RepairOrder) PaymentCreated() error {
-	return r.moveStatus(repairorder.StatusFinished, repairorder.StatusPaymentCreated)
+	return r.moveStatus(repairorder.StatusPaymentRequested, repairorder.StatusPaymentCreated)
 }
 
 func (r *RepairOrder) PaymentProcessing() error {

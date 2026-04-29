@@ -44,6 +44,7 @@ type (
 		SaveIfApproved(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfInExecution(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfFinished(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfPaymentRequested(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfPaymentCreated(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfPaymentProcessing(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfPaymentSucceeded(ctx context.Context, ro *domain.RepairOrder) error

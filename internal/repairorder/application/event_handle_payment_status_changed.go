@@ -58,7 +58,7 @@ func (h *HandlePaymentStatusChanged) Execute(ctx context.Context, evt events.Pay
 
 func (h *HandlePaymentStatusChanged) handleStatusChanged(ctx context.Context, repairOrder *domain.RepairOrder, status string) error {
 	transitions := map[Status]paymentTransition{
-		StatusPending:    {repairOrder.PaymentCreated, h.repository.SaveIfFinished, "finished"},
+		StatusPending:    {repairOrder.PaymentCreated, h.repository.SaveIfPaymentRequested, "payment_requested"},
 		StatusProcessing: {repairOrder.PaymentProcessing, h.repository.SaveIfPaymentCreated, "payment_created"},
 		StatusSucceeded:  {repairOrder.PaymentSucceeded, h.repository.SaveIfPaymentProcessing, "payment_processing"},
 		StatusFailed:     {repairOrder.PaymentFailed, h.repository.SaveIfPaymentProcessing, ""},
