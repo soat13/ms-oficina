@@ -58,11 +58,11 @@ func (h *HandlePaymentStatusChanged) Execute(ctx context.Context, evt events.Pay
 
 func (h *HandlePaymentStatusChanged) handleStatusChanged(ctx context.Context, repairOrder *domain.RepairOrder, status string) error {
 	transitions := map[Status]paymentTransition{
-		StatusPending:    {repairOrder.PaymentCreated, h.repository.SaveIfPaymentRequested, "payment_requested"},
-		StatusProcessing: {repairOrder.PaymentProcessing, h.repository.SaveIfPaymentCreated, "payment_created"},
-		StatusSucceeded:  {repairOrder.PaymentSucceeded, h.repository.SaveIfPaymentProcessing, "payment_processing"},
-		StatusFailed:     {repairOrder.PaymentFailed, h.repository.SaveIfPaymentProcessing, ""},
-		StatusError:      {repairOrder.PaymentError, h.repository.SaveIfPaymentProcessing, ""},
+		StatusPending:    {apply: repairOrder.PaymentCreated, save: h.repository.SaveIfPaymentRequested, metricPhase: "payment_requested"},
+		StatusProcessing: {apply: repairOrder.PaymentProcessing, save: h.repository.SaveIfPaymentCreated, metricPhase: "payment_created"},
+		StatusFailed:     {apply: repairOrder.PaymentFailed, save: h.repository.SaveIfPaymentProcessing, metricPhase: ""},
+		StatusError:      {apply: repairOrder.PaymentError, save: h.repository.SaveIfPaymentProcessingOrFailed, metricPhase: ""},
+		StatusSucceeded:  {apply: repairOrder.PaymentSucceeded, save: h.repository.SaveIfPaymentProcessingOrFailed, metricPhase: ""},
 	}
 
 	transition, ok := transitions[Status(status)]

@@ -223,6 +223,18 @@ func (r *BunRepairOrderRepository) SaveIfPaymentProcessing(ctx context.Context, 
 	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentProcessing)
 }
 
+func (r *BunRepairOrderRepository) SaveIfPaymentProcessingOrFailed(ctx context.Context, ro *domain.RepairOrder) error {
+	_, err := r.db.NewUpdate().
+		Model(toModel(ro)).
+		WherePK().
+		Where("status IN (?)", bun.In([]repairorder.Status{
+			repairorder.StatusPaymentProcessing,
+			repairorder.StatusPaymentFailed,
+		})).
+		Exec(ctx)
+	return err
+}
+
 func (r *BunRepairOrderRepository) SaveIfPaymentSucceeded(ctx context.Context, ro *domain.RepairOrder) error {
 	return r.saveIfStatus(ctx, ro, repairorder.StatusPaymentSucceeded)
 }
