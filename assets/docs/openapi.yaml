@@ -1,30 +1,13 @@
 openapi: "3.0.3"
 info:
   title: Oficina API
-  version: 1.0.0
-  description: |-
-    #### Autenticação
-
-    A autenticação é obrigatória para acessar as rotas de administração.
-
-    Utilize `POST /auth/login` para obter um token JWT e, em seguida, informe 
-    `Bearer <token>` no cabeçalho `Authorization` ao chamar as rotas protegidas.
-
-    No Swagger UI, utilize o botão **Authorize** para registrar o token.
-
-    > Observação: o endpoint `POST /auth/login` é mantido nesta API apenas para fins de documentação e desevolvimento local.  
-    > A lógica de autenticação foi movida para uma **AWS Lambda dedicada**, e o **API Gateway** está configurado para
-    > redirecionar automaticamente as requisições para essa função.
+  version: 2.0.0
 servers:
   - url: /
     description: API-Gateway
 security:
   - bearerAuth: []
 tags:
-  - name: Auth
-    description: Fluxo de autenticação e emissão de tokens JWT.
-  - name: Users
-    description: Administração de usuários internos.
   - name: Customers
     description: Cadastro de clientes.
   - name: Vehicles
@@ -38,48 +21,6 @@ tags:
   - name: Estimates
     description: Orçamentos gerados a partir de ordens de reparo.
 paths:
-  /auth/login:
-    post:
-      tags: [ Auth ]
-      summary: Autenticar usuário
-      description: Retorna um token JWT válido para acessar as rotas protegidas.
-      security: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-            example:
-              cpf: "71296750043"
-              password: password123
-      responses:
-        '200':
-          description: Autenticação realizada com sucesso.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '400':
-          description: Corpo JSON inválido.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "400"
-                message: invalid JSON body
-        '401':
-          description: Credenciais inválidas.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "401"
-                message: invalid credentials
-        '422':
-          $ref: '#/components/responses/UnprocessableEntityResponse'
   /admin/services:
     get:
       tags: [Services]
@@ -242,6 +183,15 @@ paths:
               example:
                 code: "404"
                 message: service not found
+        '409':
+          description: Serviço em uso (vinculado a uma ordem de reparo).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: resource in use
   /admin/products:
     get:
       tags: [Products]
@@ -404,6 +354,15 @@ paths:
               example:
                 code: "404"
                 message: product not found
+        '409':
+          description: Produto em uso (vinculado a uma ordem de reparo).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: resource in use
   /admin/customers:
     get:
       tags: [Customers]
@@ -542,8 +501,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                code: customer with this email already exists
-                message: "409"
+                code: "409"
+                message: customer with this email already exists
         '422':
           $ref: '#/components/responses/UnprocessableEntityResponse'
     delete:
@@ -572,6 +531,15 @@ paths:
               example:
                 code: "404"
                 message: customer not found
+        '409':
+          description: Cliente em uso (vinculado a uma ordem de reparo).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: resource in use
   /admin/customers/{customerId}/vehicles:
     parameters:
       - $ref: '#/components/parameters/CustomerIdParam'
@@ -761,170 +729,15 @@ paths:
               example:
                 code: "404"
                 message: vehicle not found
-  /admin/users:
-    get:
-      tags: [Users]
-      summary: Listar usuários
-      parameters:
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/OffsetParam'
-      responses:
-        '200':
-          description: Lista de usuários.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserListResponse'
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
-    post:
-      tags: [Users]
-      summary: Criar usuário
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserCreateRequest'
-      responses:
-        '201':
-          description: Usuário criado.
-        '400':
-          description: Corpo JSON inválido.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "400"
-                message: invalid JSON body
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
         '409':
-          description: Usuário duplicado (documento ou email já existente).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                duplicateDocument:
-                  value:
-                    code: "409"
-                    message: user with this document already exists
-                duplicateEmail:
-                  value:
-                    code: "409"
-                    message: user with this email already exists
-        '422':
-          $ref: '#/components/responses/UnprocessableEntityResponse'
-  /admin/users/{id}:
-    parameters:
-      - $ref: '#/components/parameters/ResourceIdParam'
-    get:
-      tags: [Users]
-      summary: Obter usuário por ID
-      responses:
-        '200':
-          description: Usuário encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          description: ID inválido.
+          description: Veículo em uso (vinculado a uma ordem de reparo).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                code: "400"
-                message: invalid ID
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
-        '404':
-          description: Usuário não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "404"
-                message: user not found
-    patch:
-      tags: [Users]
-      summary: Atualizar usuário
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-      responses:
-        '204':
-          description: Usuário atualizado.
-        '400':
-          description: ID inválido ou corpo JSON inválido.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                invalidId:
-                  value:
-                    code: "400"
-                    message: invalid ID
-                invalidJson:
-                  value:
-                    code: "400"
-                    message: invalid JSON body
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
-        '404':
-          description: Usuário não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "404"
-                message: user not found
-        '409':
-          description: Email duplicado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: user with this email already exists
-                message: "409"
-        '422':
-          $ref: '#/components/responses/UnprocessableEntityResponse'
-    delete:
-      tags: [Users]
-      summary: Remover usuário
-      responses:
-        '204':
-          description: Usuário removido.
-        '400':
-          description: ID inválido.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "400"
-                message: invalid ID
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
-        '404':
-          description: Usuário não encontrado.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: "404"
-                message: user not found
+                code: "409"
+                message: resource in use
   /admin/repair-orders:
     get:
       tags: [Repair Orders]
@@ -1052,6 +865,15 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
+        '409':
+          description: Transição de status inválida para o estado atual da ordem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/repair-orders/{id}/start-diagnostics:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1081,6 +903,15 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
+        '409':
+          description: Transição de status inválida para o estado atual da ordem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/repair-orders/{id}/finish-diagnostics:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1126,7 +957,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedResponse'
         '404':
-          description: Ordem de reparo não encontrada.
+          description: Ordem de reparo, produto ou serviço não encontrado.
           content:
             application/json:
               schema:
@@ -1136,6 +967,23 @@ paths:
                   value:
                     code: "404"
                     message: repair order not found
+                productNotFound:
+                  value:
+                    code: "404"
+                    message: product not found
+                serviceNotFound:
+                  value:
+                    code: "404"
+                    message: service not found
+        '409':
+          description: Transição de status inválida para o estado atual da ordem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
         '422':
           description: Validação falhou - erros de negócio ou validação.
           content:
@@ -1143,14 +991,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               examples:
-                productNotFound:
-                  value:
-                    code: "422"
-                    message: product not found
-                serviceNotFound:
-                  value:
-                    code: "422"
-                    message: service not found
                 noProductsOrServices:
                   value:
                     code: "422"
@@ -1201,6 +1041,15 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
+        '409':
+          description: Transição de status inválida para o estado atual da ordem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/repair-orders/{id}/finish-execution:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1230,6 +1079,15 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
+        '409':
+          description: Transição de status inválida para o estado atual da ordem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/repair-orders/{id}/release-vehicle:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1259,6 +1117,15 @@ paths:
               example:
                 code: "404"
                 message: repair order not found
+        '409':
+          description: Transição de status inválida para o estado atual da ordem.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/repair-orders/{id}/estimate/approve:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1266,7 +1133,7 @@ paths:
       tags: [Estimates]
       summary: Aprovar orçamento
       responses:
-        '200':
+        '204':
           description: Orçamento aprovado.
         '400':
           description: ID inválido.
@@ -1288,6 +1155,15 @@ paths:
               example:
                 code: "404"
                 message: estimate not found
+        '409':
+          description: Transição de status inválida (orçamento não está aguardando aprovação).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/repair-orders/{id}/estimate/reject:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1295,7 +1171,7 @@ paths:
       tags: [Estimates]
       summary: Rejeitar orçamento
       responses:
-        '200':
+        '204':
           description: Orçamento rejeitado.
         '400':
           description: ID inválido.
@@ -1317,6 +1193,15 @@ paths:
               example:
                 code: "404"
                 message: estimate not found
+        '409':
+          description: Transição de status inválida (orçamento não está aguardando aprovação).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "409"
+                message: invalid status transaction
   /admin/estimates/{id}/items:
     parameters:
       - $ref: '#/components/parameters/ResourceIdParam'
@@ -1890,7 +1775,27 @@ components:
           format: uuid
         status:
           type: string
-          description: Status atual da ordem (por exemplo, created, in_execution, finished, etc).
+          enum:
+            - received
+            - in_diagnostics
+            - diagnostics_finished
+            - awaiting_approval
+            - approved
+            - in_execution
+            - finished
+            - payment_requested
+            - payment_created
+            - payment_processing
+            - payment_succeeded
+            - payment_failed
+            - payment_error
+            - released
+            - canceled
+          description: Status atual da ordem de reparo.
+        payment_url:
+          type: string
+          nullable: true
+          description: URL de pagamento gerada pelo gateway (presente após requisição de pagamento).
         created_at:
           type: string
           format: date-time
