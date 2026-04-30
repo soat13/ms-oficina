@@ -47,6 +47,7 @@ type (
 		SaveIfPaymentRequested(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfPaymentCreated(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfPaymentProcessing(ctx context.Context, ro *domain.RepairOrder) error
+		SaveIfPaymentProcessingOrFailed(ctx context.Context, ro *domain.RepairOrder) error
 		SaveIfPaymentSucceeded(ctx context.Context, ro *domain.RepairOrder) error
 		GetAverageExecutionTime(ctx context.Context) (*float64, error)
 	}
