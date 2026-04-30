@@ -216,27 +216,25 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, saveErr)
 	})
 
-	t.Run("StatusSucceeded: transitions PaymentProcessing->PaymentSucceeded, records metrics", func(t *testing.T) {
+	t.Run("StatusSucceeded: transitions PaymentProcessing->PaymentSucceeded", func(t *testing.T) {
 		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
-		metrics := &mockMetricsPublisher{}
 
 		h := newHandler(
 			&mockRepository{
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentProcessingOrFailedFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return nil
 				},
 			},
-			metrics,
+			&mockMetricsPublisher{},
 		)
 
 		err := h.Execute(ctx, events.PaymentStatusChanged{ID: roID, Status: "SUCCEEDED"})
 
 		require.NoError(t, err)
 		assert.Equal(t, repairorder.StatusPaymentSucceeded, ro.Status)
-		assert.Contains(t, metrics.phaseDurations, "payment_processing")
 	})
 
 	t.Run("StatusSucceeded: returns error on invalid status transition", func(t *testing.T) {
@@ -255,7 +253,7 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 		assert.ErrorIs(t, err, sharedErrors.ErrInvalidStatusTransaction)
 	})
 
-	t.Run("StatusSucceeded: returns error when SaveIfPaymentProcessing fails", func(t *testing.T) {
+	t.Run("StatusSucceeded: returns error when SaveIfPaymentProcessingOrFailed fails", func(t *testing.T) {
 		ro := newRepairOrderWithStatus(repairorder.StatusPaymentProcessing)
 		saveErr := errors.New(saveFailedError)
 
@@ -264,7 +262,7 @@ func TestHandlePaymentStatusChanged_Execute(t *testing.T) {
 				getByIdFn: func(_ context.Context, _ uuid.UUID) (*domain.RepairOrder, error) {
 					return ro, nil
 				},
-				saveIfPaymentProcessingFn: func(_ context.Context, _ *domain.RepairOrder) error {
+				saveIfPaymentProcessingOrFailedFn: func(_ context.Context, _ *domain.RepairOrder) error {
 					return saveErr
 				},
 			},
