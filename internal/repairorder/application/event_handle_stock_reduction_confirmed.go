@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/shared/events"
 )
 
 type HandleStockReductionConfirmed struct {

@@ -1,10 +1,10 @@
 package vehicle
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	vehicleApp "github.com/soat13/fase-1-oficina/internal/vehicle/application"
-	vehicleHTTP "github.com/soat13/fase-1-oficina/internal/vehicle/infra/in/http"
-	vehicleDB "github.com/soat13/fase-1-oficina/internal/vehicle/infra/out/db"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	vehicleApp "github.com/soat13/ms-oficina/internal/vehicle/application"
+	vehicleHTTP "github.com/soat13/ms-oficina/internal/vehicle/infra/in/http"
+	vehicleDB "github.com/soat13/ms-oficina/internal/vehicle/infra/out/db"
 )
 
 func SetupDefault(container *bootstrap.Container) {

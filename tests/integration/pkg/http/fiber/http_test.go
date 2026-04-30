@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/product"
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/bootstrap/product"
+	"github.com/soat13/ms-oficina/tests/testsupport"
 	"github.com/stretchr/testify/require"
 
-	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	testauth "github.com/soat13/ms-oficina/tests/testsupport/auth"
 )
 
 func ensureSetup(t *testing.T) *testsupport.SetupConfig {

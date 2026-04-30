@@ -10,17 +10,17 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	repairorderShared "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	repairorderShared "github.com/soat13/ms-oficina/internal/shared/repairorder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/product"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
-	estimateDomain "github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
-	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/bootstrap/estimate"
+	"github.com/soat13/ms-oficina/internal/bootstrap/product"
+	"github.com/soat13/ms-oficina/internal/bootstrap/repairorder"
+	estimateDomain "github.com/soat13/ms-oficina/internal/estimate/domain"
+	"github.com/soat13/ms-oficina/tests/testsupport"
+	testauth "github.com/soat13/ms-oficina/tests/testsupport/auth"
 )
 
 // -----------------------------------------------------------------------------

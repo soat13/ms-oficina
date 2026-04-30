@@ -1,13 +1,13 @@
 package estimate
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/estimate/application"
-	eventIn "github.com/soat13/fase-1-oficina/internal/estimate/infra/in/event"
-	"github.com/soat13/fase-1-oficina/internal/estimate/infra/in/http"
-	"github.com/soat13/fase-1-oficina/internal/estimate/infra/out/db"
-	eventOut "github.com/soat13/fase-1-oficina/internal/estimate/infra/out/event"
-	"github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/estimate/application"
+	eventIn "github.com/soat13/ms-oficina/internal/estimate/infra/in/event"
+	"github.com/soat13/ms-oficina/internal/estimate/infra/in/http"
+	"github.com/soat13/ms-oficina/internal/estimate/infra/out/db"
+	eventOut "github.com/soat13/ms-oficina/internal/estimate/infra/out/event"
+	"github.com/soat13/ms-oficina/internal/shared/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {

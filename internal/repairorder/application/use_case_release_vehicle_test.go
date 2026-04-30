@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
-	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
-	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	"github.com/soat13/ms-oficina/internal/repairorder/domain"
+	sharedErrors "github.com/soat13/ms-oficina/internal/shared/errors"
+	"github.com/soat13/ms-oficina/internal/shared/repairorder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

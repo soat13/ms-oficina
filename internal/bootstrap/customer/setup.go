@@ -1,10 +1,10 @@
 package customer
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/customer/application"
-	"github.com/soat13/fase-1-oficina/internal/customer/infra/in/http"
-	"github.com/soat13/fase-1-oficina/internal/customer/infra/out/db"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/customer/application"
+	"github.com/soat13/ms-oficina/internal/customer/infra/in/http"
+	"github.com/soat13/ms-oficina/internal/customer/infra/out/db"
 )
 
 func SetupDefault(container *bootstrap.Container) {

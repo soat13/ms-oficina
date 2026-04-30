@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
-	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
+	app "github.com/soat13/ms-oficina/internal/estimate/application"
 	"github.com/soat13/oficina-utils/pkg/money"
 )
 

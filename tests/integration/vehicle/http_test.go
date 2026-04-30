@@ -9,13 +9,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/vehicle"
-	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/bootstrap/vehicle"
+	testauth "github.com/soat13/ms-oficina/tests/testsupport/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
+	"github.com/soat13/ms-oficina/tests/testsupport"
 )
 
 func ensureSetup(t *testing.T) *testsupport.SetupConfig {

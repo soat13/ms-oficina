@@ -13,8 +13,8 @@ import (
 	"github.com/soat13/oficina-utils/pkg/valueobjects/phone"
 	"github.com/uptrace/bun"
 
-	app "github.com/soat13/fase-1-oficina/internal/customer/application"
-	"github.com/soat13/fase-1-oficina/internal/customer/domain"
+	app "github.com/soat13/ms-oficina/internal/customer/application"
+	"github.com/soat13/ms-oficina/internal/customer/domain"
 )
 
 type customerModel struct {

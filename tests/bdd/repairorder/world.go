@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
+	"github.com/soat13/ms-oficina/tests/testsupport"
 )
 
 type (

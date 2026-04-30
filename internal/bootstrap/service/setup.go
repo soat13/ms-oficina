@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	serviceApp "github.com/soat13/fase-1-oficina/internal/service/application"
-	serviceHTTP "github.com/soat13/fase-1-oficina/internal/service/infra/in/http"
-	serviceDB "github.com/soat13/fase-1-oficina/internal/service/infra/out/db"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	serviceApp "github.com/soat13/ms-oficina/internal/service/application"
+	serviceHTTP "github.com/soat13/ms-oficina/internal/service/infra/in/http"
+	serviceDB "github.com/soat13/ms-oficina/internal/service/infra/out/db"
 )
 
 func SetupDefault(container *bootstrap.Container) {

@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/service"
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
-	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/bootstrap/service"
+	"github.com/soat13/ms-oficina/tests/testsupport"
+	testauth "github.com/soat13/ms-oficina/tests/testsupport/auth"
 )
 
 // -----------------------------------------------------------------------------

@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
-	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/repairorder/application"
+	"github.com/soat13/ms-oficina/internal/repairorder/domain"
+	estimateEvent "github.com/soat13/ms-oficina/internal/shared/events"
 	"github.com/soat13/oficina-utils/pkg/messaging"
 	"github.com/soat13/oficina-utils/pkg/money"
 )
