@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/product/application"
-	productEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/product/application"
+	productEvent "github.com/soat13/ms-oficina/internal/shared/events"
 	"github.com/soat13/oficina-utils/pkg/messaging"
 )
 

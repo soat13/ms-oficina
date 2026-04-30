@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/service/application"
-	"github.com/soat13/fase-1-oficina/internal/service/domain"
+	"github.com/soat13/ms-oficina/internal/service/application"
+	"github.com/soat13/ms-oficina/internal/service/domain"
 	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
 	"github.com/soat13/oficina-utils/pkg/maps"
 	"github.com/soat13/oficina-utils/pkg/money"

@@ -10,7 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
-	domain "github.com/soat13/fase-1-oficina/internal/estimate/domain"
+	domain "github.com/soat13/ms-oficina/internal/estimate/domain"
 )
 
 // MockRepository is a mock of Repository interface.

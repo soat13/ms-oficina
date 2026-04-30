@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/shared/events"
-	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/shared/events"
+	testauth "github.com/soat13/ms-oficina/tests/testsupport/auth"
 	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 	"github.com/soat13/oficina-utils/pkg/messaging/sqs"
 )

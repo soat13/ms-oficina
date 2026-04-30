@@ -12,8 +12,8 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
-	testauth "github.com/soat13/fase-1-oficina/tests/testsupport/auth"
+	"github.com/soat13/ms-oficina/tests/testsupport"
+	testauth "github.com/soat13/ms-oficina/tests/testsupport/auth"
 )
 
 // -----------------------------------------------------------------------------

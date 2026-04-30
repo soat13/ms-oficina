@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/customer/domain"
+	"github.com/soat13/ms-oficina/internal/customer/domain"
 	"github.com/soat13/oficina-utils/pkg/pagination"
 	"github.com/soat13/oficina-utils/pkg/valueobjects/document"
 	"github.com/soat13/oficina-utils/pkg/valueobjects/email"

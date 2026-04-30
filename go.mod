@@ -1,4 +1,4 @@
-module github.com/soat13/fase-1-oficina
+module github.com/soat13/ms-oficina
 
 go 1.25.1
 

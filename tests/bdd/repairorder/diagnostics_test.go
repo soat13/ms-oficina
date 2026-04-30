@@ -6,10 +6,10 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/gofiber/fiber/v2"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/estimate"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap/repairorder"
-	"github.com/soat13/fase-1-oficina/tests/testsupport"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/bootstrap/estimate"
+	"github.com/soat13/ms-oficina/internal/bootstrap/repairorder"
+	"github.com/soat13/ms-oficina/tests/testsupport"
 )
 
 func TestFeatures(t *testing.T) {

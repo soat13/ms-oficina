@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/shared/repairorder"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bun"
 

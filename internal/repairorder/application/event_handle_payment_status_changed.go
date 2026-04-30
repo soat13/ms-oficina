@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/soat13/fase-1-oficina/internal/repairorder/domain"
-	"github.com/soat13/fase-1-oficina/internal/shared/events"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	"github.com/soat13/ms-oficina/internal/repairorder/domain"
+	"github.com/soat13/ms-oficina/internal/shared/events"
+	sharedRepairOrder "github.com/soat13/ms-oficina/internal/shared/repairorder"
 )
 
 type Status string

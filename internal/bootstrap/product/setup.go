@@ -1,14 +1,14 @@
 package product
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/product/application"
-	productApp "github.com/soat13/fase-1-oficina/internal/product/application"
-	"github.com/soat13/fase-1-oficina/internal/product/infra/in/event"
-	productHTTP "github.com/soat13/fase-1-oficina/internal/product/infra/in/http"
-	productDB "github.com/soat13/fase-1-oficina/internal/product/infra/out/db"
-	eventOut "github.com/soat13/fase-1-oficina/internal/product/infra/out/event"
-	estimateEvent "github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/product/application"
+	productApp "github.com/soat13/ms-oficina/internal/product/application"
+	"github.com/soat13/ms-oficina/internal/product/infra/in/event"
+	productHTTP "github.com/soat13/ms-oficina/internal/product/infra/in/http"
+	productDB "github.com/soat13/ms-oficina/internal/product/infra/out/db"
+	eventOut "github.com/soat13/ms-oficina/internal/product/infra/out/event"
+	estimateEvent "github.com/soat13/ms-oficina/internal/shared/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {

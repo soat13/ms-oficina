@@ -3,8 +3,8 @@ package event
 import (
 	"context"
 
-	"github.com/soat13/fase-1-oficina/internal/product/application"
-	"github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/product/application"
+	"github.com/soat13/ms-oficina/internal/shared/events"
 	"github.com/soat13/oficina-utils/pkg/messaging"
 )
 

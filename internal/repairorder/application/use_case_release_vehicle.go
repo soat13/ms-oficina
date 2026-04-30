@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	sharedRepairOrder "github.com/soat13/ms-oficina/internal/shared/repairorder"
 )
 
 type ReleaseVehicleInput struct {

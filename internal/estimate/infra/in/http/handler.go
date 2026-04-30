@@ -3,9 +3,9 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	app "github.com/soat13/fase-1-oficina/internal/estimate/application"
-	"github.com/soat13/fase-1-oficina/internal/estimate/domain"
-	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	app "github.com/soat13/ms-oficina/internal/estimate/application"
+	"github.com/soat13/ms-oficina/internal/estimate/domain"
+	sharedErrors "github.com/soat13/ms-oficina/internal/shared/errors"
 	fiberHelper "github.com/soat13/oficina-utils/pkg/http/fiber"
 )
 

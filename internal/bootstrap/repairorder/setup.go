@@ -1,14 +1,14 @@
 package repairorder
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/bootstrap"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/application"
-	eventIn "github.com/soat13/fase-1-oficina/internal/repairorder/infra/in/event"
-	repairOrderHTTP "github.com/soat13/fase-1-oficina/internal/repairorder/infra/in/http"
-	"github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/db"
-	eventOut "github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/event"
-	metricsOut "github.com/soat13/fase-1-oficina/internal/repairorder/infra/out/metrics"
-	"github.com/soat13/fase-1-oficina/internal/shared/events"
+	"github.com/soat13/ms-oficina/internal/bootstrap"
+	"github.com/soat13/ms-oficina/internal/repairorder/application"
+	eventIn "github.com/soat13/ms-oficina/internal/repairorder/infra/in/event"
+	repairOrderHTTP "github.com/soat13/ms-oficina/internal/repairorder/infra/in/http"
+	"github.com/soat13/ms-oficina/internal/repairorder/infra/out/db"
+	eventOut "github.com/soat13/ms-oficina/internal/repairorder/infra/out/event"
+	metricsOut "github.com/soat13/ms-oficina/internal/repairorder/infra/out/metrics"
+	"github.com/soat13/ms-oficina/internal/shared/events"
 )
 
 func SetupDefault(container *bootstrap.Container) {

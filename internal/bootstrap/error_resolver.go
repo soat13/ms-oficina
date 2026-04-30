@@ -1,8 +1,8 @@
 package bootstrap
 
 import (
-	"github.com/soat13/fase-1-oficina/internal/shared/errors"
-	sharedRepairOrder "github.com/soat13/fase-1-oficina/internal/shared/repairorder"
+	"github.com/soat13/ms-oficina/internal/shared/errors"
+	sharedRepairOrder "github.com/soat13/ms-oficina/internal/shared/repairorder"
 	"github.com/soat13/oficina-utils/pkg/db/bun_helper"
 	errorHelper "github.com/soat13/oficina-utils/pkg/error"
 	"github.com/soat13/oficina-utils/pkg/http/fiber"

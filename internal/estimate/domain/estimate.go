@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	sharedErrors "github.com/soat13/fase-1-oficina/internal/shared/errors"
+	sharedErrors "github.com/soat13/ms-oficina/internal/shared/errors"
 	pkgEntity "github.com/soat13/oficina-utils/pkg/entity"
 	"github.com/soat13/oficina-utils/pkg/money"
 )
