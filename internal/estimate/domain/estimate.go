@@ -158,6 +158,10 @@ func (e *Estimate) Cancel() error {
 	return nil
 }
 
+func (e *Estimate) IsAwaitingStock() bool {
+	return e.Status == StatusAwaitingStock
+}
+
 func (e *Estimate) IsApproved() bool {
 	return e.Status == StatusApproved
 }

@@ -152,9 +152,61 @@ Pode ser utilizado quando:
 **Efeito esperado:**  
 OS passa para **Canceled**.
 
+> **Nota:** O cancelamento só deve ocorrer antes do início da execução. Após `in_execution`, os produtos já foram consumidos e o cancelamento não reverte o trabalho realizado.
+
 ---
 
-## 8. Acompanhamento e métricas
+## 8. Pagamento (após execução)
+
+O processo de pagamento é iniciado automaticamente ao finalizar a execução e é gerenciado pelo serviço `payment` via integração com o Mercado Pago.
+
+### 8.1 Solicitação de pagamento
+
+Ao concluir a execução (`POST /admin/repair-orders/{id}/finish-execution`), a OS avança para o status **Finished** e o sistema publica automaticamente um `PaymentRequest` para o serviço `payment`.
+
+**Status:** `finished` → `payment_requested`
+
+---
+
+### 8.2 Criação do link de pagamento
+
+O serviço `payment` recebe a solicitação, cria o registro de pagamento e gera o link do Mercado Pago.
+
+**Transições de status:**
+
+| Evento recebido (PaymentStatusChanged) | Novo status da OS |
+|---|---|
+| `PENDING` | `payment_created` |
+| `PROCESSING` | `payment_processing` |
+
+O link de pagamento (`PaymentURL`) é armazenado na OS quando disponível.
+
+---
+
+### 8.3 Resultado do pagamento
+
+O resultado do pagamento é propagado para a OS.
+
+| Evento recebido (PaymentStatusChanged) | Novo status da OS | Descrição |
+|---|---|---|
+| `SUCCEEDED` | `payment_succeeded` | Pagamento aprovado |
+| `FAILED` | `payment_failed` | Pagamento recusado |
+| `ERROR` | `payment_error` | Erro no processamento |
+
+---
+
+### 8.4 Liberação do veículo (após pagamento aprovado)
+
+- `POST /admin/repair-orders/{id}/release-vehicle`
+
+Disponível apenas após `payment_succeeded`.
+
+**Efeito esperado:**  
+OS passa para **Released** (estado final).
+
+---
+
+## 9. Acompanhamento e métricas
 
 - Listar ordens de reparo:  
   `GET /admin/repair-orders`
@@ -174,8 +226,9 @@ Esses endpoints auxiliam no acompanhamento operacional e análise de performance
 5. Finalizar diagnóstico (gera orçamento)
 6. Aprovar **ou** rejeitar orçamento
 7. (Se aprovado) iniciar execução
-8. Finalizar execução
-9. Liberar veículo
+8. Finalizar execução (dispara pagamento automaticamente)
+9. Aguardar pagamento via Mercado Pago (`payment_created` → `payment_processing` → `payment_succeeded`)
+10. Liberar veículo
 
 ---
 

@@ -37,7 +37,7 @@ func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return nil
 	}
 
-	wasApproved := estimate.IsApproved()
+	shouldPublishEvent := estimate.IsApproved() || estimate.IsAwaitingStock()
 
 	if err := estimate.Cancel(); err != nil {
 		return err
@@ -47,7 +47,7 @@ func (a *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return err
 	}
 
-	if wasApproved {
+	if shouldPublishEvent {
 		return a.eventPublisher.PublishCanceled(ctx, *estimate)
 	}
 
