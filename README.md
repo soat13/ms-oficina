@@ -166,7 +166,7 @@ O `docker compose up` sobe PostgreSQL, LocalStack (emulação de SQS + SNS) e o 
 Os testes de integração criam bancos isolados e aplicam migrações automaticamente.
 
 ### Last Sonar Overview:
-![alt text](assets\sonar-overview.png)
+<img width="1378" height="867" alt="image" src="https://github.com/user-attachments/assets/18b1e6d5-9297-4e77-88b4-284710d93637" />
 
 ### Testes BDD
 
