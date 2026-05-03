@@ -165,6 +165,9 @@ O `docker compose up` sobe PostgreSQL, LocalStack (emulação de SQS + SNS) e o 
 
 Os testes de integração criam bancos isolados e aplicam migrações automaticamente.
 
+### Last Sonar Overview:
+![alt text](assets\sonar-overview.png)
+
 ### Testes BDD
 
 O projeto inclui testes BDD escritos com **godog** (Cucumber/Gherkin) em `tests/bdd/`. Os cenários descrevem fluxos de negócio em linguagem natural (português) e validam o comportamento end-to-end dos casos de uso.

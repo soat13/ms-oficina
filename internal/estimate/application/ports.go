@@ -39,7 +39,7 @@ type (
 	EventPublisher interface {
 		PublishRejected(ctx context.Context, estimate domain.Estimate) error
 		PublishCreated(ctx context.Context, estimate domain.Estimate) error
-		PublishCanceled(ctx context.Context, estimate domain.Estimate) error
+		PublishCanceled(ctx context.Context, estimate domain.Estimate, wasApproved bool) error
 	}
 
 	TopicPublisher interface {

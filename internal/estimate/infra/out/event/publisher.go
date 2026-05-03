@@ -39,11 +39,13 @@ func (e *EventPublisher) PublishCreated(ctx context.Context, estimate domain.Est
 	return e.publisher.Send(ctx, messaging.QueueMessage{EventName: event.Topic(), Payload: event})
 }
 
-func (e *EventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate) error {
+func (e *EventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate, wasApproved bool) error {
 	products := make(map[uuid.UUID]int)
-	for _, item := range estimate.Items() {
-		if item.Type == domain.ProductItemType {
-			products[item.ID] = item.Quantity
+	if wasApproved {
+		for _, item := range estimate.Items() {
+			if item.Type == domain.ProductItemType {
+				products[item.ID] = item.Quantity
+			}
 		}
 	}
 
