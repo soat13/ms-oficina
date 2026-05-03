@@ -35,10 +35,6 @@ func (uc *Cancel) Execute(ctx context.Context, input CancelInput) error {
 		return sharedRepairOrder.ErrRepairOrderNotFound
 	}
 
-	if repairorder.IsCancelled() {
-		return nil
-	}
-
 	if err := repairorder.Cancel(); err != nil {
 		return err
 	}
