@@ -57,6 +57,10 @@ func (r *RepairOrder) UpdateTotalEstimate(totalEstimate *money.Money) {
 	r.TotalEstimate = totalEstimate
 }
 
+func (r *RepairOrder) IsCancelled() bool {
+	return r.Status == repairorder.StatusCanceled
+}
+
 func (r *RepairOrder) calculateExecutionTime() {
 	executionTime := time.Since(r.UpdatedAt).Minutes()
 	executionTimeMinutes := int64(executionTime)

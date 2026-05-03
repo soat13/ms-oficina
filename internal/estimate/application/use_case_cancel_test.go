@@ -24,7 +24,7 @@ func (m *trackingEventPublisher) PublishCreated(_ context.Context, _ domain.Esti
 	return nil
 }
 
-func (m *trackingEventPublisher) PublishCanceled(_ context.Context, _ domain.Estimate) error {
+func (m *trackingEventPublisher) PublishCanceled(_ context.Context, _ domain.Estimate, _ bool) error {
 	m.publishCanceledCalled = true
 	return nil
 }

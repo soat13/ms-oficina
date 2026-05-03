@@ -198,6 +198,6 @@ func (m *mockEventPublisher) PublishCreated(ctx context.Context, estimate domain
 	return nil
 }
 
-func (m *mockEventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate) error {
+func (m *mockEventPublisher) PublishCanceled(ctx context.Context, estimate domain.Estimate, wasApproved bool) error {
 	return nil
 }
