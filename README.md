@@ -14,7 +14,8 @@
 - [Swagger / OpenAPI](#swagger--openapi)
 - [Testes](#testes)
 - [Deploy no Kubernetes](#deploy-no-kubernetes)
-- [Arquitetura de Eventos (SQS)](#arquitetura-de-eventos-sqs)
+- [Arquitetura de Eventos (SQS + SNS)](#arquitetura-de-eventos-sqs--sns)
+- [SAGA Pattern e Compensações](#saga-pattern-e-compensações)
 - [Observabilidade](#observabilidade)
 
 ## Sobre o Projeto
@@ -32,8 +33,9 @@ Sistema de gestão para oficinas mecânicas que automatiza o fluxo completo de a
 - **Catálogos** — Serviços técnicos e produtos com controle de estoque
 - **Orçamentos** — Propostas com itens de serviço e produto, sujeitas à aprovação
 - **Ordens de Serviço (OS)** — Fluxo completo: recepção, diagnóstico, aprovação, execução e liberação
-- **Pagamentos** — Integração via eventos para atualização do status da OS com base em mudanças de status de pagamento
-- **Eventos de Domínio via SQS** — Comunicação assíncrona entre contextos via filas AWS SQS (ex: baixa de estoque após aprovação)
+- **Pagamentos** — Integração via eventos com o serviço `payment` para atualização do status da OS conforme mudanças de status de pagamento
+- **Eventos de Domínio via SQS + SNS** — Comunicação assíncrona entre contextos: filas SQS para entrega ponto a ponto e tópicos SNS para fan-out
+- **SAGA Coreografada com Compensações** — Cancelamentos disparam transações compensatórias (ex: restauração de estoque) quando aplicável, garantindo consistência eventual entre contextos
 
 A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquitetura Hexagonal**, com organização por contextos de domínio independentes.
 
@@ -55,6 +57,7 @@ A aplicação segue os princípios de **Domain-Driven Design (DDD)** e **Arquite
 - Glossário de domínio (termos, roles e status): [`docs/domain-glossary.md`](docs/domain-glossary.md)
 - Arquitetura e decisões técnicas: [`docs/architecture.md`](docs/architecture.md)
 - Modelo Entidade-Relacionamento (DER): [`docs/der.md`](docs/der.md)
+- SAGA — compensações implementadas: [`docs/implemented-saga-compensations.md`](docs/implemented-saga-compensations.md)
 - ADRs (Architecture Decision Records): [`docs/adr`](docs/adr)
 
 
@@ -76,7 +79,7 @@ Cada contexto é estruturado em:
 
 Os casos de uso são invocados por adapters de entrada e acessam recursos externos exclusivamente via **ports**, garantindo baixo acoplamento e inversão de dependência.
 
-A comunicação entre contextos ocorre por **eventos de domínio**, publicados e consumidos através de filas **AWS SQS**, preservando o desacoplamento entre bounded contexts. Em ambiente local, o SQS é emulado via **LocalStack**. Os eventos são definidos em `internal/shared/events/` e as subscrições são registradas nos respectivos `internal/bootstrap/<context>/setup.go`.
+A comunicação entre contextos ocorre por **eventos de domínio**, publicados e consumidos através de **AWS SQS** e **AWS SNS**. Em ambiente local, SQS e SNS são emulados via **LocalStack**. Os eventos são definidos em `internal/shared/events/` e as subscrições são registradas nos respectivos `internal/bootstrap/<context>/setup.go`. Ver detalhes em [Arquitetura de Eventos (SQS + SNS)](#arquitetura-de-eventos-sqs--sns).
 
 Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/architecture.md`](docs/architecture.md)
 
@@ -87,7 +90,7 @@ Para detalhes completos da arquitetura e decisões técnicas, consulte: [`docs/a
 - **ORM**: Bun
 - **Migrações**: sql-migrate
 - **Testes**: Go testing + testify + godog (BDD/Gherkin)
-- **Mensageria**: AWS SQS (LocalStack para desenvolvimento local)
+- **Mensageria**: AWS SQS + AWS SNS (LocalStack para desenvolvimento local)
 - **Containerização**: Docker + Docker Compose
 - **Banco de Dados**: PostgreSQL — Escolhido por ser um SGBD relacional maduro e confiável, adequado para garantir integridade transacional em operações críticas como criação de Ordens de Serviço, aprovação de orçamentos e controle de estoque. O modelo relacional facilita a consistência entre entidades fortemente relacionadas e oferece suporte nativo a transações ACID, constraints e índices, essenciais para a confiabilidade e evolução do sistema.
 
@@ -123,7 +126,7 @@ O projeto utiliza **GitHub Actions** para CI/CD automatizado com os seguintes jo
 
 ## Executando o Projeto
 
-O `docker compose up` sobe PostgreSQL, LocalStack (emulação do SQS) e o container de desenvolvimento Go. As filas SQS são criadas automaticamente pelo script `scripts/localstack/init-sqs.sh`. As migrações de banco são aplicadas automaticamente ao iniciar a API.
+O `docker compose up` sobe PostgreSQL, LocalStack (emulação de SQS + SNS) e o container de desenvolvimento Go. Filas SQS, tópicos SNS e respectivas subscrições (fan-out) são criados automaticamente pelo script `scripts/aws/init/ready.d/01-init.sh` durante a inicialização do LocalStack. As migrações de banco são aplicadas automaticamente ao iniciar a API.
 
 ### Com Make
 
@@ -182,6 +185,45 @@ A aplicação é deployada automaticamente no **Amazon EKS** através do pipelin
 - **services.yaml** — Service do tipo NodePort expondo a aplicação externamente
 - **hpa.yaml** — Horizontal Pod Autoscaler configurado para escalar de 1 a 10 réplicas baseado em CPU (target: 50%)
 - **metric-server.yaml** — Metrics Server necessário para o HPA funcionar corretamente
+
+## Arquitetura de Eventos (SQS + SNS)
+
+A comunicação entre os bounded contexts (`repairorder`, `estimate`, `product`) e o serviço externo `payment` é totalmente orientada a eventos. Os structs e os nomes de tópico estão centralizados em `internal/shared/events/`.
+
+### Padrão de uso
+
+- **Filas SQS** são usadas quando o evento tem **um único consumidor** (entrega ponto a ponto). Ex.: `RepairOrderCanceled`, `EstimateRejected`, `PaymentRequest`.
+- **Tópicos SNS com fan-out para SQS** são usados quando o **mesmo evento precisa ser entregue a múltiplos contextos**. O publicador envia ao tópico SNS; cada consumidor lê de uma fila SQS dedicada.
+
+### Eventos com fan-out via SNS
+
+| Tópico SNS | Filas SQS consumidoras |
+|---|---|
+| `estimate-approved` | `repairorder-estimate-approved`, `product-estimate-approved` |
+| `product-stock-reduction-confirmed` | `repairorder-product-stock-reduction-confirmed`, `estimate-product-stock-reduction-confirmed` |
+
+### Filas SQS principais
+
+| Fila | Produtor | Consumidor |
+|---|---|---|
+| `repairorder-diagnostics-finished` | `repairorder` | `estimate` |
+| `estimate-created` | `estimate` | `repairorder` |
+| `estimate-rejected` | `estimate` | `repairorder` |
+| `estimate-canceled` | `estimate` | `product` |
+| `repairorder-canceled` | `repairorder` | `estimate` |
+| `product-stock-insufficient-detected` | `product` | `repairorder` |
+| `payment-request` | `repairorder` | `payment` (externo) |
+| `payment-status-changed.fifo` | `payment` (externo) | `repairorder` |
+
+> Em ambiente local, todas as filas, tópicos e subscrições são provisionados pelo script `scripts/aws/init/ready.d/01-init.sh`, executado automaticamente pelo LocalStack. O healthcheck do container espera o arquivo `/tmp/sqs-init.done` antes de marcar o serviço como saudável.
+
+## SAGA Pattern e Compensações
+
+A integração entre contextos segue o padrão **SAGA Coreografada**: não existe um orquestrador central. Cada serviço publica eventos sobre fatos do seu domínio e reage aos eventos publicados por outros. Quando uma falha ou cancelamento ocorre, **transações compensatórias** desfazem o efeito das etapas anteriores (ex.: restaurar estoque que foi reduzido na aprovação de um orçamento posteriormente cancelado).
+
+As compensações implementadas e as lacunas mapeadas estão documentadas em:
+
+- [`docs/implemented-saga-compensations.md`](docs/implemented-saga-compensations.md) 
 
 ## Observabilidade
 
