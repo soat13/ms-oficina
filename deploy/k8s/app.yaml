@@ -6,7 +6,7 @@ metadata:
   labels:
     app: oficina
     tags.datadoghq.com/env: "development"
-    tags.datadoghq.com/service: "oficina-api"
+    tags.datadoghq.com/service: "ms-oficina"
     tags.datadoghq.com/version: "1.0.0"
 spec:
   replicas: 2
@@ -18,10 +18,10 @@ spec:
       labels:
         app: oficina
         tags.datadoghq.com/env: "development"
-        tags.datadoghq.com/service: "oficina-api"
+        tags.datadoghq.com/service: "ms-oficina"
         tags.datadoghq.com/version: "1.0.0"
       annotations:
-        ad.datadoghq.com/oficina-api.logs: '[{"source":"go","service":"oficina-api"}]'
+        ad.datadoghq.com/oficina-api.logs: '[{"source":"go","service":"ms-oficina"}]'
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 3
